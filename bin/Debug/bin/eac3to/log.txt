@@ -1,0 +1,9 @@
+eac3to v3.31
+command line: "C:\Users\NICO\Desktop\X264GUI\bin\Debug\\bin\eac3to\eac3to.exe" -log=NUL "D:\Download\avsTemp.aac" "D:\Download\avsTemp.mp4"
+------------------------------------------------------------------------------
+FLAC, 2.0 channels, 0:11:30, 24 bits, 1456kbps, 48kHz
+Decoding FLAC...
+Encoding AAC <0.50> with NeroAacEnc...
+The original audio track has a constant bit depth of 24 bits.
+eac3to processing took 19 seconds.
+Done.
