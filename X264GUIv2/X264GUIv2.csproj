@@ -1,0 +1,39 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net10.0-windows</TargetFramework>
+		<Nullable>enable</Nullable>
+		<UseWindowsForms>true</UseWindowsForms>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<NoWarn>IDE1006</NoWarn>
+	</PropertyGroup>
+
+	<!--<ItemGroup>
+		<Content Include="..\X264GUI\bin\Debug\bin\**\*.*">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>-->
+
+	<ItemGroup>
+		<Content Include="..\bin\Debug\bin\ffmpeg\*.*">
+			<Link>\bin\ffmpeg\%(Filename)%(Extension)</Link>
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<Visible>false</Visible>
+		</Content>
+	</ItemGroup>
+	<ItemGroup>
+		<Content Include="..\bin\Debug\bin\eac3to\*.*">
+			<Link>\bin\eac3to\%(Filename)%(Extension)</Link>
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<Visible>false</Visible>
+		</Content>
+	</ItemGroup>
+	<ItemGroup>
+		<Content Include="..\bin\Debug\bin\x264\*.*">
+			<Link>\bin\x264\%(Filename)%(Extension)</Link>
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<Visible>false</Visible>
+		</Content>
+	</ItemGroup>
+</Project>
