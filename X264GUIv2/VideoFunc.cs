@@ -79,7 +79,7 @@ namespace X264GUIv2
                 Cts = new(),
                 FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}\bin\ffmpeg\ffprobe.exe",
                 ArgumentList = { $@"-of json -show_streams -show_format -v quiet ""{input.File}""" },
-                isWait = true,
+                IsWait = true,
                 ActionOut = sr => standardOutput += sr
             };
             task.RunTask();
@@ -211,24 +211,31 @@ namespace X264GUIv2
 
         public FfprobeOutput resolutionFunc(FfprobeOutput ffprobeOutput)
         {
-            if (form.resolutionCBox.Items[form.resolutionCBox.SelectedIndex] is ComboboxItem item)
+            string text = "0";
+            if (form.resolutionCBox.SelectedIndex == -1)
+                text = form.resolutionCBox.Text;
+            else if (form.resolutionCBox.Items[form.resolutionCBox.SelectedIndex] is ComboboxItem item)
+                text = item.Value;
+
+            if (!int.TryParse(text, out int v))
+                throw new Exception("請輸入數值");
+
+            int resolution = 0;
+            if (Enum.TryParse(text, out ResolutionEnum resolutionEnum))
+                resolution = (int)resolutionEnum;
+            else
+                resolution = v;
+
+            if (resolutionEnum == ResolutionEnum.Auto)
             {
-                if (!int.TryParse(item.Value, out int v))
-                    throw new Exception("");
-
-                ResolutionEnum resolutionEnum = (ResolutionEnum)v;
-
-                if (resolutionEnum == ResolutionEnum.Auto)
-                {
-                    ffprobeOutput.NewDetail.resolutionW = ffprobeOutput.OriDetail.resolutionW;
-                    ffprobeOutput.NewDetail.resolutionH = ffprobeOutput.OriDetail.resolutionH;
-                }
-                else
-                {
-                    (int, int) GCD = OtherControlFunc.GetGCD(ffprobeOutput.OriDetail.resolutionW ?? 0, ffprobeOutput.OriDetail.resolutionH ?? 0);
-                    ffprobeOutput.NewDetail.resolutionW = (int)resolutionEnum / GCD.Item2 * GCD.Item1;
-                    ffprobeOutput.NewDetail.resolutionH = (int)resolutionEnum;
-                }
+                ffprobeOutput.NewDetail.resolutionW = ffprobeOutput.OriDetail.resolutionW;
+                ffprobeOutput.NewDetail.resolutionH = ffprobeOutput.OriDetail.resolutionH;
+            }
+            else
+            {
+                (int, int) GCD = OtherControlFunc.GetGCD(ffprobeOutput.OriDetail.resolutionW ?? 0, ffprobeOutput.OriDetail.resolutionH ?? 0);
+                ffprobeOutput.NewDetail.resolutionW = resolution / GCD.Item2 * GCD.Item1;
+                ffprobeOutput.NewDetail.resolutionH = resolution;
             }
 
             return ffprobeOutput;

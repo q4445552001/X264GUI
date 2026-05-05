@@ -1,10 +1,18 @@
 ﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace X264GUIv2
 {
-    internal class TaskHelper
+    public class TaskHelper
     {
+        [DllImport("user32.dll")]
+        static extern IntPtr FindWindow(string? lpClassName, string lpWindowName);
+
+        [DllImport("user32.dll")]
+        static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+        const uint WM_CLOSE = 0x0010;
+
         /// <summary>
         /// 檔案名稱
         /// </summary>
@@ -23,7 +31,12 @@ namespace X264GUIv2
         /// <summary>
         /// 是否等待
         /// </summary>
-        public bool isWait { get; set; } = false;
+        public bool IsWait { get; set; } = false;
+
+        /// <summary>
+        /// 自動關閉錯誤視窗
+        /// </summary>
+        public string AutoDisabledDialogBox { get; set; } = string.Empty;
 
         /// <summary>
         /// 輸出委派
@@ -72,7 +85,7 @@ namespace X264GUIv2
                     Arguments = argument, //參數
                     StandardOutputEncoding = Encoding.UTF8,
                     StandardErrorEncoding = Encoding.UTF8,
-                    StandardInputEncoding = new UTF8Encoding(false),
+                    StandardInputEncoding = Encoding.UTF8,
                 }
             };
 
@@ -98,7 +111,21 @@ namespace X264GUIv2
             p.BeginOutputReadLine();
             p.BeginErrorReadLine();
 
-            if (isWait)
+            if (!string.IsNullOrWhiteSpace(AutoDisabledDialogBox))
+            {
+                Task.Run(() =>
+                {
+                    Thread.Sleep(1000);
+                    var hWnd = FindWindow(null, AutoDisabledDialogBox);
+                    if (hWnd != IntPtr.Zero)
+                    {
+                        SendMessage(hWnd, WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
+                        throw new Exception("dddd");
+                    }
+                });
+            }
+
+            if (IsWait)
                 p.WaitForExit();
 
             do

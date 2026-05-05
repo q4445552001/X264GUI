@@ -5,6 +5,7 @@ namespace X264GUIv2
     //TODO: 新增AUDIO TRIM
     //TODO: 新增SQL LITE
     //TODO: Ass無警告模式
+    //TODO: 語系錯誤
 
     internal static class Program
     {

@@ -139,7 +139,8 @@
             resolutionCBox.Name = "resolutionCBox";
             resolutionCBox.Size = new Size(72, 25);
             resolutionCBox.TabIndex = 8;
-            resolutionCBox.SelectedIndexChanged += resolutionCBox_SelectedIndexChanged;
+            resolutionCBox.SelectedValueChanged += resolutionCBox_SelectedValueChanged;
+            resolutionCBox.Leave += resolutionCBox_Leave;
             // 
             // progressBar1
             // 

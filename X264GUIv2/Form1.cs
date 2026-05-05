@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms.VisualStyles;
 using X264GUIv2.Enums;
@@ -12,6 +13,7 @@ namespace X264GUIv2
         private readonly VideoFunc videoFunc;
         private CancellationTokenSource? Cts { get; set; }
         public int bitRateDefault = 1000000; //初始化彼特率
+        readonly Form2 f2 = new();
 
         #region 初始化
 
@@ -151,13 +153,15 @@ FFVideoSource(""{Path.GetFileName(ffprobeOutput.InFileName)}"", fpsnum={ffprobeO
                             avs = $@"
 LoadPlugin(""{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\ffms2.dll"") 
 FFVideoSource(""{Path.GetFileName(ffprobeOutput.InFileName)}"", fpsnum={ffprobeOutput.NewDetail.fpsnum}, fpsden={ffprobeOutput.NewDetail.fpsden})
-LoadPlugin(""{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\264\VSFilter.dll"")
+LoadPlugin(""{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\VSFilter.dll"")
 TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
 #deinterlace #crop #resize #denoise";
                             File.Copy(ffprobeOutput.SubtitlesFile, $"{ffprobeOutput.avsTempFile}.ass", true);
                         }
 
-                        File.WriteAllText(@$".\{ffprobeOutput.avsTempFile}.avs", avs);
+                        string avsFile = @$".\{ffprobeOutput.avsTempFile}.avs";
+                        //if (!File.Exists(avsFile))
+                        File.WriteAllText(avsFile, avs);
                         #endregion
 
                         #region 音效處理
@@ -206,10 +210,12 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
                         {
                             Cts = Cts,
                             RunPath = path,
+                            AutoDisabledDialogBox = "Warning",
                             FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\avs4x26x.exe",
                             ArgumentList = { videoFunc.Xonepass(ffprobeOutput) },
                             ActionErr = sr =>
                             {
+                                f2.show = sr;
                                 TimeSpan Timemint = TimeSpan.FromSeconds(sw.Elapsed.TotalSeconds);
                                 listView1.Items[idx].SubItems[9].Text = string.Format("{0:D2}:{1:D2}:{2:D2}", Timemint.Hours, Timemint.Minutes, Timemint.Seconds);
                                 if (sr.IndexOf("frames,") != -1 && sr.IndexOf("[") != -1)
@@ -244,10 +250,12 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
                         {
                             Cts = Cts,
                             RunPath = path,
+                            AutoDisabledDialogBox = "Warning",
                             FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\avs4x26x.exe",
                             ArgumentList = { videoFunc.Xtwopass(ffprobeOutput) },
                             ActionErr = sr =>
                             {
+                                f2.show = sr;
                                 TimeSpan Timemint = TimeSpan.FromSeconds(sw.Elapsed.TotalSeconds);
                                 listView1.Items[idx].SubItems[9].Text = string.Format("{0:D2}:{1:D2}:{2:D2}", Timemint.Hours, Timemint.Minutes, Timemint.Seconds);
                                 if (sr.IndexOf("frames,") != -1 && sr.IndexOf("[") != -1)
@@ -288,6 +296,7 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
                                         ""{ffprobeOutput.OutFile}""" },
                             ActionErr = sr =>
                             {
+                                f2.show = sr;
                                 if (sr.IndexOf("Error") > -1)
                                 {
                                     listView1.Items[idx].SubItems[8].Text = RunEnum.Error.GetDisplayName();
@@ -463,6 +472,8 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
 
         private void logViewToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            f2.Show();
+
             try
             {
             }
@@ -602,7 +613,7 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
             }
         }
 
-        private void resolutionCBox_SelectedIndexChanged(object sender, EventArgs e)
+        private void resolutionCBox_SelectedValueChanged(object sender, EventArgs e)
         {
             try
             {
@@ -612,6 +623,17 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
             catch (Exception ex)
             {
                 OtherControlFunc.ShowError(ex.Message);
+            }
+        }
+
+        private void resolutionCBox_Leave(object sender, EventArgs e)
+        {
+            try
+            {
+                resolutionCBox_SelectedValueChanged(sender, e);
+            }
+            catch
+            {
             }
         }
 
