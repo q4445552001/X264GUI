@@ -38,21 +38,31 @@
             coreCBox = new ComboBox();
             resolutionCBox = new ComboBox();
             progressBar1 = new ProgressBar();
-            progressText = new TextBox();
             listView1 = new ListView();
-            logBtn = new Button();
             runBtn = new Button();
             stopBtn = new Button();
+            statusStrip1 = new StatusStrip();
+            toolStripStatusLabel1 = new ToolStripStatusLabel();
+            progressText = new ToolStripStatusLabel();
+            menuStrip1 = new MenuStrip();
+            FileToolStripMenuItem = new ToolStripMenuItem();
+            addToolStripMenuItem = new ToolStripMenuItem();
+            diffToolStripMenuItem = new ToolStripMenuItem();
+            toolStripSeparator1 = new ToolStripSeparator();
+            clearToolStripMenuItem = new ToolStripMenuItem();
+            ViewMenuItem = new ToolStripMenuItem();
+            logViewToolStripMenuItem = new ToolStripMenuItem();
             addBtn = new Button();
             diffBtn = new Button();
-            clearBtn = new Button();
             ((System.ComponentModel.ISupportInitialize)bitrateNumeric).BeginInit();
+            statusStrip1.SuspendLayout();
+            menuStrip1.SuspendLayout();
             SuspendLayout();
             // 
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(47, 10);
+            label1.Location = new Point(46, 37);
             label1.Name = "label1";
             label1.Size = new Size(96, 18);
             label1.TabIndex = 0;
@@ -61,7 +71,7 @@
             // label2
             // 
             label2.AutoSize = true;
-            label2.Location = new Point(242, 10);
+            label2.Location = new Point(192, 37);
             label2.Name = "label2";
             label2.Size = new Size(31, 18);
             label2.TabIndex = 1;
@@ -70,7 +80,7 @@
             // label3
             // 
             label3.AutoSize = true;
-            label3.Location = new Point(299, 10);
+            label3.Location = new Point(249, 37);
             label3.Name = "label3";
             label3.Size = new Size(71, 18);
             label3.TabIndex = 2;
@@ -79,7 +89,7 @@
             // label4
             // 
             label4.AutoSize = true;
-            label4.Location = new Point(375, 10);
+            label4.Location = new Point(325, 37);
             label4.Name = "label4";
             label4.Size = new Size(78, 18);
             label4.TabIndex = 3;
@@ -89,7 +99,7 @@
             // 
             bitrateCBox.DropDownStyle = ComboBoxStyle.DropDownList;
             bitrateCBox.FormattingEnabled = true;
-            bitrateCBox.Location = new Point(14, 31);
+            bitrateCBox.Location = new Point(13, 58);
             bitrateCBox.Name = "bitrateCBox";
             bitrateCBox.Size = new Size(75, 25);
             bitrateCBox.TabIndex = 4;
@@ -97,7 +107,7 @@
             // 
             // bitrateNumeric
             // 
-            bitrateNumeric.Location = new Point(96, 31);
+            bitrateNumeric.Location = new Point(95, 58);
             bitrateNumeric.Name = "bitrateNumeric";
             bitrateNumeric.Size = new Size(73, 24);
             bitrateNumeric.TabIndex = 5;
@@ -107,7 +117,7 @@
             // 
             fpsCBox.DropDownStyle = ComboBoxStyle.DropDownList;
             fpsCBox.FormattingEnabled = true;
-            fpsCBox.Location = new Point(222, 31);
+            fpsCBox.Location = new Point(172, 58);
             fpsCBox.Name = "fpsCBox";
             fpsCBox.Size = new Size(69, 25);
             fpsCBox.TabIndex = 6;
@@ -117,7 +127,7 @@
             // 
             coreCBox.DropDownStyle = ComboBoxStyle.DropDownList;
             coreCBox.FormattingEnabled = true;
-            coreCBox.Location = new Point(375, 31);
+            coreCBox.Location = new Point(325, 58);
             coreCBox.Name = "coreCBox";
             coreCBox.Size = new Size(78, 25);
             coreCBox.TabIndex = 7;
@@ -125,7 +135,7 @@
             // resolutionCBox
             // 
             resolutionCBox.FormattingEnabled = true;
-            resolutionCBox.Location = new Point(297, 31);
+            resolutionCBox.Location = new Point(247, 58);
             resolutionCBox.Name = "resolutionCBox";
             resolutionCBox.Size = new Size(72, 25);
             resolutionCBox.TabIndex = 8;
@@ -133,30 +143,24 @@
             // 
             // progressBar1
             // 
-            progressBar1.Location = new Point(459, 34);
+            progressBar1.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            progressBar1.Location = new Point(409, 58);
             progressBar1.Name = "progressBar1";
-            progressBar1.Size = new Size(100, 23);
+            progressBar1.Size = new Size(254, 25);
             progressBar1.TabIndex = 10;
-            // 
-            // progressText
-            // 
-            progressText.Location = new Point(565, 34);
-            progressText.Name = "progressText";
-            progressText.ReadOnly = true;
-            progressText.Size = new Size(100, 24);
-            progressText.TabIndex = 11;
             // 
             // listView1
             // 
             listView1.AllowDrop = true;
+            listView1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             listView1.CheckBoxes = true;
             listView1.FullRowSelect = true;
             listView1.GridLines = true;
-            listView1.Location = new Point(14, 62);
+            listView1.Location = new Point(12, 92);
             listView1.Name = "listView1";
             listView1.OwnerDraw = true;
             listView1.ShowItemToolTips = true;
-            listView1.Size = new Size(651, 417);
+            listView1.Size = new Size(651, 300);
             listView1.TabIndex = 12;
             listView1.UseCompatibleStateImageBehavior = false;
             listView1.View = View.Details;
@@ -167,22 +171,12 @@
             listView1.DragDrop += listView1_DragDrop;
             listView1.DragEnter += listView1_DragEnter;
             // 
-            // logBtn
-            // 
-            logBtn.Location = new Point(701, 55);
-            logBtn.Name = "logBtn";
-            logBtn.Size = new Size(75, 23);
-            logBtn.TabIndex = 13;
-            logBtn.Text = "LOG";
-            logBtn.UseVisualStyleBackColor = true;
-            logBtn.Click += logBtn_Click;
-            // 
             // runBtn
             // 
             runBtn.Enabled = false;
-            runBtn.Location = new Point(690, 105);
+            runBtn.Location = new Point(504, 27);
             runBtn.Name = "runBtn";
-            runBtn.Size = new Size(75, 23);
+            runBtn.Size = new Size(75, 28);
             runBtn.TabIndex = 14;
             runBtn.Text = "開始轉檔";
             runBtn.UseVisualStyleBackColor = true;
@@ -191,58 +185,124 @@
             // stopBtn
             // 
             stopBtn.Enabled = false;
-            stopBtn.Location = new Point(782, 55);
+            stopBtn.Location = new Point(585, 27);
             stopBtn.Name = "stopBtn";
-            stopBtn.Size = new Size(75, 23);
+            stopBtn.Size = new Size(75, 28);
             stopBtn.TabIndex = 15;
             stopBtn.Text = "強制停止";
             stopBtn.UseVisualStyleBackColor = true;
             stopBtn.Click += stopBtn_Click;
             // 
+            // statusStrip1
+            // 
+            statusStrip1.Items.AddRange(new ToolStripItem[] { toolStripStatusLabel1, progressText });
+            statusStrip1.Location = new Point(0, 408);
+            statusStrip1.Name = "statusStrip1";
+            statusStrip1.Size = new Size(672, 22);
+            statusStrip1.TabIndex = 19;
+            statusStrip1.Text = "statusStrip1";
+            // 
+            // toolStripStatusLabel1
+            // 
+            toolStripStatusLabel1.Name = "toolStripStatusLabel1";
+            toolStripStatusLabel1.Size = new Size(34, 17);
+            toolStripStatusLabel1.Text = "數量:";
+            // 
+            // progressText
+            // 
+            progressText.Name = "progressText";
+            progressText.Size = new Size(26, 17);
+            progressText.Text = "0/0";
+            // 
+            // menuStrip1
+            // 
+            menuStrip1.Items.AddRange(new ToolStripItem[] { FileToolStripMenuItem, ViewMenuItem });
+            menuStrip1.Location = new Point(0, 0);
+            menuStrip1.Name = "menuStrip1";
+            menuStrip1.Size = new Size(672, 24);
+            menuStrip1.TabIndex = 20;
+            menuStrip1.Text = "menuStrip1";
+            // 
+            // FileToolStripMenuItem
+            // 
+            FileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { addToolStripMenuItem, diffToolStripMenuItem, toolStripSeparator1, clearToolStripMenuItem });
+            FileToolStripMenuItem.Name = "FileToolStripMenuItem";
+            FileToolStripMenuItem.Size = new Size(43, 20);
+            FileToolStripMenuItem.Text = "檔案";
+            // 
+            // addToolStripMenuItem
+            // 
+            addToolStripMenuItem.Name = "addToolStripMenuItem";
+            addToolStripMenuItem.Size = new Size(146, 22);
+            addToolStripMenuItem.Text = "新增視訊檔案";
+            addToolStripMenuItem.Click += addToolStripMenuItem_Click;
+            // 
+            // diffToolStripMenuItem
+            // 
+            diffToolStripMenuItem.Name = "diffToolStripMenuItem";
+            diffToolStripMenuItem.Size = new Size(146, 22);
+            diffToolStripMenuItem.Text = "移除視訊檔案";
+            diffToolStripMenuItem.Click += diffToolStripMenuItem_Click;
+            // 
+            // toolStripSeparator1
+            // 
+            toolStripSeparator1.Name = "toolStripSeparator1";
+            toolStripSeparator1.Size = new Size(143, 6);
+            // 
+            // clearToolStripMenuItem
+            // 
+            clearToolStripMenuItem.Name = "clearToolStripMenuItem";
+            clearToolStripMenuItem.Size = new Size(146, 22);
+            clearToolStripMenuItem.Text = "清空列表";
+            clearToolStripMenuItem.Click += clearToolStripMenuItem_Click;
+            // 
+            // ViewMenuItem
+            // 
+            ViewMenuItem.DropDownItems.AddRange(new ToolStripItem[] { logViewToolStripMenuItem });
+            ViewMenuItem.Name = "ViewMenuItem";
+            ViewMenuItem.Size = new Size(43, 20);
+            ViewMenuItem.Text = "檢視";
+            // 
+            // logViewToolStripMenuItem
+            // 
+            logViewToolStripMenuItem.Name = "logViewToolStripMenuItem";
+            logViewToolStripMenuItem.Size = new Size(123, 22);
+            logViewToolStripMenuItem.Text = "LogView";
+            logViewToolStripMenuItem.Click += logViewToolStripMenuItem_Click;
+            // 
             // addBtn
             // 
-            addBtn.Location = new Point(690, 151);
+            addBtn.Location = new Point(409, 27);
             addBtn.Name = "addBtn";
-            addBtn.Size = new Size(75, 23);
-            addBtn.TabIndex = 16;
+            addBtn.Size = new Size(28, 28);
+            addBtn.TabIndex = 21;
             addBtn.Text = "+";
             addBtn.UseVisualStyleBackColor = true;
             addBtn.Click += addBtn_Click;
             // 
             // diffBtn
             // 
-            diffBtn.Location = new Point(690, 208);
+            diffBtn.Location = new Point(443, 27);
             diffBtn.Name = "diffBtn";
-            diffBtn.Size = new Size(75, 23);
-            diffBtn.TabIndex = 17;
+            diffBtn.Size = new Size(28, 28);
+            diffBtn.TabIndex = 22;
             diffBtn.Text = "-";
             diffBtn.UseVisualStyleBackColor = true;
             diffBtn.Click += diffBtn_Click;
-            // 
-            // clearBtn
-            // 
-            clearBtn.Location = new Point(690, 179);
-            clearBtn.Name = "clearBtn";
-            clearBtn.Size = new Size(75, 23);
-            clearBtn.TabIndex = 18;
-            clearBtn.Text = "清空";
-            clearBtn.UseVisualStyleBackColor = true;
-            clearBtn.Click += clearBtm_Click;
             // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(8F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
             AutoValidate = AutoValidate.EnableAllowFocusChange;
-            ClientSize = new Size(914, 510);
-            Controls.Add(clearBtn);
+            ClientSize = new Size(672, 430);
             Controls.Add(diffBtn);
             Controls.Add(addBtn);
+            Controls.Add(statusStrip1);
+            Controls.Add(menuStrip1);
             Controls.Add(stopBtn);
             Controls.Add(runBtn);
-            Controls.Add(logBtn);
             Controls.Add(listView1);
-            Controls.Add(progressText);
             Controls.Add(progressBar1);
             Controls.Add(resolutionCBox);
             Controls.Add(coreCBox);
@@ -254,11 +314,16 @@
             Controls.Add(label2);
             Controls.Add(label1);
             Font = new Font("Microsoft JhengHei UI", 10F);
+            MainMenuStrip = menuStrip1;
             Name = "Form1";
             Text = "X264GUI";
             FormClosing += Form1_FormClosing;
             Load += Form1_Load;
             ((System.ComponentModel.ISupportInitialize)bitrateNumeric).EndInit();
+            statusStrip1.ResumeLayout(false);
+            statusStrip1.PerformLayout();
+            menuStrip1.ResumeLayout(false);
+            menuStrip1.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -275,13 +340,22 @@
         public ComboBox coreCBox;
         public ComboBox resolutionCBox;
         public ProgressBar progressBar1;
-        public TextBox progressText;
         public ListView listView1;
         public Button logBtn;
         public Button runBtn;
         public Button stopBtn;
+        public StatusStrip statusStrip1;
+        public ToolStripStatusLabel progressText;
+        public ToolStripStatusLabel toolStripStatusLabel1;
+        public MenuStrip menuStrip1;
+        public ToolStripMenuItem ViewMenuItem;
+        public ToolStripMenuItem logViewToolStripMenuItem;
+        public ToolStripMenuItem FileToolStripMenuItem;
+        public ToolStripMenuItem addToolStripMenuItem;
+        public ToolStripMenuItem clearToolStripMenuItem;
+        private ToolStripMenuItem diffToolStripMenuItem;
+        private ToolStripSeparator toolStripSeparator1;
         public Button addBtn;
         public Button diffBtn;
-        public Button clearBtn;
     }
 }

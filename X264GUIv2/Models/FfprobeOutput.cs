@@ -4,7 +4,8 @@ namespace X264GUIv2.Models
 {
     internal class FfprobeOutput
     {
-        public Guid Guid = new();
+        public Guid Guid = Guid.NewGuid();
+        public string avsTempFile = $"_avsTemp_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
         public bool isAcc { get; set; } = false;
         public double duration { get; set; } = 0;
         public int size { get; set; } = 0;
@@ -12,13 +13,15 @@ namespace X264GUIv2.Models
         public Detail OriDetail { get; set; } = new();
         public string InFile { get; set; } = "";
         public string InFileName => Path.GetFileName(InFile);
-        public string OutFile => $"{Path.GetDirectoryName(InFile)!.Replace("\\", "//")}//{Path.GetFileNameWithoutExtension(InFile)}-0.mp4";
+        public string OutFile => $@"{Path.GetDirectoryName(InFile)}\{Path.GetFileNameWithoutExtension(InFile)}-0.mp4";
+        public int index { get; set; } = 0;
+        public RunEnum run { get; set; } = RunEnum.Init;
         public string SubtitlesFile
         {
             get
             {
                 if (File.Exists(Path.GetDirectoryName(InFile) + "\\" + Path.GetFileNameWithoutExtension(InFile) + ".ass"))
-                    return $"{Path.GetDirectoryName(InFile)?.Replace("\\", "//")}//{Path.GetFileNameWithoutExtension(InFile).Replace("\\", "//")}.ass";
+                    return $@"{Path.GetDirectoryName(InFile)}\{Path.GetFileNameWithoutExtension(InFile)}.ass";
                 else
                     return "";
             }

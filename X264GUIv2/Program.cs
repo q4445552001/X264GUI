@@ -1,10 +1,10 @@
+using System.Text;
+
 namespace X264GUIv2
 {
     //TODO: 新增AUDIO TRIM
-    //TODO: 修正用搜尋時的路徑問題
-    //TODO: 修正語言問題
-    //TODO: 新增未完成的檔案
-    //TODO: 讀取改多執行續
+    //TODO: 新增SQL LITE
+    //TODO: Ass無警告模式
 
     internal static class Program
     {
@@ -21,6 +21,8 @@ namespace X264GUIv2
                 Environment.Exit(1);
 #endif
             }
+
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.

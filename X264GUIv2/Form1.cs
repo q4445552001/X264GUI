@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using System.Windows.Forms;
+using System.Text.RegularExpressions;
 using System.Windows.Forms.VisualStyles;
 using X264GUIv2.Enums;
 using X264GUIv2.Models;
@@ -8,14 +8,10 @@ namespace X264GUIv2
 {
     public partial class Form1 : Form
     {
-        public static string[] videoExt => [VideoExt.mp4, VideoExt.mkv, VideoExt.avi, VideoExt.mov];
-
+        private readonly Graphics BarGraphics;
         private readonly VideoFunc videoFunc;
-        private readonly OtherControlFunc otherControlFunc;
-        private readonly ControlFunc controlFunc;
-
-        public int BitValueDef = 900000; //初始化彼特率
-        Thread Nico_Init, Nico;
+        private CancellationTokenSource? Cts { get; set; }
+        public int bitRateDefault = 1000000; //初始化彼特率
 
         #region 初始化
 
@@ -25,9 +21,9 @@ namespace X264GUIv2
 
             fpsCBox.Items.Add(new ComboboxItem("Auto", "Auto"));
             fpsCBox.Items.Add(new ComboboxItem("23.976", "24000/1001"));
-            fpsCBox.Items.Add(new ComboboxItem("25", "25"));
+            fpsCBox.Items.Add(new ComboboxItem("25", "25/1"));
             fpsCBox.Items.Add(new ComboboxItem("29.970", "30000/1001"));
-            fpsCBox.Items.Add(new ComboboxItem("30", "30"));
+            fpsCBox.Items.Add(new ComboboxItem("30", "30/1"));
 
             int cpunumber = Environment.ProcessorCount;
             for (int i = 0; i <= cpunumber; i++)
@@ -36,7 +32,7 @@ namespace X264GUIv2
             bitrateNumeric.Increment = new decimal([100, 0, 0, 0]);
             bitrateNumeric.Maximum = new decimal([100000, 0, 0, 0]);
             bitrateNumeric.Minimum = new decimal([1, 0, 0, 0]);
-            bitrateNumeric.Value = BitValueDef / 1000;
+            bitrateNumeric.Value = bitRateDefault / 1000;
 
             foreach (BitrateEnum e in Enum.GetValues<BitrateEnum>())
                 bitrateCBox.Items.Add(new ComboboxItem(Enum.GetName(e)!, ((int)e).ToString()));
@@ -45,7 +41,7 @@ namespace X264GUIv2
                 resolutionCBox.Items.Add(new ComboboxItem(((int)e).ToString(), ((int)e).ToString()));
 
             bitrateCBox.SelectedIndex = 0;
-            fpsCBox.SelectedIndex = 0;
+            fpsCBox.SelectedIndex = 1;
             resolutionCBox.SelectedIndex = resolutionCBox.FindString(((int)ResolutionEnum.Normal).ToString());
             coreCBox.SelectedIndex = 0;
 
@@ -57,24 +53,23 @@ namespace X264GUIv2
                 new() { Text = "FPS 模式", Width = 100, TextAlign = HorizontalAlignment.Center },
                 new() { Text = "FPS", Width = 120, TextAlign = HorizontalAlignment.Center },
                 new() { Text = "解析度", Width = 170, TextAlign = HorizontalAlignment.Center },
-                new() { Text = "時間長度", Width = 170, TextAlign = HorizontalAlignment.Center },
+                new() { Text = "時間長度", Width = 80, TextAlign = HorizontalAlignment.Center },
                 new() { Text = "檔案大小", Width = 140, TextAlign = HorizontalAlignment.Center },
-                new() { Text = "進度", Width = 140, TextAlign = HorizontalAlignment.Center },
-                new() { Text = "狀態", TextAlign = HorizontalAlignment.Center },
-                new() { Text = "消耗時間", Width = 170, TextAlign = HorizontalAlignment.Center },
+                new() { Text = "進度", Width = 70, TextAlign = HorizontalAlignment.Center },
+                new() { Text = "狀態", Width = 100, TextAlign = HorizontalAlignment.Center },
+                new() { Text = "消耗時間", Width = 80, TextAlign = HorizontalAlignment.Center },
                 new() { Text = "路徑", Width = 300 },
             }]);
 
+            BarGraphics = progressBar1.CreateGraphics();
             videoFunc = new(this);
-            otherControlFunc = new(this);
-            controlFunc = new(this);
         }
 
         private void Form1_Load(object sender, EventArgs e) => CheckForIllegalCrossThreadCalls = false;
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (Nico_Init != null && Nico_Init.IsAlive /*&& checkBox1.Checked.ToString() == "False"*/)
+            if (Cts != null && !Cts.Token.IsCancellationRequested)
             {
                 OtherControlFunc.ShowError("轉檔中，請先停止後再關閉程式");
                 e.Cancel = true;
@@ -91,14 +86,21 @@ namespace X264GUIv2
 
         private void runBtn_Click(object sender, EventArgs e)
         {
-            Stopwatch sw = new Stopwatch();
+            float weightA = 0.48f;
+            float weightB = 0.48f;
+            float weightC = 0.04f;
+
+            Stopwatch sw = new();
             if (listView1.Items.Count != 0)
             {
-                Nico_Init = new Thread(() =>
+                Cts = new();
+                Task.Run(() =>
                 {
                     runBtn.Enabled = false;
+                    addToolStripMenuItem.Enabled = false;
                     addBtn.Enabled = false;
-                    clearBtn.Enabled = false;
+                    clearToolStripMenuItem.Enabled = false;
+                    diffToolStripMenuItem.Enabled = false;
                     diffBtn.Enabled = false;
                     bitrateCBox.Enabled = false;
                     fpsCBox.Enabled = false;
@@ -106,26 +108,33 @@ namespace X264GUIv2
                     bitrateNumeric.Enabled = false;
 
                     int listViewCount = listView1.Items.Count;
-                    foreach (FfprobeOutput ffprobeOutput in videoFunc.ffprobeDataOriginal)
+                    foreach (FfprobeOutput ffprobeOutput in videoFunc.ffprobeData)
                     {
+                        if (Cts.Token.IsCancellationRequested)
+                            return;
+
+                        if (ffprobeOutput.run == RunEnum.Done)
+                            continue;
+
                         string? path = Path.GetDirectoryName(ffprobeOutput.InFile);
-                        if (!string.IsNullOrWhiteSpace(path))
-                            throw new Exception("查無路徑");
+                        if (string.IsNullOrWhiteSpace(path))
+                            throw new Exception($"無效路徑 {path}");
 
-                        Directory.SetCurrentDirectory(path!);
+                        Environment.CurrentDirectory = path;
 
-                        var item = listView1.Items.Cast<ListView>().FirstOrDefault(x => (Guid?)x.Tag == ffprobeOutput.Guid);
-                        int idx = 1;
+                        #region 初始化
+                        int idx = listView1.Items.Cast<ListViewItem>().ToList().FindIndex(x => (Guid?)x.Tag == ffprobeOutput.Guid);
                         listView1.Items[idx].SubItems[8].ForeColor = Color.Black;
-                        listView1.Items[idx].SubItems[8].Text = "初始化";
+                        listView1.Items[idx].SubItems[8].Text = RunEnum.Init.GetDisplayName();
+                        ffprobeOutput.run = RunEnum.Init;
                         listView1.Items[idx].UseItemStyleForSubItems = false;
-                        progressText.Text = $"{idx + 1}//{listViewCount}";
+                        progressText.Text = $"{idx + 1}/{listViewCount}";
 
                         sw.Reset();
                         sw.Start();
 
                         stopBtn.Enabled = true;
-                        progressBar1.Value = 0;
+                        UpdateProgres(0, 100);
 
                         double prodatabar = 0;
                         string avs = "";
@@ -133,296 +142,334 @@ namespace X264GUIv2
                         if (string.IsNullOrWhiteSpace(ffprobeOutput.SubtitlesFile))
                         {
                             avs = $@"
-LoadPlugin(""{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}\\bin\\x264\\ffms2.dll"") FFVideoSource(""
-{Path.GetFileName(ffprobeOutput.InFileName)}"", fpsnum={ffprobeOutput.NewDetail.fpsnum}, fpsden={ffprobeOutput.NewDetail.fpsden})
+LoadPlugin(""{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\ffms2.dll"") 
+FFVideoSource(""{Path.GetFileName(ffprobeOutput.InFileName)}"", fpsnum={ffprobeOutput.NewDetail.fpsnum}, fpsden={ffprobeOutput.NewDetail.fpsden})
 #deinterlace #crop #resize #denoise";
                         }
                         else
                         {
                             avs = $@"
-LoadPlugin(""{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}\\bin\\x264\\ffms2.dll"") FFVideoSource(""
-{Path.GetFileName(ffprobeOutput.InFileName)}"", fpsnum={ffprobeOutput.NewDetail.fpsnum}, fpsden={ffprobeOutput.NewDetail.fpsden})
-LoadPlugin(""{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}\\bin\\264\\VSFilter.dll"")
-TextSub(""avsTemp.ass"",1)
+LoadPlugin(""{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\ffms2.dll"") 
+FFVideoSource(""{Path.GetFileName(ffprobeOutput.InFileName)}"", fpsnum={ffprobeOutput.NewDetail.fpsnum}, fpsden={ffprobeOutput.NewDetail.fpsden})
+LoadPlugin(""{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\264\VSFilter.dll"")
+TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
 #deinterlace #crop #resize #denoise";
-                            File.Copy(ffprobeOutput.SubtitlesFile, "avsTemp.ass", true);
+                            File.Copy(ffprobeOutput.SubtitlesFile, $"{ffprobeOutput.avsTempFile}.ass", true);
                         }
 
-                        File.WriteAllText(@".\avsTemp.avs", avs);
+                        File.WriteAllText(@$".\{ffprobeOutput.avsTempFile}.avs", avs);
+                        #endregion
+
+                        #region 音效處理
+                        if (Path.GetExtension(ffprobeOutput.InFile).ToLower() == $".{VideoExt.mkv}")
+                        {
+                            if (Cts.Token.IsCancellationRequested)
+                                return;
+                            listView1.Items[idx].SubItems[8].Text = RunEnum.SoundSeparation.GetDisplayName();
+                            ffprobeOutput.run = RunEnum.SoundSeparation;
+                            new TaskHelper
+                            {
+                                Cts = Cts,
+                                RunPath = path,
+                                FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\mkvextract.exe",
+                                ArgumentList = {
+                                    $@"tracks ""{ffprobeOutput.InFile}"" 1:""{Path.GetDirectoryName(ffprobeOutput.InFile)}""{ffprobeOutput.avsTempFile}.aac""",
+                                },
+                            }.RunTask();
+
+                            if (!ffprobeOutput.isAcc)
+                            {
+                                if (Cts.Token.IsCancellationRequested)
+                                    return;
+                                listView1.Items[idx].SubItems[8].Text = RunEnum.SoundProcessing.GetDisplayName();
+                                ffprobeOutput.run = RunEnum.SoundProcessing;
+                                new TaskHelper
+                                {
+                                    Cts = Cts,
+                                    RunPath = path,
+                                    FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\eac3to\eac3to.exe",
+                                    ArgumentList = {
+                                        @"-log=NUL """ + Path.GetDirectoryName(ffprobeOutput.InFile) + @$"\{ffprobeOutput.avsTempFile}.aac"" """ + Path.GetDirectoryName(ffprobeOutput.InFile) + @$"\{ffprobeOutput.avsTempFile}.mp4""",
+                                    },
+                                }.RunTask();
+                            }
+                        }
+                        #endregion
+
+                        #region OnePass
+                        if (Cts.Token.IsCancellationRequested)
+                            return;
+                        listView1.Items[idx].SubItems[8].Text = RunEnum.OnePass.GetDisplayName();
+                        ffprobeOutput.run = RunEnum.OnePass;
+                        double proA = 0;
+                        new TaskHelper
+                        {
+                            Cts = Cts,
+                            RunPath = path,
+                            FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\avs4x26x.exe",
+                            ArgumentList = { videoFunc.Xonepass(ffprobeOutput) },
+                            ActionErr = sr =>
+                            {
+                                TimeSpan Timemint = TimeSpan.FromSeconds(sw.Elapsed.TotalSeconds);
+                                listView1.Items[idx].SubItems[9].Text = string.Format("{0:D2}:{1:D2}:{2:D2}", Timemint.Hours, Timemint.Minutes, Timemint.Seconds);
+                                if (sr.IndexOf("frames,") != -1 && sr.IndexOf("[") != -1)
+                                {
+                                    double prodata1 = Math.Round(Convert.ToDouble(sr.Substring(sr.IndexOf("[") + 1, sr.LastIndexOf("%") - 1)), 2);
+                                    proA = Math.Round(prodata1 * weightA, 2);
+                                    listView1.Items[idx].SubItems[7].Text = $"{prodata1} %";
+                                    if (proA <= 100)
+                                        UpdateProgres((float)proA, 100);
+                                }
+
+                                if (sr.IndexOf("[error]") != -1)
+                                {
+                                    listView1.Items[idx].SubItems[8].Text = RunEnum.Error.GetDisplayName();
+                                    ffprobeOutput.run = RunEnum.Error;
+                                    listView1.Items[idx].SubItems[8].ForeColor = Color.Red;
+                                }
+                            }
+                        }.RunTask();
+                        prodatabar = 100 * weightA;
+                        if (ffprobeOutput.run == RunEnum.Error)
+                            continue;
+                        #endregion
+
+                        #region TwoPass
+                        if (Cts.Token.IsCancellationRequested)
+                            return;
+                        listView1.Items[idx].SubItems[8].Text = RunEnum.TwoPass.GetDisplayName();
+                        ffprobeOutput.run = RunEnum.TwoPass;
+                        double proB = 0;
+                        new TaskHelper
+                        {
+                            Cts = Cts,
+                            RunPath = path,
+                            FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\avs4x26x.exe",
+                            ArgumentList = { videoFunc.Xtwopass(ffprobeOutput) },
+                            ActionErr = sr =>
+                            {
+                                TimeSpan Timemint = TimeSpan.FromSeconds(sw.Elapsed.TotalSeconds);
+                                listView1.Items[idx].SubItems[9].Text = string.Format("{0:D2}:{1:D2}:{2:D2}", Timemint.Hours, Timemint.Minutes, Timemint.Seconds);
+                                if (sr.IndexOf("frames,") != -1 && sr.IndexOf("[") != -1)
+                                {
+                                    double prodata1 = Math.Round(Convert.ToDouble(sr.Substring(sr.IndexOf("[") + 1, sr.LastIndexOf("%") - 1)), 2);
+                                    proB = Math.Round(prodatabar + (prodata1 * weightB), 2);
+                                    listView1.Items[idx].SubItems[7].Text = $"{prodata1} %";
+                                    if (proB <= 100)
+                                        UpdateProgres((float)proB, 100);
+                                }
+
+                                if (sr.IndexOf("[error]") != -1)
+                                {
+                                    listView1.Items[idx].SubItems[8].Text = RunEnum.Error.GetDisplayName();
+                                    ffprobeOutput.run = RunEnum.Error;
+                                    listView1.Items[idx].SubItems[8].ForeColor = Color.Red;
+                                }
+                            }
+                        }.RunTask();
+                        prodatabar = 100 * (weightA + weightB);
+                        if (ffprobeOutput.run == RunEnum.Error)
+                            continue;
+                        #endregion
+
+                        #region MP4Box
+                        if (Cts.Token.IsCancellationRequested)
+                            return;
+                        listView1.Items[idx].SubItems[8].Text = RunEnum.Merge.GetDisplayName();
+                        ffprobeOutput.run = RunEnum.Merge;
+                        new TaskHelper
+                        {
+                            Cts = Cts,
+                            RunPath = path,
+                            FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\mp4box.exe",
+                            ArgumentList = {
+                                        $@"-add ""{ffprobeOutput.avsTempFile}.264"" ^
+                                        -add ""{(Path.GetExtension(ffprobeOutput.InFile).ToLower() == VideoExt.mkv ? (!ffprobeOutput.isAcc ? $"{ffprobeOutput.avsTempFile}.mp4" : $"{ffprobeOutput.avsTempFile}.aac") : ffprobeOutput.InFile)}""#audio ^
+                                        ""{ffprobeOutput.OutFile}""" },
+                            ActionErr = sr =>
+                            {
+                                if (sr.IndexOf("Error") > -1)
+                                {
+                                    listView1.Items[idx].SubItems[8].Text = RunEnum.Error.GetDisplayName();
+                                    ffprobeOutput.run = RunEnum.Error;
+                                    listView1.Items[idx].SubItems[8].ForeColor = Color.Red;
+                                    return;
+                                }
+
+                                Match match = Regex.Match(sr, @"\((\d+)/(\d+)\)");
+                                if (match.Success)
+                                {
+                                    float current = float.TryParse(match.Groups[1].Value, out float _current) ? _current : 0;
+                                    float percentage = (float)prodatabar + (current * weightC);
+                                    listView1.Items[idx].SubItems[7].Text = $"{current:F1} %";
+                                    UpdateProgres(percentage, 100);
+                                }
+                            },
+                        }.RunTask();
+                        if (ffprobeOutput.run == RunEnum.Error)
+                            continue;
+                        #endregion
+
+                        UpdateProgres(100, 100);
+                        listView1.Items[idx].SubItems[7].Text = "100 %";
+                        listView1.Items[idx].SubItems[8].Text = RunEnum.Done.GetDisplayName();
+                        ffprobeOutput.run = RunEnum.Done;
+                        videoFunc.Delete(ffprobeOutput);
+                        TimeSpan Timemint = TimeSpan.FromSeconds(sw.Elapsed.TotalSeconds);
+                        listView1.Items[idx].SubItems[9].Text = string.Format("{0:D2}:{1:D2}:{2:D2}", Timemint.Hours, Timemint.Minutes, Timemint.Seconds);
+                        sw.Stop();
                     }
 
                     stopBtn.Enabled = false;
                     runBtn.Enabled = true;
+                    addToolStripMenuItem.Enabled = true;
                     addBtn.Enabled = true;
-                    clearBtn.Enabled = true;
+                    clearToolStripMenuItem.Enabled = true;
+                    diffToolStripMenuItem.Enabled = true;
                     diffBtn.Enabled = true;
                     bitrateCBox.Enabled = true;
                     fpsCBox.Enabled = true;
                     resolutionCBox.Enabled = true;
                     bitrateNumeric.Enabled = true;
-
-                    #region
-                    //for (int i = 0; i < listViewCount; i++)
-                    //{
-
-                    //    //Audio Not aac
-                    //    if (Path.GetExtension(InFileName[i]).ToString().ToLower() == ".mkv")
-                    //    {
-                    //        listView1.Items[i].SubItems[8].Text = "音效分離";
-                    //        Nico = new Thread(() =>
-                    //        {
-                    //            var run = new Process
-                    //            {
-                    //                StartInfo = new ProcessStartInfo
-                    //                {
-                    //                    FileName = Path.Combine(AppDomain.CurrentDomain.SetupInformation.ApplicationBase + @".\bin\x264\", "mkvextract.exe"),
-                    //                    Arguments = "tracks \"" + InFileName[i].Replace("//", "\\") + "\" 1:\"" + Path.GetDirectoryName(InFileName[i]) + "\\avsTemp.aac\"",
-                    //                    UseShellExecute = false,
-                    //                    CreateNoWindow = true,
-                    //                    RedirectStandardError = true
-                    //                }
-                    //            };
-                    //            run.Start();
-                    //            run.WaitForExit();
-                    //        });
-                    //        Nico.Start();
-                    //        Nico.Join();
-
-                    //        if (NewData[i][6] == "false")
-                    //        {
-                    //            listView1.Items[i].SubItems[8].Text = "音效處理";
-                    //            Nico = new Thread(() =>
-                    //            {
-                    //                var run = new Process
-                    //                {
-                    //                    StartInfo = new ProcessStartInfo
-                    //                    {
-                    //                        FileName = Path.Combine(AppDomain.CurrentDomain.SetupInformation.ApplicationBase + @"\bin\eac3to\", "eac3to.exe"),
-                    //                        Arguments = @"-log=NUL """ + Path.GetDirectoryName(InFileName[i]) + @"\avsTemp.aac"" """ + Path.GetDirectoryName(InFileName[i]) + @"\avsTemp.mp4""",
-                    //                        UseShellExecute = false,
-                    //                        CreateNoWindow = true,
-                    //                        RedirectStandardError = true
-                    //                    }
-                    //                };
-                    //                run.Start();
-                    //                run.WaitForExit();
-                    //            });
-                    //            Nico.Start();
-                    //            Nico.Join();
-                    //        }
-                    //    }
-
-                    //    //One Pass
-                    //    listView1.Items[i].SubItems[8].Text = "OnePass";
-                    //    Nico = new Thread(() =>
-                    //    {
-                    //        var run = new Process
-                    //        {
-                    //            StartInfo = new ProcessStartInfo
-                    //            {
-                    //                FileName = Path.Combine(AppDomain.CurrentDomain.SetupInformation.ApplicationBase + @".\bin\x264\", "avs4x26x.exe"),
-                    //                Arguments = XOCode[i],
-                    //                UseShellExecute = false,
-                    //                CreateNoWindow = true,
-                    //                RedirectStandardError = true
-                    //            }
-                    //        };
-                    //        run.Start();
-
-                    //        StreamReader sr = run.StandardError;
-                    //        while (!sr.EndOfStream)
-                    //        {
-                    //            TimeSpan Timemint = TimeSpan.FromSeconds(sw.Elapsed.TotalSeconds);
-                    //            listView1.Items[i].SubItems[9].Text = string.Format("{0:D2}:{1:D2}:{2:D2}", Timemint.Hours, Timemint.Minutes, Timemint.Seconds);
-                    //            string srstring = sr.ReadLine();
-                    //            //f2.show = srstring;
-                    //            if (srstring.IndexOf("frames,") != -1 && srstring.IndexOf("[") != -1)
-                    //            {
-                    //                double prodata = Math.Round(Convert.ToDouble(srstring.Substring(srstring.IndexOf("[") + 1, srstring.LastIndexOf("%") - 1)) / 2, 2);
-                    //                if (prodata < 99.99)
-                    //                {
-                    //                    progressBar1.Value = (int)prodata;
-                    //                    listView1.Items[i].SubItems[7].Text = prodata + " %";
-                    //                }
-                    //                prodatabar = prodata;
-                    //            }
-                    //        }
-                    //    });
-                    //    Nico.Start();
-                    //    Nico.Join();
-
-                    //    //Two Pass
-                    //    listView1.Items[i].SubItems[8].Text = "TwoPass";
-                    //    Nico = new Thread(() =>
-                    //    {
-                    //        var run = new Process
-                    //        {
-                    //            StartInfo = new ProcessStartInfo
-                    //            {
-                    //                FileName = Path.Combine(AppDomain.CurrentDomain.SetupInformation.ApplicationBase + @".\bin\x264\", "avs4x26x.exe"),
-                    //                Arguments = XTCode[i],
-                    //                UseShellExecute = false,
-                    //                CreateNoWindow = true,
-                    //                RedirectStandardError = true
-                    //            }
-                    //        };
-                    //        run.Start();
-
-                    //        StreamReader sr = run.StandardError;
-                    //        while (!sr.EndOfStream)
-                    //        {
-                    //            TimeSpan Timemint = TimeSpan.FromSeconds(sw.Elapsed.TotalSeconds);
-                    //            listView1.Items[i].SubItems[9].Text = string.Format("{0:D2}:{1:D2}:{2:D2}", Timemint.Hours, Timemint.Minutes, Timemint.Seconds);
-                    //            string srstring = sr.ReadLine();
-                    //            //f2.show = srstring;
-                    //            if (srstring.IndexOf("frames,") != -1 && srstring.IndexOf("[") != -1)
-                    //            {
-                    //                double prodata = Math.Round((prodatabar + Convert.ToDouble(srstring.Substring(srstring.IndexOf("[") + 1, srstring.LastIndexOf("%") - 1)) / 2), 2);
-                    //                if (prodata < 99.99)
-                    //                {
-                    //                    progressBar1.Value = (int)prodata;
-                    //                    listView1.Items[i].SubItems[7].Text = prodata + " %";
-                    //                }
-                    //            }
-                    //        }
-                    //    });
-                    //    Nico.Start();
-                    //    Nico.Join();
-
-                    //    //MP4Box
-                    //    listView1.Items[i].SubItems[8].Text = "合併中";
-                    //    Nico = new Thread(() =>
-                    //    {
-                    //        var run = new Process
-                    //        {
-                    //            StartInfo = new ProcessStartInfo
-                    //            {
-                    //                FileName = Path.Combine(AppDomain.CurrentDomain.SetupInformation.ApplicationBase + @".\bin\x264\", "mp4box.exe"),
-                    //                Arguments =
-                    //                    "-add \"avsTemp.264\" -add \"" +
-                    //                    (Path.GetExtension(InFileName[i]).ToString().ToLower() == ".mkv" ? (NewData[i][6] == "false" ? "avsTemp.mp4" : "avsTemp.aac") : InFileName[i].Replace("//", "\\")) +
-                    //                    "\"#audio \"" + OutFileName[i].Replace("//", "\\") + "\"",
-                    //                UseShellExecute = false,
-                    //                CreateNoWindow = true,
-                    //                RedirectStandardError = true
-                    //            }
-                    //        };
-                    //        run.Start();
-
-                    //        StreamReader sr = run.StandardError;
-                    //        string srstring = sr.ReadToEnd();
-                    //        //f2.show = srstring;
-                    //        if (srstring.IndexOf("Error") != -1)
-                    //        {
-                    //            listView1.Items[i].SubItems[8].Text = "錯誤";
-                    //            listView1.Items[i].SubItems[8].ForeColor = Color.Red;
-                    //        }
-                    //        else if (sr.EndOfStream)
-                    //        {
-                    //            progressBar1.Value = 100;
-                    //            listView1.Items[i].SubItems[7].Text = "100 %";
-                    //            listView1.Items[i].SubItems[8].Text = "Done";
-                    //            Delete();
-                    //            TimeSpan Timemint = TimeSpan.FromSeconds(sw.Elapsed.TotalSeconds);
-                    //            listView1.Items[i].SubItems[9].Text = string.Format("{0:D2}:{1:D2}:{2:D2}", Timemint.Hours, Timemint.Minutes, Timemint.Seconds);
-                    //        }
-                    //    });
-                    //    Nico.Start();
-                    //    Nico.Join();
-                    //    sw.Stop();
-                    //}
-                    #endregion
-                });
-                Nico_Init.Start();
+                    Cts.Cancel();
+                }, Cts.Token);
             }
         }
 
         private void stopBtn_Click(object sender, EventArgs e)
         {
-            while (true)
+            if (Cts != null && !Cts.Token.IsCancellationRequested)
             {
-                if (Nico_Init != null && Nico_Init.IsAlive) Nico_Init.Abort();
-                if (Nico != null && Nico.IsAlive) Nico.Abort();
-                if (!Nico_Init.IsAlive)
+                Cts.Cancel();
+                Process[] localAll = Process.GetProcesses();
+                foreach (Process p in localAll)
                 {
-                    //foreach (Process p in Process.GetProcessesByName("eac3to")) p.Kill();
-                    Process[] localAll = Process.GetProcesses();
-                    foreach (Process p in localAll)
+                    switch (p.ProcessName)
                     {
-                        switch (p.ProcessName)
-                        {
-                            case "x264":
-                            case "avs4x26x":
-                            case "mp4box":
-                            case "eac3to":
-                                p.Kill();
-                                break;
-                        }
+                        case "x264":
+                        case "avs4x26x":
+                        case "mp4box":
+                        case "eac3to":
+                            p.Kill();
+                            break;
                     }
-
-                    stopBtn.Enabled = false;
-                    runBtn.Enabled = true;
-                    addBtn.Enabled = true;
-                    clearBtn.Enabled = true;
-                    diffBtn.Enabled = true;
-                    bitrateCBox.Enabled = true;
-                    fpsCBox.Enabled = true;
-                    resolutionCBox.Enabled = true;
-                    bitrateNumeric.Enabled = true;
-                    videoFunc.Delete();
-                    OtherControlFunc.ShowError("已強制停止");
-                    listView1.Items[Convert.ToInt32(progressText.Text.Split('/')[0]) - 1].SubItems[8].Text = "強制停止";
-                    break;
                 }
+
+                stopBtn.Enabled = false;
+                runBtn.Enabled = true;
+                addToolStripMenuItem.Enabled = true;
+                addBtn.Enabled = true;
+                clearToolStripMenuItem.Enabled = true;
+                diffToolStripMenuItem.Enabled = true;
+                diffBtn.Enabled = true;
+                bitrateCBox.Enabled = true;
+                fpsCBox.Enabled = true;
+                resolutionCBox.Enabled = true;
+                bitrateNumeric.Enabled = true;
+                int idx = Convert.ToInt32(progressText.Text?.Split('/')[0]) - 1;
+                listView1.Items[idx].SubItems[8].Text = RunEnum.Stop.GetDisplayName();
+                int idx2 = videoFunc.ffprobeData.FindIndex(x => x.Guid == (Guid?)listView1.Items[idx].Tag);
+                videoFunc.ffprobeData[idx2].run = RunEnum.Stop;
+                videoFunc.Delete(videoFunc.ffprobeData[idx2]);
+                OtherControlFunc.ShowError("已強制停止");
+            }
+        }
+
+        private void addToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                addBtn_Click(sender, e);
+            }
+            catch
+            {
             }
         }
 
         private void addBtn_Click(object sender, EventArgs e)
         {
-            //讀取檔案
-            OpenFileDialog openfile = new();
-            openfile.Multiselect = true;
+            try
+            {
+                OpenFileDialog openfile = new()
+                {
+                    Multiselect = true
+                };
 
-            string fileStr = "";
-            foreach (string ext in videoExt)
-                fileStr += $"*.{ext};";
+                string fileStr = "";
+                foreach (string ext in VideoExt.GetVideoExt)
+                    fileStr += $"*.{ext};";
 
-            fileStr = fileStr[..^1];
+                fileStr = fileStr[..^1];
 
-            openfile.Filter = $"{fileStr}|{fileStr}";
+                openfile.Filter = $"{fileStr}|{fileStr}";
 
-            if (openfile.ShowDialog() == DialogResult.OK)
-                foreach (string file in openfile.FileNames)
-                    videoFunc.Encode(file);
+                if (openfile.ShowDialog() == DialogResult.OK)
+                    videoFunc.Encode(openfile.FileNames);
+            }
+            catch (Exception ex)
+            {
+                OtherControlFunc.ShowError(ex.Message);
+            }
+        }
+
+        private void diffToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                diffBtn_Click(sender, e);
+            }
+            catch
+            {
+            }
         }
 
         private void diffBtn_Click(object sender, EventArgs e)
         {
-            for (int i = listView1.SelectedItems.Count - 1; i >= 0; i--)
+            try
             {
-                int item = listView1.SelectedIndices[i];
-                videoFunc.ffprobeDataOriginal.RemoveAt(item);
-                listView1.Items.RemoveAt(item);
+                for (int i = listView1.SelectedItems.Count - 1; i >= 0; i--)
+                {
+                    int item = listView1.SelectedIndices[i];
+                    videoFunc.ffprobeData.RemoveAt(item);
+                    listView1.Items.RemoveAt(item);
+                }
+
+                progressText.Text = $"0/{listView1.Items.Count}";
             }
-
-            progressText.Text = $"0/{listView1.Items.Count}";
+            catch (Exception ex)
+            {
+                OtherControlFunc.ShowError(ex.Message);
+            }
         }
 
-        private void clearBtm_Click(object sender, EventArgs e)
+        private void clearToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            listView1.Items.Clear();
-            runBtn.Enabled = false;
-            stopBtn.Enabled = false;
-            progressText.Text = "0/0";
-            listView1.Columns[0].Tag = false;
-            listView1.Refresh();
+            try
+            {
+                listView1.Items.Clear();
+                runBtn.Enabled = false;
+                stopBtn.Enabled = false;
+                progressText.Text = "0/0";
+                listView1.Columns[0].Tag = false;
+                listView1.Refresh();
 
-            videoFunc.ffprobeDataOriginal.Clear();
+                videoFunc.ffprobeData.Clear();
+            }
+            catch (Exception ex)
+            {
+                OtherControlFunc.ShowError(ex.Message);
+            }
         }
 
-        private void logBtn_Click(object sender, EventArgs e)
+        private void logViewToolStripMenuItem_Click(object sender, EventArgs e)
         {
-
+            try
+            {
+            }
+            catch (Exception ex)
+            {
+                OtherControlFunc.ShowError(ex.Message);
+            }
         }
 
         #endregion
@@ -433,98 +480,208 @@ TextSub(""avsTemp.ass"",1)
 
         private void listView1_DrawColumnHeader(object sender, DrawListViewColumnHeaderEventArgs e)
         {
-            if (e.ColumnIndex == 0)
+            try
             {
-                e.DrawBackground();
-                CheckBoxRenderer.DrawCheckBox(e.Graphics,
-                    new Point(e.Bounds.Left + 4, e.Bounds.Top + 4),
-                    new Rectangle(e.Bounds.X + 18, e.Bounds.Y + 4, e.Bounds.Width - 24, e.Bounds.Height - 4),
-                    "檔案名稱",
-                    new Font("微軟正黑體", 9.0f, FontStyle.Regular),
-                    TextFormatFlags.Left,
-                    false,
-                    Convert.ToBoolean(e.Header?.Tag) ? CheckBoxState.CheckedNormal : CheckBoxState.UncheckedNormal);
+                if (e.ColumnIndex == 0)
+                {
+                    e.DrawBackground();
+                    CheckBoxRenderer.DrawCheckBox(e.Graphics,
+                        new Point(e.Bounds.Left + 4, e.Bounds.Top + 4),
+                        new Rectangle(e.Bounds.X + 18, e.Bounds.Y + 4, e.Bounds.Width - 24, e.Bounds.Height - 4),
+                        "檔案名稱",
+                        new Font("微軟正黑體", 9.0f, FontStyle.Regular),
+                        TextFormatFlags.Left,
+                        false,
+                        Convert.ToBoolean(e.Header?.Tag) ? CheckBoxState.CheckedNormal : CheckBoxState.UncheckedNormal);
+                }
+                else
+                    e.DrawDefault = true;
             }
-            else
-                e.DrawDefault = true;
+            catch (Exception ex)
+            {
+                OtherControlFunc.ShowError(ex.Message);
+            }
         }
 
         private void listView1_ColumnClick(object sender, ColumnClickEventArgs e)
         {
-            if (e.Column == 0)
+            try
             {
-                bool value = Convert.ToBoolean(listView1.Columns[e.Column].Tag);
-                listView1.Columns[e.Column].Tag = !value;
-                foreach (ListViewItem item in listView1.Items)
-                    item.Checked = !value;
-                listView1.Invalidate();
+                if (e.Column == 0)
+                {
+                    bool value = Convert.ToBoolean(listView1.Columns[e.Column].Tag);
+                    listView1.Columns[e.Column].Tag = !value;
+                    foreach (ListViewItem item in listView1.Items)
+                        item.Checked = !value;
+                    listView1.Invalidate();
+                }
+            }
+            catch (Exception ex)
+            {
+                OtherControlFunc.ShowError(ex.Message);
             }
         }
 
         private void listView1_DragEnter(object sender, DragEventArgs e)
         {
-            if (e.Data == null)
-                return;
+            try
+            {
+                if (e.Data == null)
+                    return;
 
-            e.Effect = e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.All : DragDropEffects.None;
+                e.Effect = e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.All : DragDropEffects.None;
+
+            }
+            catch (Exception ex)
+            {
+                OtherControlFunc.ShowError(ex.Message);
+            }
         }
 
         private void listView1_DragDrop(object sender, DragEventArgs e)
         {
-            if (e.Data == null)
+            try
             {
+                if (e.Data == null)
+                {
+                    runBtn.Enabled = true;
+                    return;
+                }
+
+                if (e.Data.GetData(DataFormats.FileDrop, false) is not string[] files)
+                {
+                    runBtn.Enabled = true;
+                    return;
+                }
+
+                foreach (string file in files)
+                {
+                    List<string> f = [];
+                    string extension = Path.GetExtension(file);
+                    if (VideoExt.GetVideoExt.Any(x => $".{x}" == extension))
+                        f.Add(file);
+
+                    videoFunc.Encode([.. f]);
+                }
+
                 runBtn.Enabled = true;
-                return;
             }
-
-            if (e.Data.GetData(DataFormats.FileDrop, false) is not string[] files)
+            catch (Exception ex)
             {
-                runBtn.Enabled = true;
-                return;
+                OtherControlFunc.ShowError(ex.Message);
             }
-
-            foreach (string file in files)
-            {
-                string extension = Path.GetExtension(file);
-                if (videoExt.Any(x => x == extension))
-                    videoFunc.Encode(file);
-            }
-
-            runBtn.Enabled = true;
         }
         #endregion
 
         #region Changed
         private void bitrateCBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            bitrateNumeric.Enabled = bitrateCBox.SelectedItem?.ToString() == "Manual";
-
-            IList<ListViewItem> listViews = [.. listView1.CheckedItems.Cast<ListViewItem>()];
-            foreach (ListViewItem listView in listViews)
+            try
             {
-                FfprobeOutput? data = videoFunc.ffprobeDataOriginal.FirstOrDefault(x => x.Guid == (Guid?)listView.Tag);
-                if (data == null) continue;
+                bitrateNumeric.Enabled = bitrateCBox.SelectedItem?.ToString() == "Manual";
 
-                if (bitrateCBox.SelectedItem?.ToString() == "Auto")
-                    data.NewDetail.bitrate = data.OriDetail.bitrate - 100000;
-                else if (bitrateCBox.SelectedItem?.ToString() == "Manual")
-                    data.NewDetail.bitrate = (int)bitrateNumeric.Value * 1000;
+                if (videoFunc != null)
+                    OtherControlFunc.listViewCheck(this, videoFunc.ffprobeData, idx => videoFunc.ffprobeData[idx] = videoFunc.bitRateFunc(videoFunc.ffprobeData[idx]));
+            }
+            catch (Exception ex)
+            {
+                OtherControlFunc.ShowError(ex.Message);
             }
         }
 
         private void fpsCBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-
+            try
+            {
+                if (videoFunc != null)
+                    OtherControlFunc.listViewCheck(this, videoFunc.ffprobeData, idx => videoFunc.ffprobeData[idx] = videoFunc.fpsFunc(videoFunc.ffprobeData[idx]));
+            }
+            catch (Exception ex)
+            {
+                OtherControlFunc.ShowError(ex.Message);
+            }
         }
 
         private void resolutionCBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-
+            try
+            {
+                if (videoFunc != null)
+                    OtherControlFunc.listViewCheck(this, videoFunc.ffprobeData, idx => videoFunc.ffprobeData[idx] = videoFunc.resolutionFunc(videoFunc.ffprobeData[idx]));
+            }
+            catch (Exception ex)
+            {
+                OtherControlFunc.ShowError(ex.Message);
+            }
         }
 
         private void bitrateNumeric_ValueChanged(object sender, EventArgs e)
         {
+            try
+            {
+                if (bitrateNumeric.Value == 0)
+                    return;
 
+                if (videoFunc != null)
+                    OtherControlFunc.listViewCheck(this, videoFunc.ffprobeData, idx => videoFunc.ffprobeData[idx] = videoFunc.bitRateNumericFunc(videoFunc.ffprobeData[idx]));
+            }
+            catch (Exception ex)
+            {
+                OtherControlFunc.ShowError(ex.Message);
+            }
+        }
+        #endregion
+
+        #region 進度條
+        /// <summary>
+        /// 進度條
+        /// </summary>
+        public void UpdateProgres(float now, float count, bool isPercentage = true)
+        {
+            void del()
+            {
+                progressBar1.PerformStep();
+                var v = now / count * 100;
+                var str = isPercentage ? Math.Round(v, 2).ToString("#0.00") + " %" : $"{now:#,##0}/{count:#,##0}";
+                var font = new Font("Consolas", 12, FontStyle.Bold);
+                var pt = new PointF(progressBar1.Width / 2 - (str.Length * 4), progressBar1.Height / 2 - 10);
+                progressBar1.Value = v >= 100 ? 100 : (int)v;
+                BarGraphics.DrawString(str, font, v >= 50 ? Brushes.White : Brushes.Blue, pt);
+            }
+            Invoke(del);
+        }
+
+
+        /// <summary>
+        /// 進度條轉圈圈
+        /// </summary>
+        public void UpdateProgresLoop(CancellationTokenSource cts)
+        {
+            var spinnerIndex = 0;
+            var spinnerChars = new[] { '|', '/', '-', '\\' };
+
+            void del()
+            {
+                progressBar1.PerformStep();
+                var spinner = spinnerChars[spinnerIndex];
+                spinnerIndex = (spinnerIndex + 1) % spinnerChars.Length;
+                var font = new Font("Consolas", 12, FontStyle.Bold);
+                var pt = new PointF(progressBar1.Width / 2 - 20, progressBar1.Height / 2 - 10);
+                progressBar1.Value = 100;
+                BarGraphics.DrawString($"{spinner} Loading...", font, Brushes.White, pt);
+            }
+
+            while (true)
+            {
+                if (cts.Token.IsCancellationRequested)
+                {
+                    Invoke(progressBar1.PerformStep);
+                    return;
+                }
+
+                Invoke(del);
+                Thread.Sleep(500);
+            }
         }
         #endregion
     }
