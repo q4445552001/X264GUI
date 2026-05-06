@@ -53,15 +53,18 @@
             toolStripSeparator1 = new ToolStripSeparator();
             clearToolStripMenuItem = new ToolStripMenuItem();
             dbToolStripMenuItem = new ToolStripMenuItem();
+            dbLoadToolStripMenuItem = new ToolStripMenuItem();
             dbSaveToolStripMenuItem = new ToolStripMenuItem();
             dbClearToolStripMenuItem = new ToolStripMenuItem();
             ViewMenuItem = new ToolStripMenuItem();
             logViewToolStripMenuItem = new ToolStripMenuItem();
+            toolStripSeparator2 = new ToolStripSeparator();
             logViewClearToolStripMenuItem = new ToolStripMenuItem();
             settingToolStripMenuItem = new ToolStripMenuItem();
             AutoTrimToolStripMenuItem = new ToolStripMenuItem();
             addBtn = new Button();
             diffBtn = new Button();
+            toolStripSeparator3 = new ToolStripSeparator();
             ((System.ComponentModel.ISupportInitialize)bitrateNumeric).BeginInit();
             statusStrip1.SuspendLayout();
             menuStrip1.SuspendLayout();
@@ -281,26 +284,35 @@
             // 
             // dbToolStripMenuItem
             // 
-            dbToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { dbSaveToolStripMenuItem, dbClearToolStripMenuItem });
+            dbToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { dbLoadToolStripMenuItem, dbSaveToolStripMenuItem, toolStripSeparator3, dbClearToolStripMenuItem });
             dbToolStripMenuItem.Name = "dbToolStripMenuItem";
             dbToolStripMenuItem.Size = new Size(55, 20);
             dbToolStripMenuItem.Text = "儲存體";
+            // 
+            // dbLoadToolStripMenuItem
+            // 
+            dbLoadToolStripMenuItem.Name = "dbLoadToolStripMenuItem";
+            dbLoadToolStripMenuItem.Size = new Size(122, 22);
+            dbLoadToolStripMenuItem.Text = "讀取存檔";
+            dbLoadToolStripMenuItem.Click += dbLoadToolStripMenuItem_Click;
             // 
             // dbSaveToolStripMenuItem
             // 
             dbSaveToolStripMenuItem.Name = "dbSaveToolStripMenuItem";
             dbSaveToolStripMenuItem.Size = new Size(122, 22);
-            dbSaveToolStripMenuItem.Text = "儲存列表";
+            dbSaveToolStripMenuItem.Text = "存檔";
+            dbSaveToolStripMenuItem.Click += dbSaveToolStripMenuItem_Click;
             // 
             // dbClearToolStripMenuItem
             // 
             dbClearToolStripMenuItem.Name = "dbClearToolStripMenuItem";
             dbClearToolStripMenuItem.Size = new Size(122, 22);
-            dbClearToolStripMenuItem.Text = "清除列表";
+            dbClearToolStripMenuItem.Text = "清除存檔";
+            dbClearToolStripMenuItem.Click += dbClearToolStripMenuItem_Click;
             // 
             // ViewMenuItem
             // 
-            ViewMenuItem.DropDownItems.AddRange(new ToolStripItem[] { logViewToolStripMenuItem, logViewClearToolStripMenuItem });
+            ViewMenuItem.DropDownItems.AddRange(new ToolStripItem[] { logViewToolStripMenuItem, toolStripSeparator2, logViewClearToolStripMenuItem });
             ViewMenuItem.Name = "ViewMenuItem";
             ViewMenuItem.Size = new Size(43, 20);
             ViewMenuItem.Text = "檢視";
@@ -308,14 +320,19 @@
             // logViewToolStripMenuItem
             // 
             logViewToolStripMenuItem.Name = "logViewToolStripMenuItem";
-            logViewToolStripMenuItem.Size = new Size(180, 22);
+            logViewToolStripMenuItem.Size = new Size(150, 22);
             logViewToolStripMenuItem.Text = "LogView";
             logViewToolStripMenuItem.Click += logViewToolStripMenuItem_Click;
+            // 
+            // toolStripSeparator2
+            // 
+            toolStripSeparator2.Name = "toolStripSeparator2";
+            toolStripSeparator2.Size = new Size(147, 6);
             // 
             // logViewClearToolStripMenuItem
             // 
             logViewClearToolStripMenuItem.Name = "logViewClearToolStripMenuItem";
-            logViewClearToolStripMenuItem.Size = new Size(180, 22);
+            logViewClearToolStripMenuItem.Size = new Size(150, 22);
             logViewClearToolStripMenuItem.Text = "LogView 清除";
             logViewClearToolStripMenuItem.Click += logViewClearToolStripMenuItem_Click;
             // 
@@ -352,6 +369,11 @@
             diffBtn.Text = "-";
             diffBtn.UseVisualStyleBackColor = true;
             diffBtn.Click += diffBtn_Click;
+            // 
+            // toolStripSeparator3
+            // 
+            toolStripSeparator3.Name = "toolStripSeparator3";
+            toolStripSeparator3.Size = new Size(119, 6);
             // 
             // Form1
             // 
@@ -428,5 +450,8 @@
         private ToolStripMenuItem settingToolStripMenuItem;
         private ToolStripMenuItem AutoTrimToolStripMenuItem;
         private ToolStripMenuItem logViewClearToolStripMenuItem;
+        private ToolStripSeparator toolStripSeparator2;
+        private ToolStripMenuItem dbLoadToolStripMenuItem;
+        private ToolStripSeparator toolStripSeparator3;
     }
 }

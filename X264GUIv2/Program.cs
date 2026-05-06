@@ -2,7 +2,6 @@ using System.Text;
 
 namespace X264GUIv2
 {
-    //TODO: 新增SQL LITE 儲存體
     //TODO: trim 還有問題
     //TODO: 路徑語系錯誤
 

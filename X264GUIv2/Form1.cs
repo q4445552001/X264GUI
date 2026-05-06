@@ -100,15 +100,13 @@ namespace X264GUIv2
                     sw1.Start();
 
                     runBtn.Enabled = false;
-                    addToolStripMenuItem.Enabled = false;
                     addBtn.Enabled = false;
-                    clearToolStripMenuItem.Enabled = false;
-                    diffToolStripMenuItem.Enabled = false;
                     diffBtn.Enabled = false;
                     bitrateCBox.Enabled = false;
                     fpsCBox.Enabled = false;
                     resolutionCBox.Enabled = false;
                     bitrateNumeric.Enabled = false;
+                    menuStrip1.Enabled = false;
 
                     Stopwatch sw2 = new();
                     for (int i = 0; i < videoFunc.ffprobeData.Count; i++)
@@ -135,15 +133,13 @@ namespace X264GUIv2
 
                     stopBtn.Enabled = false;
                     runBtn.Enabled = true;
-                    addToolStripMenuItem.Enabled = true;
                     addBtn.Enabled = true;
-                    clearToolStripMenuItem.Enabled = true;
-                    diffToolStripMenuItem.Enabled = true;
                     diffBtn.Enabled = true;
                     bitrateCBox.Enabled = true;
                     fpsCBox.Enabled = true;
                     resolutionCBox.Enabled = true;
                     bitrateNumeric.Enabled = true;
+                    menuStrip1.Enabled = true;
                     Cts.Cancel();
 
                     sw1.Stop();
@@ -178,15 +174,13 @@ namespace X264GUIv2
                 VideoFunc.Delete(videoFunc.ffprobeData[idx2]);
                 stopBtn.Enabled = false;
                 runBtn.Enabled = true;
-                addToolStripMenuItem.Enabled = true;
                 addBtn.Enabled = true;
-                clearToolStripMenuItem.Enabled = true;
-                diffToolStripMenuItem.Enabled = true;
                 diffBtn.Enabled = true;
                 bitrateCBox.Enabled = true;
                 fpsCBox.Enabled = true;
                 resolutionCBox.Enabled = true;
                 bitrateNumeric.Enabled = true;
+                menuStrip1.Enabled = true;
                 OtherControlFunc.ShowError("已強制停止");
             }
         }
@@ -397,6 +391,80 @@ namespace X264GUIv2
             catch (Exception ex)
             {
                 OtherControlFunc.WriteLog(ex.Message);
+            }
+        }
+
+        private void dbLoadToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (!(MessageBox.Show("確定讀取?", "提示", MessageBoxButtons.YesNo) == DialogResult.Yes))
+                    return;
+
+                using var sql = new sqlLiteFunc();
+                videoFunc.ffprobeData = sql.SelectTable();
+                if (videoFunc.ffprobeData.Count == 0)
+                {
+                    OtherControlFunc.ShowError("無存檔");
+                    return;
+                }
+
+                foreach (FfprobeOutput ffprobeOutput in videoFunc.ffprobeData)
+                    listView1.Items.Add(VideoFunc.DataViewObject(ffprobeOutput));
+            }
+            catch (Exception ex)
+            {
+                OtherControlFunc.WriteLog(ex.Message);
+                OtherControlFunc.ShowError(ex.Message);
+            }
+        }
+
+        private void dbSaveToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (videoFunc.ffprobeData.Count == 0)
+                {
+                    OtherControlFunc.ShowError("無可儲存資料");
+                    return;
+                }
+
+                if (!(MessageBox.Show("確定儲存?", "提示", MessageBoxButtons.YesNo) == DialogResult.Yes))
+                    return;
+
+                for (int i = 0; i < videoFunc.ffprobeData.Count; i++)
+                {
+                    int idx = listView1.Items.Cast<ListViewItem>().ToList().FindIndex(x => (Guid?)x.Tag == videoFunc.ffprobeData[i].Guid);
+                    videoFunc.ffprobeData[i].index = idx;
+                }
+
+                using var sql = new sqlLiteFunc();
+                sql.Insert(videoFunc.ffprobeData);
+                MessageBox.Show("儲存成功");
+            }
+            catch (Exception ex)
+            {
+                OtherControlFunc.WriteLog(ex.Message);
+                OtherControlFunc.ShowError(ex.Message);
+            }
+        }
+
+        private void dbClearToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (!(MessageBox.Show("確定清除?", "提示", MessageBoxButtons.YesNo) == DialogResult.Yes))
+                    return;
+
+                using var sql = new sqlLiteFunc();
+                sql.DropTable();
+
+                clearToolStripMenuItem_Click(sender, e);
+            }
+            catch (Exception ex)
+            {
+                OtherControlFunc.WriteLog(ex.Message);
+                OtherControlFunc.ShowError(ex.Message);
             }
         }
         #endregion
@@ -635,8 +703,7 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
         /// </summary>
         private FfprobeOutput audioProcess(FfprobeOutput ffprobeOutput, int idx, string path, Stopwatch sw1, Stopwatch sw2)
         {
-            ffprobeOutput.AudioTrim = AutoTrimToolStripMenuItem.Checked;
-            if (ffprobeOutput.AudioTrim)
+            if (AutoTrimToolStripMenuItem.Checked)
             {
                 if (Cts == null || Cts.Token.IsCancellationRequested)
                     return ffprobeOutput;

@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Collections.Concurrent;
+using System.Text.Json;
 using X264GUIv2.Enums;
 using X264GUIv2.Models;
 
@@ -22,7 +23,7 @@ namespace X264GUIv2
                     index = idx,
                 })];
 
-                List<FfprobeOutput> _ffprobe = [];
+                ConcurrentBag<FfprobeOutput> _ffprobe = [];
                 Parallel.ForEach(loadFiles,
                     () => new HashSet<object>(), // 每個 thread 一份
                     (file, state, localVisited) =>
@@ -33,19 +34,18 @@ namespace X264GUIv2
                     _ => { }
                 );
 
-                _ffprobe = [.. _ffprobe.OrderBy(x => x.index)];
-
-                for (int i = 0; i < _ffprobe.Count; i++)
+                List<FfprobeOutput> data = [.. _ffprobe.OrderBy(x => x.index).ToList()];
+                for (int i = 0; i < data.Count; i++)
                 {
-                    _ffprobe[i] = bitRateFunc(_ffprobe[i]);
-                    _ffprobe[i] = bitRateFunc(_ffprobe[i]);
-                    _ffprobe[i] = fpsFunc(_ffprobe[i]);
-                    _ffprobe[i] = resolutionFunc(_ffprobe[i]);
-                    _ffprobe[i] = bitRateNumericFunc(_ffprobe[i]);
-                    form.listView1.Items.Add(DataViewObject(_ffprobe[i]));
+                    data[i] = bitRateFunc(data[i]);
+                    data[i] = bitRateFunc(data[i]);
+                    data[i] = fpsFunc(data[i]);
+                    data[i] = resolutionFunc(data[i]);
+                    data[i] = bitRateNumericFunc(data[i]);
+                    form.listView1.Items.Add(DataViewObject(data[i]));
                 }
 
-                ffprobeData.AddRange(_ffprobe);
+                ffprobeData.AddRange(data);
             }
             catch (IndexOutOfRangeException print)
             {

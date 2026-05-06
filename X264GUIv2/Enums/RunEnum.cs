@@ -2,7 +2,7 @@
 
 namespace X264GUIv2.Enums
 {
-    internal enum RunEnum
+    public enum RunEnum
     {
         [Display(Name = "初始化")]
         Init,

@@ -1,6 +1,6 @@
 ﻿namespace X264GUIv2.Enums
 {
-    internal enum ResolutionEnum
+    public enum ResolutionEnum
     {
         Auto = 0,
         VeryLow = 360,
