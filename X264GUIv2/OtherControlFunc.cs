@@ -67,5 +67,26 @@ namespace X264GUIv2
             TimeSpan Timemint = TimeSpan.FromSeconds(sw.Elapsed.TotalSeconds);
             return string.Format("{0:D2}:{1:D2}:{2:D2}", Timemint.Hours, Timemint.Minutes, Timemint.Seconds);
         }
+
+        /// <summary>
+        /// 寫入log
+        /// </summary>
+        public static void WriteLog(string Str, Action<string>? action = null)
+        {
+            try
+            {
+                var str = $"[{DateTime.Now:yyyy/MM/dd HH:mm:ss:fff}] {Str}";
+
+#if DEBUG
+                Debug.WriteLine(str);
+#endif
+                action?.Invoke(str);
+
+                using StreamWriter sw = new($"{AppDomain.CurrentDomain.BaseDirectory}\\{Assembly.GetExecutingAssembly().EntryPoint?.DeclaringType?.Namespace}_log.txt", true);
+                sw.WriteLine(str);
+                sw.Close();
+            }
+            catch { }
+        }
     }
 }

@@ -37,6 +37,7 @@
             LogBox.Multiline = true;
             LogBox.Name = "LogBox";
             LogBox.ReadOnly = true;
+            LogBox.ScrollBars = ScrollBars.Vertical;
             LogBox.Size = new Size(489, 345);
             LogBox.TabIndex = 0;
             // 
@@ -47,7 +48,7 @@
             ClientSize = new Size(513, 369);
             Controls.Add(LogBox);
             Name = "Form2";
-            Text = "Form2";
+            Text = "Log";
             FormClosing += Form2_FormClosing;
             ResumeLayout(false);
             PerformLayout();

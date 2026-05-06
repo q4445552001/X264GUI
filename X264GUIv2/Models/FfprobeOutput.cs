@@ -16,6 +16,7 @@ namespace X264GUIv2.Models
         public string OutFile => $@"{Path.GetDirectoryName(InFile)}\{Path.GetFileNameWithoutExtension(InFile)}-0.mp4";
         public int index { get; set; } = 0;
         public RunEnum run { get; set; } = RunEnum.Init;
+        public bool AudioTrim { get; set; } = false;
         public string SubtitlesFile
         {
             get

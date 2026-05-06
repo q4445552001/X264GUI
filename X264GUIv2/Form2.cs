@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Windows.Forms;
 
 namespace X264GUIv2
 {
@@ -10,7 +11,7 @@ namespace X264GUIv2
         }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public string show
+        public string appendText
         {
             set
             {
@@ -23,6 +24,11 @@ namespace X264GUIv2
         {
             e.Cancel = true;
             Hide();
+        }
+
+        public void clear()
+        {
+            LogBox.Clear();
         }
     }
 }

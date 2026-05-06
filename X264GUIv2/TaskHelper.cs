@@ -64,7 +64,10 @@ namespace X264GUIv2
             if (!File.Exists(FileName ?? ""))
                 throw new Exception($"{FileName} 無效路徑");
 
-            string argument = ArgumentList.Count > 0 ? string.Join(" ", ArgumentList).Replace("^", "").Replace("\r\n", " ") : "";
+            string argument = ArgumentList.Count > 0 ? string.Join(" ", ArgumentList).Replace("\r\n", " ") : "";
+#if DEBUG
+            Debug.WriteLine(argument);
+#endif
 
             var p = new Process()
             {
@@ -89,7 +92,9 @@ namespace X264GUIv2
             {
                 if (!string.IsNullOrEmpty(e.Data))
                 {
+#if DEBUG
                     Debug.WriteLine(e.Data);
+#endif
                     ActionOut?.Invoke(e.Data);
                 }
             };
@@ -98,7 +103,9 @@ namespace X264GUIv2
             {
                 if (!string.IsNullOrEmpty(e.Data))
                 {
+#if DEBUG
                     Debug.WriteLine(e.Data);
+#endif
                     ActionErr?.Invoke(e.Data);
                 }
             };

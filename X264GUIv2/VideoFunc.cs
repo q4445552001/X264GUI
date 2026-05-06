@@ -49,15 +49,15 @@ namespace X264GUIv2
             }
             catch (IndexOutOfRangeException print)
             {
-                OtherControlFunc.ShowError("格式錯誤\n" + print);
+                OtherControlFunc.WriteLog($"格式錯誤: {print}");
             }
             catch (NullReferenceException print)
             {
-                OtherControlFunc.ShowError("格式錯誤\n" + print);
+                OtherControlFunc.WriteLog($"格式錯誤: {print}");
             }
             catch (Exception ex)
             {
-                OtherControlFunc.ShowError("格式錯誤\n" + ex.Message);
+                OtherControlFunc.WriteLog(ex.Message);
             }
 
             form.progressText.Text = $"0/{form.listView1.Items.Count}";
@@ -78,7 +78,12 @@ namespace X264GUIv2
             {
                 Cts = new(),
                 FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}\bin\ffmpeg\ffprobe.exe",
-                ArgumentList = { $@"-of json -show_streams -show_format -v quiet ""{input.File}""" },
+                ArgumentList = {
+                    $@"-of json",
+                    $@"-show_streams",
+                    $@"-show_format",
+                    $@"-v quiet ""{input.File}"""
+                },
                 IsWait = true,
                 ActionOut = sr => standardOutput += sr
             };
@@ -255,54 +260,66 @@ namespace X264GUIv2
             try
             {
                 Thread.Sleep(1000);
-                File.Delete($@"{ffprobeOutput.InFileName}.ffindex");
-                File.Delete(@"./x2642pass.stats.temp");
-                File.Delete(@"./x2642pass.stats.mbtree.temp");
-                File.Delete(@"./x2642pass.stats");
-                File.Delete(@"./x2642pass.stats.mbtree");
-                File.Delete(@$"./{ffprobeOutput.avsTempFile}.avs");
-                File.Delete(@$"./{ffprobeOutput.avsTempFile}.ass");
-                File.Delete(@$"./{ffprobeOutput.avsTempFile}.264");
-                File.Delete(@$"./{ffprobeOutput.avsTempFile}.aac");
-                File.Delete(@$"./{ffprobeOutput.avsTempFile}.mp4");
+                File.Delete($"{ffprobeOutput.InFile}.ffindex");
+                File.Delete(@$"{Path.GetDirectoryName(ffprobeOutput.InFile)}\/x2642pass.stats.temp");
+                File.Delete(@$"{Path.GetDirectoryName(ffprobeOutput.InFile)}\/x2642pass.stats.mbtree.temp");
+                File.Delete(@$"{Path.GetDirectoryName(ffprobeOutput.InFile)}\/x2642pass.stats");
+                File.Delete(@$"{Path.GetDirectoryName(ffprobeOutput.InFile)}\/x2642pass.stats.mbtree");
+                File.Delete(@$"{Path.GetDirectoryName(ffprobeOutput.InFile)}\{ffprobeOutput.avsTempFile}.avs");
+                File.Delete(@$"{Path.GetDirectoryName(ffprobeOutput.InFile)}\{ffprobeOutput.avsTempFile}.ass");
+                File.Delete(@$"{Path.GetDirectoryName(ffprobeOutput.InFile)}\{ffprobeOutput.avsTempFile}.264");
+                File.Delete(@$"{Path.GetDirectoryName(ffprobeOutput.InFile)}\{ffprobeOutput.avsTempFile}.aac");
+                File.Delete(@$"{Path.GetDirectoryName(ffprobeOutput.InFile)}\{ffprobeOutput.avsTempFile}.mp4");
             }
             catch
             {
             }
         }
 
-        public string Xonepass(FfprobeOutput ffprobeOutput)
+        public string[] Xonepass(FfprobeOutput ffprobeOutput)
         {
+            List<string> arr = [];
+
             string threads = form.coreCBox.SelectedItem?.ToString() ?? "0";
 
-            string str = $@"^
---x26x-binary ""{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\x264.exe"" ^
---bframes 0 --bitrate {ffprobeOutput.NewDetail.bitrate / 1000} --pass 1 --threads {threads} --stats ""x2642pass.stats"" ^
--o NUL ""{ffprobeOutput.avsTempFile}.avs""
-";
-
-            return str;
+            arr.Add($@"--x26x-binary ""{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\x264.exe""");
+            arr.Add($@"--bframes 0");
+            arr.Add($@"--bitrate {ffprobeOutput.NewDetail.bitrate / 1000}");
+            arr.Add($@"--pass 1");
+            arr.Add($@"--threads {threads}");
+            arr.Add($@"--stats ""x2642pass.stats""");
+            arr.Add($@"-o NUL ""{ffprobeOutput.avsTempFile}.avs""");
+            return [.. arr];
         }
 
-        public string Xtwopass(FfprobeOutput ffprobeOutput)
+        public string[] Xtwopass(FfprobeOutput ffprobeOutput)
         {
-            string threads = form.coreCBox.SelectedItem?.ToString() ?? "0";
-            string str;
-            if (ffprobeOutput.NewDetail.resolutionW == null || ffprobeOutput.NewDetail.resolutionH == null)
-                str = $@"^
---x26x-binary ""{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\x264.exe"" ^
---bframes 0 --bitrate {ffprobeOutput.NewDetail.bitrate / 1000} --pass 2 --threads {threads} --stats ""x2642pass.stats"" ^
--o ""{ffprobeOutput.avsTempFile}.264"" ""{ffprobeOutput.avsTempFile}.avs""
-";
-            else
-                str = $@"^
---x26x-binary ""{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\x264.exe"" ^
---bframes 0 --bitrate {ffprobeOutput.NewDetail.bitrate / 1000} --pass 2 --threads {threads} --stats ""x2642pass.stats"" ^
---vf resize:width={ffprobeOutput.NewDetail.resolutionW},height={ffprobeOutput.NewDetail.resolutionH},sar=1:1 ^
--o ""{ffprobeOutput.avsTempFile}.264"" ""{ffprobeOutput.avsTempFile}.avs""
-";
+            List<string> arr = [];
 
-            return str;
+            string threads = form.coreCBox.SelectedItem?.ToString() ?? "0";
+            if (ffprobeOutput.NewDetail.resolutionW == null || ffprobeOutput.NewDetail.resolutionH == null)
+            {
+                arr.Add($@"--x26x-binary ""{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\x264.exe""");
+                arr.Add($@"--bframes 0");
+                arr.Add($@"--bitrate {ffprobeOutput.NewDetail.bitrate / 1000}");
+                arr.Add($@"--pass 2");
+                arr.Add($@"--threads {threads}");
+                arr.Add($@"--stats ""x2642pass.stats""");
+                arr.Add($@"-o ""{ffprobeOutput.avsTempFile}.264"" ""{ffprobeOutput.avsTempFile}.avs""");
+            }
+            else
+            {
+                arr.Add($@"--x26x-binary ""{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\x264.exe""");
+                arr.Add($@"--bframes 0");
+                arr.Add($@"--bitrate {ffprobeOutput.NewDetail.bitrate / 1000}");
+                arr.Add($@"--pass 2");
+                arr.Add($@"--threads {threads}");
+                arr.Add($@"--stats ""x2642pass.stats""");
+                arr.Add($@"--vf resize:width={ffprobeOutput.NewDetail.resolutionW},height={ffprobeOutput.NewDetail.resolutionH},sar=1:1");
+                arr.Add($@"-o ""{ffprobeOutput.avsTempFile}.264"" ""{ffprobeOutput.avsTempFile}.avs""");
+            }
+
+            return [.. arr];
         }
     }
 }

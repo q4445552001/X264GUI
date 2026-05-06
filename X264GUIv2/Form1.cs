@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using System.Windows.Forms;
 using System.Windows.Forms.VisualStyles;
 using X264GUIv2.Enums;
 using X264GUIv2.Models;
@@ -12,7 +13,7 @@ namespace X264GUIv2
         private readonly VideoFunc videoFunc;
         private CancellationTokenSource? Cts { get; set; }
         public int bitRateDefault = 1000000; //初始化彼特率
-        private readonly Form2 f2;
+        public readonly Form2 f2;
 
         private readonly float weightA = 0.47f;
         private readonly float weightB = 0.47f;
@@ -223,7 +224,7 @@ namespace X264GUIv2
             }
             catch (Exception ex)
             {
-                OtherControlFunc.ShowError(ex.Message);
+                OtherControlFunc.WriteLog(ex.Message);
             }
         }
 
@@ -253,7 +254,7 @@ namespace X264GUIv2
             }
             catch (Exception ex)
             {
-                OtherControlFunc.ShowError(ex.Message);
+                OtherControlFunc.WriteLog(ex.Message);
             }
         }
 
@@ -272,7 +273,7 @@ namespace X264GUIv2
             }
             catch (Exception ex)
             {
-                OtherControlFunc.ShowError(ex.Message);
+                OtherControlFunc.WriteLog(ex.Message);
             }
         }
 
@@ -284,10 +285,21 @@ namespace X264GUIv2
             }
             catch (Exception ex)
             {
-                OtherControlFunc.ShowError(ex.Message);
+                OtherControlFunc.WriteLog(ex.Message);
             }
         }
 
+        private void logViewClearToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                f2.clear();
+            }
+            catch (Exception ex)
+            {
+                OtherControlFunc.WriteLog(ex.Message);
+            }
+        }
         #endregion
 
         #region listView
@@ -315,7 +327,7 @@ namespace X264GUIv2
             }
             catch (Exception ex)
             {
-                OtherControlFunc.ShowError(ex.Message);
+                OtherControlFunc.WriteLog(ex.Message);
             }
         }
 
@@ -334,7 +346,7 @@ namespace X264GUIv2
             }
             catch (Exception ex)
             {
-                OtherControlFunc.ShowError(ex.Message);
+                OtherControlFunc.WriteLog(ex.Message);
             }
         }
 
@@ -350,7 +362,7 @@ namespace X264GUIv2
             }
             catch (Exception ex)
             {
-                OtherControlFunc.ShowError(ex.Message);
+                OtherControlFunc.WriteLog(ex.Message);
             }
         }
 
@@ -384,7 +396,7 @@ namespace X264GUIv2
             }
             catch (Exception ex)
             {
-                OtherControlFunc.ShowError(ex.Message);
+                OtherControlFunc.WriteLog(ex.Message);
             }
         }
         #endregion
@@ -401,7 +413,7 @@ namespace X264GUIv2
             }
             catch (Exception ex)
             {
-                OtherControlFunc.ShowError(ex.Message);
+                OtherControlFunc.WriteLog(ex.Message);
             }
         }
 
@@ -414,7 +426,7 @@ namespace X264GUIv2
             }
             catch (Exception ex)
             {
-                OtherControlFunc.ShowError(ex.Message);
+                OtherControlFunc.WriteLog(ex.Message);
             }
         }
 
@@ -427,7 +439,7 @@ namespace X264GUIv2
             }
             catch (Exception ex)
             {
-                OtherControlFunc.ShowError(ex.Message);
+                OtherControlFunc.WriteLog(ex.Message);
             }
         }
 
@@ -454,8 +466,14 @@ namespace X264GUIv2
             }
             catch (Exception ex)
             {
-                OtherControlFunc.ShowError(ex.Message);
+                OtherControlFunc.WriteLog(ex.Message);
             }
+        }
+
+        private void settingToolStripMenuItem_DropDownClosing(object sender, ToolStripDropDownClosingEventArgs e)
+        {
+            if (e.CloseReason == ToolStripDropDownCloseReason.ItemClicked)
+                e.Cancel = true;
         }
         #endregion
 
@@ -613,7 +631,44 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
         /// </summary>
         private FfprobeOutput audioProcess(FfprobeOutput ffprobeOutput, int idx, string path, Stopwatch sw1)
         {
-            if (Path.GetExtension(ffprobeOutput.InFile).Equals($".{VideoExt.mkv}", StringComparison.CurrentCultureIgnoreCase))
+            ffprobeOutput.AudioTrim = AutoTrimToolStripMenuItem.Checked;
+            if (ffprobeOutput.AudioTrim)
+            {
+                if (Cts == null || Cts.Token.IsCancellationRequested)
+                    return ffprobeOutput;
+
+                listView1.Items[idx].SubItems[8].Text = RunEnum.AudioTrim.GetDisplayName();
+                ffprobeOutput.run = RunEnum.AudioTrim;
+                int exitCode = new TaskHelper
+                {
+                    Cts = Cts,
+                    RunPath = path,
+                    FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\ffmpeg\ffmpeg.exe",
+                    ArgumentList = {
+                        $@"-i ""{Path.GetDirectoryName(ffprobeOutput.InFile)}\{ffprobeOutput.InFileName}""",
+                        $@"-ar 48000",
+                        $@"-ac 2",
+                        $@"-af ""aresample=48000,asetpts=PTS-STARTPTS""",
+                        $@"-c:a aac",
+                        $@"-q:a 1 ""{Path.GetDirectoryName(ffprobeOutput.InFile)}\{ffprobeOutput.avsTempFile}.aac""",
+                        $@"-progress pipe:1",
+                        $@"-nostats",
+                        $@"-loglevel error",
+                    },
+                    ActionErr = sr =>
+                    {
+                        f2.appendText = sr;
+                    },
+                    ActionOut = sr =>
+                    {
+                        f2.appendText = sr;
+                    },
+                }.RunTask();
+
+                if (exitCode == 0)
+                    ffprobeOutput.isAcc = true;
+            }
+            else if (Path.GetExtension(ffprobeOutput.InFile).Equals($".{VideoExt.mkv}", StringComparison.CurrentCultureIgnoreCase))
             {
                 if (Cts == null || Cts.Token.IsCancellationRequested)
                     return ffprobeOutput;
@@ -625,8 +680,9 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
                     RunPath = path,
                     FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\mkvextract.exe",
                     ArgumentList = {
-                                    $@"tracks ""{ffprobeOutput.InFile}"" 1:""{Path.GetDirectoryName(ffprobeOutput.InFile)}""{ffprobeOutput.avsTempFile}.aac""",
-                                },
+                        $@"tracks ""{ffprobeOutput.InFile}""",
+                        $@"1:""{Path.GetDirectoryName(ffprobeOutput.InFile)}""{ffprobeOutput.avsTempFile}.aac""",
+                    },
                 }.RunTask();
 
                 if (!ffprobeOutput.isAcc)
@@ -641,8 +697,10 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
                         RunPath = path,
                         FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\eac3to\eac3to.exe",
                         ArgumentList = {
-                                        @"-log=NUL """ + Path.GetDirectoryName(ffprobeOutput.InFile) + @$"\{ffprobeOutput.avsTempFile}.aac"" """ + Path.GetDirectoryName(ffprobeOutput.InFile) + @$"\{ffprobeOutput.avsTempFile}.mp4""",
-                                    },
+                            $@"-log=NUL",
+                            $@"{Path.GetDirectoryName(ffprobeOutput.InFile)}\{ffprobeOutput.avsTempFile}.aac""",
+                            $@"""{Path.GetDirectoryName(ffprobeOutput.InFile)}\{ffprobeOutput.avsTempFile}.mp4""",
+                         },
                     }.RunTask();
                 }
             }
@@ -669,10 +727,11 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
                 RunPath = path,
                 AutoCloseDialogBox = "Warning",
                 FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\avs4x26x.exe",
-                ArgumentList = { videoFunc.Xonepass(ffprobeOutput) },
+                ArgumentList = videoFunc.Xonepass(ffprobeOutput),
                 ActionErr = sr =>
                 {
-                    f2.show = sr;
+                    OtherControlFunc.WriteLog(sr);
+                    f2.appendText = sr;
                     listView1.Items[idx].SubItems[9].Text = OtherControlFunc.timeConv(sw2);
                     timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
                     if (sr.IndexOf("frames,") != -1 && sr.IndexOf('[') != -1)
@@ -714,10 +773,10 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
                 RunPath = path,
                 AutoCloseDialogBox = "Warning",
                 FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\avs4x26x.exe",
-                ArgumentList = { videoFunc.Xtwopass(ffprobeOutput) },
+                ArgumentList = videoFunc.Xtwopass(ffprobeOutput),
                 ActionErr = sr =>
                 {
-                    f2.show = sr;
+                    f2.appendText = sr;
                     listView1.Items[idx].SubItems[9].Text = OtherControlFunc.timeConv(sw2);
                     timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
                     if (sr.IndexOf("frames,") != -1 && sr.IndexOf('[') != -1)
@@ -758,12 +817,13 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
                 RunPath = path,
                 FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\mp4box.exe",
                 ArgumentList = {
-                     $@"-add ""{ffprobeOutput.avsTempFile}.264"" ^
-                     -add ""{(Path.GetExtension(ffprobeOutput.InFile).Equals(VideoExt.mkv, StringComparison.CurrentCultureIgnoreCase) ? (!ffprobeOutput.isAcc ? $"{ffprobeOutput.avsTempFile}.mp4" : $"{ffprobeOutput.avsTempFile}.aac") : ffprobeOutput.InFile)}""#audio ^
-                     ""{ffprobeOutput.OutFile}""" },
+                    $@"-add ""{ffprobeOutput.avsTempFile}.264""",
+                    $@"-add ""{(Path.GetExtension(ffprobeOutput.InFile).Equals(VideoExt.mkv, StringComparison.CurrentCultureIgnoreCase) ? (!ffprobeOutput.isAcc ? $"{ffprobeOutput.avsTempFile}.mp4" : $"{ffprobeOutput.avsTempFile}.aac") : ffprobeOutput.InFile)}""#audio",
+                    $@"""{ffprobeOutput.OutFile}"""
+                },
                 ActionErr = sr =>
                 {
-                    f2.show = sr;
+                    f2.appendText = sr;
                     timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
                     if (sr.IndexOf("Error") > -1)
                     {

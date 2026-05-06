@@ -7,11 +7,14 @@ namespace X264GUIv2.Enums
         [Display(Name = "初始化")]
         Init,
 
-        [Display(Name = "音效分離")]
+        [Display(Name = "音軌分離")]
         SoundSeparation,
 
-        [Display(Name = "音效處理")]
+        [Display(Name = "音軌處理")]
         SoundProcessing,
+
+        [Display(Name = "音軌修剪")]
+        AudioTrim,
 
         [Display(Name = "OnePass")]
         OnePass,
