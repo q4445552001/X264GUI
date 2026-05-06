@@ -6,12 +6,7 @@ namespace X264GUIv2
 {
     public class TaskHelper
     {
-        [DllImport("user32.dll")]
-        static extern IntPtr FindWindow(string? lpClassName, string lpWindowName);
-
-        [DllImport("user32.dll")]
-        static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
-        const uint WM_CLOSE = 0x0010;
+        public required CancellationTokenSource Cts { get; set; }
 
         /// <summary>
         /// 檔案名稱
@@ -36,7 +31,7 @@ namespace X264GUIv2
         /// <summary>
         /// 自動關閉錯誤視窗
         /// </summary>
-        public string AutoDisabledDialogBox { get; set; } = string.Empty;
+        public string AutoCloseDialogBox { get; set; } = string.Empty;
 
         /// <summary>
         /// 輸出委派
@@ -48,14 +43,15 @@ namespace X264GUIv2
         /// </summary>
         public Action<string>? ActionErr { get; set; }
 
-        public required CancellationTokenSource Cts { get; set; }
-
         public ProcessWindowStyle WindowStyle { get; set; } = ProcessWindowStyle.Hidden;
+
+        private bool isClose { get; set; } = false;
+        public string isCloseMsg { get; private set; } = string.Empty;
 
         /// <summary>
         /// 執行程序
         /// </summary>
-        protected internal bool RunTask()
+        protected internal int RunTask()
         {
             if (!string.IsNullOrWhiteSpace(RunPath))
             {
@@ -111,19 +107,7 @@ namespace X264GUIv2
             p.BeginOutputReadLine();
             p.BeginErrorReadLine();
 
-            if (!string.IsNullOrWhiteSpace(AutoDisabledDialogBox))
-            {
-                Task.Run(() =>
-                {
-                    Thread.Sleep(1000);
-                    var hWnd = FindWindow(null, AutoDisabledDialogBox);
-                    if (hWnd != IntPtr.Zero)
-                    {
-                        SendMessage(hWnd, WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
-                        throw new Exception("dddd");
-                    }
-                });
-            }
+            closeDialogBox();
 
             if (IsWait)
                 p.WaitForExit();
@@ -132,15 +116,42 @@ namespace X264GUIv2
             {
                 if (!p.HasExited)
                 {
-                    if (Cts.Token.IsCancellationRequested)
+                    if (Cts.Token.IsCancellationRequested || isClose)
+                    {
                         p.Kill();
+                    }
                 }
             }
             while (!p.WaitForExit(1000));
 
             Environment.CurrentDirectory = Path.GetDirectoryName(Environment.ProcessPath) ?? throw new Exception("路徑失敗");
 
-            return p.ExitCode == 0;
+            return p.ExitCode;
+        }
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        static extern IntPtr FindWindow(string? lpClassName, string lpWindowName);
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+        const uint WM_CLOSE = 0x0010;
+
+        private void closeDialogBox()
+        {
+            if (!string.IsNullOrWhiteSpace(AutoCloseDialogBox))
+            {
+                Task.Run(() =>
+                {
+                    Thread.Sleep(1000);
+                    var hWnd = FindWindow(null, AutoCloseDialogBox);
+                    if (hWnd != IntPtr.Zero)
+                    {
+                        SendMessage(hWnd, WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
+                        isClose = true;
+                        isCloseMsg = $"檢查到 {AutoCloseDialogBox}，自動關閉";
+                    }
+                });
+            }
         }
     }
 }

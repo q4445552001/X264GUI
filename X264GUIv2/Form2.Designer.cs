@@ -48,6 +48,7 @@
             Controls.Add(LogBox);
             Name = "Form2";
             Text = "Form2";
+            FormClosing += Form2_FormClosing;
             ResumeLayout(false);
             PerformLayout();
         }

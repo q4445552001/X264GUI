@@ -220,7 +220,7 @@ namespace X264GUIv2
             if (!int.TryParse(text, out int v))
                 throw new Exception("請輸入數值");
 
-            int resolution = 0;
+            int resolution;
             if (Enum.TryParse(text, out ResolutionEnum resolutionEnum))
                 resolution = (int)resolutionEnum;
             else
@@ -250,7 +250,7 @@ namespace X264GUIv2
         /// <summary>
         /// 刪除檔案
         /// </summary>
-        public void Delete(FfprobeOutput ffprobeOutput)
+        public static void Delete(FfprobeOutput ffprobeOutput)
         {
             try
             {

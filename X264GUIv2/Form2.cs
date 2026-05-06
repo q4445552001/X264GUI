@@ -24,11 +24,5 @@ namespace X264GUIv2
             e.Cancel = true;
             Hide();
         }
-
-        private void richTextBox1_TextChanged(object sender, EventArgs e)
-        {
-            LogBox.SelectionStart = LogBox.TextLength;
-            LogBox.ScrollToCaret();
-        }
     }
 }

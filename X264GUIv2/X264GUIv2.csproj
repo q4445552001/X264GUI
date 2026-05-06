@@ -6,7 +6,7 @@
 		<Nullable>enable</Nullable>
 		<UseWindowsForms>true</UseWindowsForms>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<NoWarn>IDE1006</NoWarn>
+		<NoWarn>IDE1006;SYSLIB1054;SYSLIB1045;CA2249;</NoWarn>
 	</PropertyGroup>
 
 	<!--<ItemGroup>

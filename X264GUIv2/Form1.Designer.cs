@@ -44,6 +44,8 @@
             statusStrip1 = new StatusStrip();
             toolStripStatusLabel1 = new ToolStripStatusLabel();
             progressText = new ToolStripStatusLabel();
+            timeStripStatusLabel = new ToolStripStatusLabel();
+            timeStripStatus = new ToolStripStatusLabel();
             menuStrip1 = new MenuStrip();
             FileToolStripMenuItem = new ToolStripMenuItem();
             addToolStripMenuItem = new ToolStripMenuItem();
@@ -196,7 +198,7 @@
             // 
             // statusStrip1
             // 
-            statusStrip1.Items.AddRange(new ToolStripItem[] { toolStripStatusLabel1, progressText });
+            statusStrip1.Items.AddRange(new ToolStripItem[] { toolStripStatusLabel1, progressText, timeStripStatusLabel, timeStripStatus });
             statusStrip1.Location = new Point(0, 408);
             statusStrip1.Name = "statusStrip1";
             statusStrip1.Size = new Size(672, 22);
@@ -214,6 +216,20 @@
             progressText.Name = "progressText";
             progressText.Size = new Size(26, 17);
             progressText.Text = "0/0";
+            // 
+            // timeStripStatusLabel
+            // 
+            timeStripStatusLabel.Name = "timeStripStatusLabel";
+            timeStripStatusLabel.RightToLeft = RightToLeft.No;
+            timeStripStatusLabel.Size = new Size(70, 17);
+            timeStripStatusLabel.Text = "總消耗時間:";
+            // 
+            // timeStripStatus
+            // 
+            timeStripStatus.Name = "timeStripStatus";
+            timeStripStatus.RightToLeft = RightToLeft.No;
+            timeStripStatus.Size = new Size(55, 17);
+            timeStripStatus.Text = "00:00:00";
             // 
             // menuStrip1
             // 
@@ -358,5 +374,7 @@
         private ToolStripSeparator toolStripSeparator1;
         public Button addBtn;
         public Button diffBtn;
+        public ToolStripStatusLabel timeStripStatusLabel;
+        public ToolStripStatusLabel timeStripStatus;
     }
 }

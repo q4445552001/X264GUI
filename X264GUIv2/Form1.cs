@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms.VisualStyles;
 using X264GUIv2.Enums;
@@ -13,13 +12,19 @@ namespace X264GUIv2
         private readonly VideoFunc videoFunc;
         private CancellationTokenSource? Cts { get; set; }
         public int bitRateDefault = 1000000; //初始化彼特率
-        readonly Form2 f2 = new();
+        private readonly Form2 f2;
+
+        private readonly float weightA = 0.47f;
+        private readonly float weightB = 0.47f;
+        private readonly float weightC = 0.06f;
 
         #region 初始化
 
         public Form1()
         {
             InitializeComponent();
+            f2 = new();
+            BarGraphics = progressBar1.CreateGraphics();
 
             fpsCBox.Items.Add(new ComboboxItem("Auto", "Auto"));
             fpsCBox.Items.Add(new ComboboxItem("23.976", "24000/1001"));
@@ -63,7 +68,6 @@ namespace X264GUIv2
                 new() { Text = "路徑", Width = 300 },
             }]);
 
-            BarGraphics = progressBar1.CreateGraphics();
             videoFunc = new(this);
         }
 
@@ -82,22 +86,18 @@ namespace X264GUIv2
 
         #endregion
 
-        public void TaskAction(Action obj) => Invoke(obj);
-
         #region Button
 
         private void runBtn_Click(object sender, EventArgs e)
         {
-            float weightA = 0.48f;
-            float weightB = 0.48f;
-            float weightC = 0.04f;
-
-            Stopwatch sw = new();
             if (listView1.Items.Count != 0)
             {
                 Cts = new();
                 Task.Run(() =>
                 {
+                    Stopwatch sw1 = new();
+                    sw1.Start();
+
                     runBtn.Enabled = false;
                     addToolStripMenuItem.Enabled = false;
                     addBtn.Enabled = false;
@@ -109,224 +109,27 @@ namespace X264GUIv2
                     resolutionCBox.Enabled = false;
                     bitrateNumeric.Enabled = false;
 
-                    int listViewCount = listView1.Items.Count;
-                    foreach (FfprobeOutput ffprobeOutput in videoFunc.ffprobeData)
+                    Stopwatch sw2 = new();
+                    for (int i = 0; i < videoFunc.ffprobeData.Count; i++)
                     {
                         if (Cts.Token.IsCancellationRequested)
                             return;
 
-                        if (ffprobeOutput.run == RunEnum.Done)
-                            continue;
+                        sw2.Reset();
+                        sw2.Start();
 
-                        string? path = Path.GetDirectoryName(ffprobeOutput.InFile);
-                        if (string.IsNullOrWhiteSpace(path))
-                            throw new Exception($"無效路徑 {path}");
-
-                        Environment.CurrentDirectory = path;
-
-                        #region 初始化
-                        int idx = listView1.Items.Cast<ListViewItem>().ToList().FindIndex(x => (Guid?)x.Tag == ffprobeOutput.Guid);
-                        listView1.Items[idx].SubItems[8].ForeColor = Color.Black;
-                        listView1.Items[idx].SubItems[8].Text = RunEnum.Init.GetDisplayName();
-                        ffprobeOutput.run = RunEnum.Init;
-                        listView1.Items[idx].UseItemStyleForSubItems = false;
-                        progressText.Text = $"{idx + 1}/{listViewCount}";
-
-                        sw.Reset();
-                        sw.Start();
-
-                        stopBtn.Enabled = true;
-                        UpdateProgres(0, 100);
-
-                        double prodatabar = 0;
-                        string avs = "";
-
-                        if (string.IsNullOrWhiteSpace(ffprobeOutput.SubtitlesFile))
+                        try
                         {
-                            avs = $@"
-LoadPlugin(""{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\ffms2.dll"") 
-FFVideoSource(""{Path.GetFileName(ffprobeOutput.InFileName)}"", fpsnum={ffprobeOutput.NewDetail.fpsnum}, fpsden={ffprobeOutput.NewDetail.fpsden})
-#deinterlace #crop #resize #denoise";
+                            mainProcess(videoFunc.ffprobeData[i], sw1, sw2);
+                            if (videoFunc.ffprobeData[i].run == RunEnum.Stop)
+                                break;
                         }
-                        else
+                        catch
                         {
-                            avs = $@"
-LoadPlugin(""{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\ffms2.dll"") 
-FFVideoSource(""{Path.GetFileName(ffprobeOutput.InFileName)}"", fpsnum={ffprobeOutput.NewDetail.fpsnum}, fpsden={ffprobeOutput.NewDetail.fpsden})
-LoadPlugin(""{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\VSFilter.dll"")
-TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
-#deinterlace #crop #resize #denoise";
-                            File.Copy(ffprobeOutput.SubtitlesFile, $"{ffprobeOutput.avsTempFile}.ass", true);
+                            continue;
                         }
 
-                        string avsFile = @$".\{ffprobeOutput.avsTempFile}.avs";
-                        //if (!File.Exists(avsFile))
-                        File.WriteAllText(avsFile, avs);
-                        #endregion
-
-                        #region 音效處理
-                        if (Path.GetExtension(ffprobeOutput.InFile).ToLower() == $".{VideoExt.mkv}")
-                        {
-                            if (Cts.Token.IsCancellationRequested)
-                                return;
-                            listView1.Items[idx].SubItems[8].Text = RunEnum.SoundSeparation.GetDisplayName();
-                            ffprobeOutput.run = RunEnum.SoundSeparation;
-                            new TaskHelper
-                            {
-                                Cts = Cts,
-                                RunPath = path,
-                                FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\mkvextract.exe",
-                                ArgumentList = {
-                                    $@"tracks ""{ffprobeOutput.InFile}"" 1:""{Path.GetDirectoryName(ffprobeOutput.InFile)}""{ffprobeOutput.avsTempFile}.aac""",
-                                },
-                            }.RunTask();
-
-                            if (!ffprobeOutput.isAcc)
-                            {
-                                if (Cts.Token.IsCancellationRequested)
-                                    return;
-                                listView1.Items[idx].SubItems[8].Text = RunEnum.SoundProcessing.GetDisplayName();
-                                ffprobeOutput.run = RunEnum.SoundProcessing;
-                                new TaskHelper
-                                {
-                                    Cts = Cts,
-                                    RunPath = path,
-                                    FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\eac3to\eac3to.exe",
-                                    ArgumentList = {
-                                        @"-log=NUL """ + Path.GetDirectoryName(ffprobeOutput.InFile) + @$"\{ffprobeOutput.avsTempFile}.aac"" """ + Path.GetDirectoryName(ffprobeOutput.InFile) + @$"\{ffprobeOutput.avsTempFile}.mp4""",
-                                    },
-                                }.RunTask();
-                            }
-                        }
-                        #endregion
-
-                        #region OnePass
-                        if (Cts.Token.IsCancellationRequested)
-                            return;
-                        listView1.Items[idx].SubItems[8].Text = RunEnum.OnePass.GetDisplayName();
-                        ffprobeOutput.run = RunEnum.OnePass;
-                        double proA = 0;
-                        new TaskHelper
-                        {
-                            Cts = Cts,
-                            RunPath = path,
-                            AutoDisabledDialogBox = "Warning",
-                            FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\avs4x26x.exe",
-                            ArgumentList = { videoFunc.Xonepass(ffprobeOutput) },
-                            ActionErr = sr =>
-                            {
-                                f2.show = sr;
-                                TimeSpan Timemint = TimeSpan.FromSeconds(sw.Elapsed.TotalSeconds);
-                                listView1.Items[idx].SubItems[9].Text = string.Format("{0:D2}:{1:D2}:{2:D2}", Timemint.Hours, Timemint.Minutes, Timemint.Seconds);
-                                if (sr.IndexOf("frames,") != -1 && sr.IndexOf("[") != -1)
-                                {
-                                    double prodata1 = Math.Round(Convert.ToDouble(sr.Substring(sr.IndexOf("[") + 1, sr.LastIndexOf("%") - 1)), 2);
-                                    proA = Math.Round(prodata1 * weightA, 2);
-                                    listView1.Items[idx].SubItems[7].Text = $"{prodata1} %";
-                                    if (proA <= 100)
-                                        UpdateProgres((float)proA, 100);
-                                }
-
-                                if (sr.IndexOf("[error]") != -1)
-                                {
-                                    listView1.Items[idx].SubItems[8].Text = RunEnum.Error.GetDisplayName();
-                                    ffprobeOutput.run = RunEnum.Error;
-                                    listView1.Items[idx].SubItems[8].ForeColor = Color.Red;
-                                }
-                            }
-                        }.RunTask();
-                        prodatabar = 100 * weightA;
-                        if (ffprobeOutput.run == RunEnum.Error)
-                            continue;
-                        #endregion
-
-                        #region TwoPass
-                        if (Cts.Token.IsCancellationRequested)
-                            return;
-                        listView1.Items[idx].SubItems[8].Text = RunEnum.TwoPass.GetDisplayName();
-                        ffprobeOutput.run = RunEnum.TwoPass;
-                        double proB = 0;
-                        new TaskHelper
-                        {
-                            Cts = Cts,
-                            RunPath = path,
-                            AutoDisabledDialogBox = "Warning",
-                            FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\avs4x26x.exe",
-                            ArgumentList = { videoFunc.Xtwopass(ffprobeOutput) },
-                            ActionErr = sr =>
-                            {
-                                f2.show = sr;
-                                TimeSpan Timemint = TimeSpan.FromSeconds(sw.Elapsed.TotalSeconds);
-                                listView1.Items[idx].SubItems[9].Text = string.Format("{0:D2}:{1:D2}:{2:D2}", Timemint.Hours, Timemint.Minutes, Timemint.Seconds);
-                                if (sr.IndexOf("frames,") != -1 && sr.IndexOf("[") != -1)
-                                {
-                                    double prodata1 = Math.Round(Convert.ToDouble(sr.Substring(sr.IndexOf("[") + 1, sr.LastIndexOf("%") - 1)), 2);
-                                    proB = Math.Round(prodatabar + (prodata1 * weightB), 2);
-                                    listView1.Items[idx].SubItems[7].Text = $"{prodata1} %";
-                                    if (proB <= 100)
-                                        UpdateProgres((float)proB, 100);
-                                }
-
-                                if (sr.IndexOf("[error]") != -1)
-                                {
-                                    listView1.Items[idx].SubItems[8].Text = RunEnum.Error.GetDisplayName();
-                                    ffprobeOutput.run = RunEnum.Error;
-                                    listView1.Items[idx].SubItems[8].ForeColor = Color.Red;
-                                }
-                            }
-                        }.RunTask();
-                        prodatabar = 100 * (weightA + weightB);
-                        if (ffprobeOutput.run == RunEnum.Error)
-                            continue;
-                        #endregion
-
-                        #region MP4Box
-                        if (Cts.Token.IsCancellationRequested)
-                            return;
-                        listView1.Items[idx].SubItems[8].Text = RunEnum.Merge.GetDisplayName();
-                        ffprobeOutput.run = RunEnum.Merge;
-                        new TaskHelper
-                        {
-                            Cts = Cts,
-                            RunPath = path,
-                            FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\mp4box.exe",
-                            ArgumentList = {
-                                        $@"-add ""{ffprobeOutput.avsTempFile}.264"" ^
-                                        -add ""{(Path.GetExtension(ffprobeOutput.InFile).ToLower() == VideoExt.mkv ? (!ffprobeOutput.isAcc ? $"{ffprobeOutput.avsTempFile}.mp4" : $"{ffprobeOutput.avsTempFile}.aac") : ffprobeOutput.InFile)}""#audio ^
-                                        ""{ffprobeOutput.OutFile}""" },
-                            ActionErr = sr =>
-                            {
-                                f2.show = sr;
-                                if (sr.IndexOf("Error") > -1)
-                                {
-                                    listView1.Items[idx].SubItems[8].Text = RunEnum.Error.GetDisplayName();
-                                    ffprobeOutput.run = RunEnum.Error;
-                                    listView1.Items[idx].SubItems[8].ForeColor = Color.Red;
-                                    return;
-                                }
-
-                                Match match = Regex.Match(sr, @"\((\d+)/(\d+)\)");
-                                if (match.Success)
-                                {
-                                    float current = float.TryParse(match.Groups[1].Value, out float _current) ? _current : 0;
-                                    float percentage = (float)prodatabar + (current * weightC);
-                                    listView1.Items[idx].SubItems[7].Text = $"{current:F1} %";
-                                    UpdateProgres(percentage, 100);
-                                }
-                            },
-                        }.RunTask();
-                        if (ffprobeOutput.run == RunEnum.Error)
-                            continue;
-                        #endregion
-
-                        UpdateProgres(100, 100);
-                        listView1.Items[idx].SubItems[7].Text = "100 %";
-                        listView1.Items[idx].SubItems[8].Text = RunEnum.Done.GetDisplayName();
-                        ffprobeOutput.run = RunEnum.Done;
-                        videoFunc.Delete(ffprobeOutput);
-                        TimeSpan Timemint = TimeSpan.FromSeconds(sw.Elapsed.TotalSeconds);
-                        listView1.Items[idx].SubItems[9].Text = string.Format("{0:D2}:{1:D2}:{2:D2}", Timemint.Hours, Timemint.Minutes, Timemint.Seconds);
-                        sw.Stop();
+                        sw2.Stop();
                     }
 
                     stopBtn.Enabled = false;
@@ -341,6 +144,9 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
                     resolutionCBox.Enabled = true;
                     bitrateNumeric.Enabled = true;
                     Cts.Cancel();
+
+                    sw1.Stop();
+                    timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
                 }, Cts.Token);
             }
         }
@@ -364,6 +170,11 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
                     }
                 }
 
+                int idx = Convert.ToInt32(progressText.Text?.Split('/')[0]) - 1;
+                listView1.Items[idx].SubItems[8].Text = RunEnum.Stop.GetDisplayName();
+                int idx2 = videoFunc.ffprobeData.FindIndex(x => x.Guid == (Guid?)listView1.Items[idx].Tag);
+                videoFunc.ffprobeData[idx2].run = RunEnum.Stop;
+                VideoFunc.Delete(videoFunc.ffprobeData[idx2]);
                 stopBtn.Enabled = false;
                 runBtn.Enabled = true;
                 addToolStripMenuItem.Enabled = true;
@@ -375,11 +186,6 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
                 fpsCBox.Enabled = true;
                 resolutionCBox.Enabled = true;
                 bitrateNumeric.Enabled = true;
-                int idx = Convert.ToInt32(progressText.Text?.Split('/')[0]) - 1;
-                listView1.Items[idx].SubItems[8].Text = RunEnum.Stop.GetDisplayName();
-                int idx2 = videoFunc.ffprobeData.FindIndex(x => x.Guid == (Guid?)listView1.Items[idx].Tag);
-                videoFunc.ffprobeData[idx2].run = RunEnum.Stop;
-                videoFunc.Delete(videoFunc.ffprobeData[idx2]);
                 OtherControlFunc.ShowError("已強制停止");
             }
         }
@@ -472,10 +278,9 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
 
         private void logViewToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            f2.Show();
-
             try
             {
+                f2.Show();
             }
             catch (Exception ex)
             {
@@ -704,6 +509,300 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
                 Invoke(del);
                 Thread.Sleep(500);
             }
+        }
+        #endregion
+
+        #region 轉換
+
+        private void mainProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2)
+        {
+            if (ffprobeOutput.run == RunEnum.Done)
+                throw new Exception($"{ffprobeOutput.InFileName} 已完成");
+
+            string? path = Path.GetDirectoryName(ffprobeOutput.InFile);
+            if (string.IsNullOrWhiteSpace(path))
+                throw new Exception($"無效路徑 {path}");
+
+            Environment.CurrentDirectory = path;
+
+            int listViewCount = listView1.Items.Count;
+
+            #region 初始化
+            int idx = listView1.Items.Cast<ListViewItem>().ToList().FindIndex(x => (Guid?)x.Tag == ffprobeOutput.Guid);
+            listView1.Items[idx].SubItems[8].ForeColor = Color.Black;
+            listView1.Items[idx].SubItems[8].Text = RunEnum.Init.GetDisplayName();
+            ffprobeOutput.run = RunEnum.Init;
+            listView1.Items[idx].UseItemStyleForSubItems = false;
+            progressText.Text = $"{idx + 1}/{listViewCount}";
+
+            stopBtn.Enabled = true;
+            UpdateProgres(0, 100);
+
+            double prodatabar = 0;
+            string avs = "";
+
+            if (string.IsNullOrWhiteSpace(ffprobeOutput.SubtitlesFile))
+            {
+                avs = $@"
+LoadPlugin(""{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\ffms2.dll"") 
+FFVideoSource(""{Path.GetFileName(ffprobeOutput.InFileName)}"", fpsnum={ffprobeOutput.NewDetail.fpsnum}, fpsden={ffprobeOutput.NewDetail.fpsden})
+#deinterlace #crop #resize #denoise";
+            }
+            else
+            {
+                avs = $@"
+LoadPlugin(""{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\ffms2.dll"") 
+FFVideoSource(""{Path.GetFileName(ffprobeOutput.InFileName)}"", fpsnum={ffprobeOutput.NewDetail.fpsnum}, fpsden={ffprobeOutput.NewDetail.fpsden})
+LoadPlugin(""{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\VSFilter.dll"")
+TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
+#deinterlace #crop #resize #denoise";
+                File.Copy(ffprobeOutput.SubtitlesFile, $"{ffprobeOutput.avsTempFile}.ass", true);
+            }
+
+            if (File.Exists(@$".\{Path.GetFileNameWithoutExtension(ffprobeOutput.InFile)}.avs"))
+                File.Copy(@$".\{Path.GetFileNameWithoutExtension(ffprobeOutput.InFile)}.avs", @$".\{ffprobeOutput.avsTempFile}.avs", true);
+            else
+                File.WriteAllText(@$".\{ffprobeOutput.avsTempFile}.avs", avs);
+            #endregion
+
+            ffprobeOutput = audioProcess(ffprobeOutput, idx, path, sw1);
+            ffprobeOutput = errProcess(ffprobeOutput, idx, 0, out RunEnum isRun0);
+            switch (isRun0)
+            {
+                case RunEnum.Stop: return;
+                case RunEnum.Error: throw new Exception($"{RunEnum.SoundProcessing.GetDisplayName()} Error");
+            }
+
+            ffprobeOutput = onePassProcess(ffprobeOutput, idx, path, sw1, sw2, out int exitCode);
+            ffprobeOutput = errProcess(ffprobeOutput, idx, exitCode, out RunEnum isRun1);
+            switch (isRun1)
+            {
+                case RunEnum.Stop: return;
+                case RunEnum.Error: throw new Exception($"{RunEnum.Merge.GetDisplayName()} Error");
+            }
+            prodatabar = 100 * weightA;
+
+            ffprobeOutput = twoPassProcess(ffprobeOutput, idx, path, sw1, sw2, prodatabar, out exitCode);
+            ffprobeOutput = errProcess(ffprobeOutput, idx, exitCode, out RunEnum isRun2);
+            switch (isRun2)
+            {
+                case RunEnum.Stop: return;
+                case RunEnum.Error: throw new Exception($"{RunEnum.Merge.GetDisplayName()} Error");
+            }
+            prodatabar = 100 * (weightA + weightB);
+
+            ffprobeOutput = mergeProcess(ffprobeOutput, idx, path, sw1, sw2, prodatabar, out exitCode);
+            ffprobeOutput = errProcess(ffprobeOutput, idx, exitCode, out RunEnum isRun3);
+            switch (isRun3)
+            {
+                case RunEnum.Stop: return;
+                case RunEnum.Error: throw new Exception($"{RunEnum.Merge.GetDisplayName()} Error");
+            }
+
+            UpdateProgres(100, 100);
+            listView1.Items[idx].SubItems[7].Text = "100 %";
+            listView1.Items[idx].SubItems[8].Text = RunEnum.Done.GetDisplayName();
+            ffprobeOutput.run = RunEnum.Done;
+            VideoFunc.Delete(ffprobeOutput);
+            TimeSpan Timemint = TimeSpan.FromSeconds(sw2.Elapsed.TotalSeconds);
+            listView1.Items[idx].SubItems[9].Text = string.Format("{0:D2}:{1:D2}:{2:D2}", Timemint.Hours, Timemint.Minutes, Timemint.Seconds);
+        }
+
+        /// <summary>
+        /// 音效處理
+        /// </summary>
+        private FfprobeOutput audioProcess(FfprobeOutput ffprobeOutput, int idx, string path, Stopwatch sw1)
+        {
+            if (Path.GetExtension(ffprobeOutput.InFile).Equals($".{VideoExt.mkv}", StringComparison.CurrentCultureIgnoreCase))
+            {
+                if (Cts == null || Cts.Token.IsCancellationRequested)
+                    return ffprobeOutput;
+                listView1.Items[idx].SubItems[8].Text = RunEnum.SoundSeparation.GetDisplayName();
+                ffprobeOutput.run = RunEnum.SoundSeparation;
+                new TaskHelper
+                {
+                    Cts = Cts,
+                    RunPath = path,
+                    FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\mkvextract.exe",
+                    ArgumentList = {
+                                    $@"tracks ""{ffprobeOutput.InFile}"" 1:""{Path.GetDirectoryName(ffprobeOutput.InFile)}""{ffprobeOutput.avsTempFile}.aac""",
+                                },
+                }.RunTask();
+
+                if (!ffprobeOutput.isAcc)
+                {
+                    if (Cts.Token.IsCancellationRequested)
+                        return ffprobeOutput;
+                    listView1.Items[idx].SubItems[8].Text = RunEnum.SoundProcessing.GetDisplayName();
+                    ffprobeOutput.run = RunEnum.SoundProcessing;
+                    new TaskHelper
+                    {
+                        Cts = Cts,
+                        RunPath = path,
+                        FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\eac3to\eac3to.exe",
+                        ArgumentList = {
+                                        @"-log=NUL """ + Path.GetDirectoryName(ffprobeOutput.InFile) + @$"\{ffprobeOutput.avsTempFile}.aac"" """ + Path.GetDirectoryName(ffprobeOutput.InFile) + @$"\{ffprobeOutput.avsTempFile}.mp4""",
+                                    },
+                    }.RunTask();
+                }
+            }
+
+            timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
+            return ffprobeOutput;
+        }
+
+        /// <summary>
+        /// OnePass
+        /// </summary>
+        private FfprobeOutput onePassProcess(FfprobeOutput ffprobeOutput, int idx, string path, Stopwatch sw1, Stopwatch sw2, out int exitCode)
+        {
+            exitCode = 0;
+
+            if (Cts == null || Cts.Token.IsCancellationRequested)
+                return ffprobeOutput;
+            listView1.Items[idx].SubItems[8].Text = RunEnum.OnePass.GetDisplayName();
+            ffprobeOutput.run = RunEnum.OnePass;
+            double proA = 0;
+            exitCode = new TaskHelper
+            {
+                Cts = Cts,
+                RunPath = path,
+                AutoCloseDialogBox = "Warning",
+                FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\avs4x26x.exe",
+                ArgumentList = { videoFunc.Xonepass(ffprobeOutput) },
+                ActionErr = sr =>
+                {
+                    f2.show = sr;
+                    listView1.Items[idx].SubItems[9].Text = OtherControlFunc.timeConv(sw2);
+                    timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
+                    if (sr.IndexOf("frames,") != -1 && sr.IndexOf('[') != -1)
+                    {
+                        double prodata1 = Math.Round(Convert.ToDouble(sr.Substring(sr.IndexOf('[') + 1, sr.LastIndexOf('%') - 1)), 2);
+                        proA = Math.Round(prodata1 * weightA, 2);
+                        listView1.Items[idx].SubItems[7].Text = $"{prodata1} %";
+                        if (proA <= 100)
+                            UpdateProgres((float)proA, 100);
+                    }
+
+                    if (sr.IndexOf("[error]") != -1)
+                    {
+                        listView1.Items[idx].SubItems[8].Text = RunEnum.Error.GetDisplayName();
+                        ffprobeOutput.run = RunEnum.Error;
+                        listView1.Items[idx].SubItems[8].ForeColor = Color.Red;
+                    }
+                }
+            }.RunTask();
+
+            return ffprobeOutput;
+        }
+
+        /// <summary>
+        /// TwoPass
+        /// </summary>
+        private FfprobeOutput twoPassProcess(FfprobeOutput ffprobeOutput, int idx, string path, Stopwatch sw1, Stopwatch sw2, double prodatabar, out int exitCode)
+        {
+            exitCode = 0;
+
+            if (Cts == null || Cts.Token.IsCancellationRequested)
+                return ffprobeOutput;
+            listView1.Items[idx].SubItems[8].Text = RunEnum.TwoPass.GetDisplayName();
+            ffprobeOutput.run = RunEnum.TwoPass;
+            double proB = 0;
+            exitCode = new TaskHelper
+            {
+                Cts = Cts,
+                RunPath = path,
+                AutoCloseDialogBox = "Warning",
+                FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\avs4x26x.exe",
+                ArgumentList = { videoFunc.Xtwopass(ffprobeOutput) },
+                ActionErr = sr =>
+                {
+                    f2.show = sr;
+                    listView1.Items[idx].SubItems[9].Text = OtherControlFunc.timeConv(sw2);
+                    timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
+                    if (sr.IndexOf("frames,") != -1 && sr.IndexOf('[') != -1)
+                    {
+                        double prodata1 = Math.Round(Convert.ToDouble(sr.Substring(sr.IndexOf('[') + 1, sr.LastIndexOf('%') - 1)), 2);
+                        proB = Math.Round(prodatabar + (prodata1 * weightB), 2);
+                        listView1.Items[idx].SubItems[7].Text = $"{prodata1} %";
+                        if (proB <= 100)
+                            UpdateProgres((float)proB, 100);
+                    }
+
+                    if (sr.IndexOf("[error]") != -1)
+                    {
+                        listView1.Items[idx].SubItems[8].Text = RunEnum.Error.GetDisplayName();
+                        ffprobeOutput.run = RunEnum.Error;
+                        listView1.Items[idx].SubItems[8].ForeColor = Color.Red;
+                    }
+                }
+            }.RunTask();
+
+            return ffprobeOutput;
+        }
+
+        /// <summary>
+        /// Merge
+        /// </summary>
+        private FfprobeOutput mergeProcess(FfprobeOutput ffprobeOutput, int idx, string path, Stopwatch sw1, Stopwatch sw2, double prodatabar, out int exitCode)
+        {
+            exitCode = 0;
+
+            if (Cts == null || Cts.Token.IsCancellationRequested)
+                return ffprobeOutput;
+            listView1.Items[idx].SubItems[8].Text = RunEnum.Merge.GetDisplayName();
+            ffprobeOutput.run = RunEnum.Merge;
+            exitCode = new TaskHelper
+            {
+                Cts = Cts,
+                RunPath = path,
+                FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\mp4box.exe",
+                ArgumentList = {
+                     $@"-add ""{ffprobeOutput.avsTempFile}.264"" ^
+                     -add ""{(Path.GetExtension(ffprobeOutput.InFile).Equals(VideoExt.mkv, StringComparison.CurrentCultureIgnoreCase) ? (!ffprobeOutput.isAcc ? $"{ffprobeOutput.avsTempFile}.mp4" : $"{ffprobeOutput.avsTempFile}.aac") : ffprobeOutput.InFile)}""#audio ^
+                     ""{ffprobeOutput.OutFile}""" },
+                ActionErr = sr =>
+                {
+                    f2.show = sr;
+                    timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
+                    if (sr.IndexOf("Error") > -1)
+                    {
+                        listView1.Items[idx].SubItems[8].Text = RunEnum.Error.GetDisplayName();
+                        ffprobeOutput.run = RunEnum.Error;
+                        listView1.Items[idx].SubItems[8].ForeColor = Color.Red;
+                        return;
+                    }
+
+                    Match match = Regex.Match(sr, @"\((\d+)/(\d+)\)");
+                    if (match.Success)
+                    {
+                        listView1.Items[idx].SubItems[9].Text = OtherControlFunc.timeConv(sw2);
+                        float current = float.TryParse(match.Groups[1].Value, out float _current) ? _current : 0;
+                        float percentage = (float)prodatabar + (current * weightC);
+                        listView1.Items[idx].SubItems[7].Text = $"{current:F1} %";
+                        UpdateProgres(percentage, 100);
+                    }
+                },
+            }.RunTask();
+
+            return ffprobeOutput;
+        }
+
+        private FfprobeOutput errProcess(FfprobeOutput ffprobeOutput, int idx, int exitCode, out RunEnum run)
+        {
+            if (exitCode != 0 && ffprobeOutput.run != RunEnum.Stop)
+            {
+                listView1.Items[idx].SubItems[8].Text = RunEnum.Error.GetDisplayName();
+                ffprobeOutput.run = RunEnum.Error;
+                listView1.Items[idx].SubItems[8].ForeColor = Color.Red;
+            }
+
+            if (ffprobeOutput.run == RunEnum.Error)
+                run = RunEnum.Error;
+            else
+                run = ffprobeOutput.run;
+
+            return ffprobeOutput;
         }
         #endregion
     }

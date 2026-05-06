@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using System.Reflection;
 using X264GUIv2.Models;
 
@@ -59,6 +60,12 @@ namespace X264GUIv2
             int ratioW = _w / w;
             int ratioH = _h / w;
             return (ratioW, ratioH);
+        }
+
+        public static string timeConv(Stopwatch sw)
+        {
+            TimeSpan Timemint = TimeSpan.FromSeconds(sw.Elapsed.TotalSeconds);
+            return string.Format("{0:D2}:{1:D2}:{2:D2}", Timemint.Hours, Timemint.Minutes, Timemint.Seconds);
         }
     }
 }
