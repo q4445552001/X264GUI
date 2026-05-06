@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
-using System.Windows.Forms;
 using System.Windows.Forms.VisualStyles;
 using X264GUIv2.Enums;
 using X264GUIv2.Models;
@@ -15,9 +14,10 @@ namespace X264GUIv2
         public int bitRateDefault = 1000000; //初始化彼特率
         public readonly Form2 f2;
 
-        private readonly float weightA = 0.47f;
-        private readonly float weightB = 0.47f;
-        private readonly float weightC = 0.06f;
+        private float weightAudio => AutoTrimToolStripMenuItem.Checked ? .10f : 0f;
+        private float weightOnePass => .96f - weightAudio;
+        private float weightTwoPass => weightOnePass / 2;
+        private float weightMerge => 100f - weightOnePass;
 
         #region 初始化
 
@@ -483,6 +483,9 @@ namespace X264GUIv2
         /// </summary>
         public void UpdateProgres(float now, float count, bool isPercentage = true)
         {
+            if (now > 100)
+                return;
+
             void del()
             {
                 progressBar1.PerformStep();
@@ -583,22 +586,23 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
                 File.WriteAllText(@$".\{ffprobeOutput.avsTempFile}.avs", avs);
             #endregion
 
-            ffprobeOutput = audioProcess(ffprobeOutput, idx, path, sw1);
+            ffprobeOutput = audioProcess(ffprobeOutput, idx, path, sw1, sw2);
             ffprobeOutput = errProcess(ffprobeOutput, idx, 0, out RunEnum isRun0);
             switch (isRun0)
             {
                 case RunEnum.Stop: return;
                 case RunEnum.Error: throw new Exception($"{RunEnum.SoundProcessing.GetDisplayName()} Error");
             }
+            prodatabar = 100 * weightAudio;
 
-            ffprobeOutput = onePassProcess(ffprobeOutput, idx, path, sw1, sw2, out int exitCode);
+            ffprobeOutput = onePassProcess(ffprobeOutput, idx, path, sw1, sw2, prodatabar, out int exitCode);
             ffprobeOutput = errProcess(ffprobeOutput, idx, exitCode, out RunEnum isRun1);
             switch (isRun1)
             {
                 case RunEnum.Stop: return;
                 case RunEnum.Error: throw new Exception($"{RunEnum.Merge.GetDisplayName()} Error");
             }
-            prodatabar = 100 * weightA;
+            prodatabar = 100 * (weightAudio + weightOnePass);
 
             ffprobeOutput = twoPassProcess(ffprobeOutput, idx, path, sw1, sw2, prodatabar, out exitCode);
             ffprobeOutput = errProcess(ffprobeOutput, idx, exitCode, out RunEnum isRun2);
@@ -607,7 +611,7 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
                 case RunEnum.Stop: return;
                 case RunEnum.Error: throw new Exception($"{RunEnum.Merge.GetDisplayName()} Error");
             }
-            prodatabar = 100 * (weightA + weightB);
+            prodatabar = 100 * (weightAudio + weightOnePass + weightTwoPass);
 
             ffprobeOutput = mergeProcess(ffprobeOutput, idx, path, sw1, sw2, prodatabar, out exitCode);
             ffprobeOutput = errProcess(ffprobeOutput, idx, exitCode, out RunEnum isRun3);
@@ -629,7 +633,7 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
         /// <summary>
         /// 音效處理
         /// </summary>
-        private FfprobeOutput audioProcess(FfprobeOutput ffprobeOutput, int idx, string path, Stopwatch sw1)
+        private FfprobeOutput audioProcess(FfprobeOutput ffprobeOutput, int idx, string path, Stopwatch sw1, Stopwatch sw2)
         {
             ffprobeOutput.AudioTrim = AutoTrimToolStripMenuItem.Checked;
             if (ffprobeOutput.AudioTrim)
@@ -655,12 +659,27 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
                         $@"-nostats",
                         $@"-loglevel error",
                     },
-                    ActionErr = sr =>
-                    {
-                        f2.appendText = sr;
-                    },
                     ActionOut = sr =>
                     {
+                        listView1.Items[idx].SubItems[9].Text = OtherControlFunc.timeConv(sw2);
+                        timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
+                        int str = sr.IndexOf('=');
+
+                        if (str <= 0)
+                            return;
+
+                        string key = sr[..str];
+                        string value = sr[(str + 1)..];
+
+                        if (key == "out_time_ms" && double.TryParse(value, out double outTimeMs))
+                        {
+                            double currentSeconds = outTimeMs / 1_000_000.0;
+                            double pro = currentSeconds / ffprobeOutput.duration * 100.0;
+                            double proA = pro * weightAudio;
+                            listView1.Items[idx].SubItems[7].Text = $"{pro:F1} %";
+                            UpdateProgres((float)proA, 100);
+                        }
+
                         f2.appendText = sr;
                     },
                 }.RunTask();
@@ -683,6 +702,11 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
                         $@"tracks ""{ffprobeOutput.InFile}""",
                         $@"1:""{Path.GetDirectoryName(ffprobeOutput.InFile)}""{ffprobeOutput.avsTempFile}.aac""",
                     },
+                    ActionOut = sr =>
+                    {
+                        timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
+                        f2.appendText = sr;
+                    },
                 }.RunTask();
 
                 if (!ffprobeOutput.isAcc)
@@ -701,6 +725,11 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
                             $@"{Path.GetDirectoryName(ffprobeOutput.InFile)}\{ffprobeOutput.avsTempFile}.aac""",
                             $@"""{Path.GetDirectoryName(ffprobeOutput.InFile)}\{ffprobeOutput.avsTempFile}.mp4""",
                          },
+                        ActionOut = sr =>
+                        {
+                            timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
+                            f2.appendText = sr;
+                        },
                     }.RunTask();
                 }
             }
@@ -712,7 +741,7 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
         /// <summary>
         /// OnePass
         /// </summary>
-        private FfprobeOutput onePassProcess(FfprobeOutput ffprobeOutput, int idx, string path, Stopwatch sw1, Stopwatch sw2, out int exitCode)
+        private FfprobeOutput onePassProcess(FfprobeOutput ffprobeOutput, int idx, string path, Stopwatch sw1, Stopwatch sw2, double prodatabar, out int exitCode)
         {
             exitCode = 0;
 
@@ -720,7 +749,6 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
                 return ffprobeOutput;
             listView1.Items[idx].SubItems[8].Text = RunEnum.OnePass.GetDisplayName();
             ffprobeOutput.run = RunEnum.OnePass;
-            double proA = 0;
             exitCode = new TaskHelper
             {
                 Cts = Cts,
@@ -730,17 +758,15 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
                 ArgumentList = videoFunc.Xonepass(ffprobeOutput),
                 ActionErr = sr =>
                 {
-                    OtherControlFunc.WriteLog(sr);
                     f2.appendText = sr;
                     listView1.Items[idx].SubItems[9].Text = OtherControlFunc.timeConv(sw2);
                     timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
                     if (sr.IndexOf("frames,") != -1 && sr.IndexOf('[') != -1)
                     {
                         double prodata1 = Math.Round(Convert.ToDouble(sr.Substring(sr.IndexOf('[') + 1, sr.LastIndexOf('%') - 1)), 2);
-                        proA = Math.Round(prodata1 * weightA, 2);
-                        listView1.Items[idx].SubItems[7].Text = $"{prodata1} %";
-                        if (proA <= 100)
-                            UpdateProgres((float)proA, 100);
+                        double proA = Math.Round(prodatabar + (prodata1 * weightOnePass), 2);
+                        listView1.Items[idx].SubItems[7].Text = $"{prodata1:F1} %";
+                        UpdateProgres((float)proA, 100);
                     }
 
                     if (sr.IndexOf("[error]") != -1)
@@ -766,7 +792,6 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
                 return ffprobeOutput;
             listView1.Items[idx].SubItems[8].Text = RunEnum.TwoPass.GetDisplayName();
             ffprobeOutput.run = RunEnum.TwoPass;
-            double proB = 0;
             exitCode = new TaskHelper
             {
                 Cts = Cts,
@@ -782,10 +807,9 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
                     if (sr.IndexOf("frames,") != -1 && sr.IndexOf('[') != -1)
                     {
                         double prodata1 = Math.Round(Convert.ToDouble(sr.Substring(sr.IndexOf('[') + 1, sr.LastIndexOf('%') - 1)), 2);
-                        proB = Math.Round(prodatabar + (prodata1 * weightB), 2);
-                        listView1.Items[idx].SubItems[7].Text = $"{prodata1} %";
-                        if (proB <= 100)
-                            UpdateProgres((float)proB, 100);
+                        double proB = Math.Round(prodatabar + (prodata1 * weightTwoPass), 2);
+                        listView1.Items[idx].SubItems[7].Text = $"{prodata1:F1} %";
+                        UpdateProgres((float)proB, 100);
                     }
 
                     if (sr.IndexOf("[error]") != -1)
@@ -838,7 +862,7 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
                     {
                         listView1.Items[idx].SubItems[9].Text = OtherControlFunc.timeConv(sw2);
                         float current = float.TryParse(match.Groups[1].Value, out float _current) ? _current : 0;
-                        float percentage = (float)prodatabar + (current * weightC);
+                        float percentage = (float)prodatabar + (current * weightMerge);
                         listView1.Items[idx].SubItems[7].Text = $"{current:F1} %";
                         UpdateProgres(percentage, 100);
                     }
