@@ -7,6 +7,7 @@
 		<UseWindowsForms>true</UseWindowsForms>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<NoWarn>IDE1006;SYSLIB1054;SYSLIB1045;CA2249;</NoWarn>
+		<ApplicationIcon>1409863574410756177.ico</ApplicationIcon>
 	</PropertyGroup>
 
 	<!--<ItemGroup>
@@ -37,7 +38,15 @@
 		</Content>
 	</ItemGroup>
 	<ItemGroup>
+	  <Content Include="1409863574410756177.ico" />
+	</ItemGroup>
+	<ItemGroup>
 	  <PackageReference Include="Dapper" Version="2.1.72" />
 	  <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.7" />
+	</ItemGroup>
+	<ItemGroup>
+	  <None Update="dotnet-runtime-10.0.7-win-x64.exe">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
 	</ItemGroup>
 </Project>

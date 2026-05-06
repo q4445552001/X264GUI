@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             label1 = new Label();
             label2 = new Label();
             label3 = new Label();
@@ -55,6 +56,7 @@
             dbToolStripMenuItem = new ToolStripMenuItem();
             dbLoadToolStripMenuItem = new ToolStripMenuItem();
             dbSaveToolStripMenuItem = new ToolStripMenuItem();
+            toolStripSeparator3 = new ToolStripSeparator();
             dbClearToolStripMenuItem = new ToolStripMenuItem();
             ViewMenuItem = new ToolStripMenuItem();
             logViewToolStripMenuItem = new ToolStripMenuItem();
@@ -64,7 +66,6 @@
             AutoTrimToolStripMenuItem = new ToolStripMenuItem();
             addBtn = new Button();
             diffBtn = new Button();
-            toolStripSeparator3 = new ToolStripSeparator();
             ((System.ComponentModel.ISupportInitialize)bitrateNumeric).BeginInit();
             statusStrip1.SuspendLayout();
             menuStrip1.SuspendLayout();
@@ -303,6 +304,11 @@
             dbSaveToolStripMenuItem.Text = "存檔";
             dbSaveToolStripMenuItem.Click += dbSaveToolStripMenuItem_Click;
             // 
+            // toolStripSeparator3
+            // 
+            toolStripSeparator3.Name = "toolStripSeparator3";
+            toolStripSeparator3.Size = new Size(119, 6);
+            // 
             // dbClearToolStripMenuItem
             // 
             dbClearToolStripMenuItem.Name = "dbClearToolStripMenuItem";
@@ -370,11 +376,6 @@
             diffBtn.UseVisualStyleBackColor = true;
             diffBtn.Click += diffBtn_Click;
             // 
-            // toolStripSeparator3
-            // 
-            toolStripSeparator3.Name = "toolStripSeparator3";
-            toolStripSeparator3.Size = new Size(119, 6);
-            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(8F, 17F);
@@ -399,6 +400,7 @@
             Controls.Add(label2);
             Controls.Add(label1);
             Font = new Font("Microsoft JhengHei UI", 10F);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             MainMenuStrip = menuStrip1;
             Name = "Form1";
             Text = "X264GUI";
