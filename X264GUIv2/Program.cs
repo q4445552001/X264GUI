@@ -2,15 +2,7 @@ using System.Text;
 
 namespace X264GUIv2
 {
-    //TODO: trim 還有問題
-    //TODO: 路徑語系錯誤
-    //TODO: SQL改反射
-    //TODO: 顏色設定改初始化實做
-    //TODO: 進度條文字修正(超出範圍元範圍會被引截掉)
-    //TODO: 2PASS的進度有問題
-    //TODO: 儲存體只有一筆時無法儲存
-    //TODO: bitrate Auto時轉換結束後手動會被打開
-    //TODO: mkv的aac失效
+    //TODO: avs trim 功能尚未完整
 
     internal static class Program
     {

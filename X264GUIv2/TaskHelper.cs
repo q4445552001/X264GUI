@@ -70,7 +70,7 @@ namespace X264GUIv2
             OtherControlFunc.WriteLog($@"""{FileName}"" {argument}");
 #endif
 
-            var p = new Process()
+            Process p = new()
             {
                 StartInfo =
                 {
@@ -130,7 +130,7 @@ namespace X264GUIv2
             p.BeginOutputReadLine();
             p.BeginErrorReadLine();
 
-            closeDialogBox();
+            closeDialogBox(p);
 
             if (IsWait)
                 p.WaitForExit();
@@ -159,19 +159,23 @@ namespace X264GUIv2
         static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
         const uint WM_CLOSE = 0x0010;
 
-        private void closeDialogBox()
+        [DllImport("user32.dll")]
+        static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+
+        private void closeDialogBox(Process p)
         {
             if (!string.IsNullOrWhiteSpace(AutoCloseDialogBox))
             {
-                Task.Run(() =>
+                _ = Task.Run(() =>
                 {
                     Thread.Sleep(1000);
                     var hWnd = FindWindow(null, AutoCloseDialogBox);
-                    if (hWnd != IntPtr.Zero)
+                    _ = GetWindowThreadProcessId(hWnd, out uint pid);
+                    if (p.Id == pid && hWnd != IntPtr.Zero)
                     {
                         SendMessage(hWnd, WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
-                        isClose = true;
-                        isCloseMsg = $"檢查到 {AutoCloseDialogBox}，自動關閉";
+                        //isClose = true;
+                        isCloseMsg = $"{FileName} 檢查到 {AutoCloseDialogBox}，自動關閉";
                     }
                 });
             }

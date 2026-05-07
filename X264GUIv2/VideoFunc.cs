@@ -34,10 +34,9 @@ namespace X264GUIv2
                     _ => { }
                 );
 
-                List<FfprobeOutput> data = [.. _ffprobe.OrderBy(x => x.index).ToList()];
+                List<FfprobeOutput> data = [.. _ffprobe.OrderBy(x => x.idx).ToList()];
                 for (int i = 0; i < data.Count; i++)
                 {
-                    data[i] = bitRateFunc(data[i]);
                     data[i] = bitRateFunc(data[i]);
                     data[i] = fpsFunc(data[i]);
                     data[i] = resolutionFunc(data[i]);
@@ -60,7 +59,7 @@ namespace X264GUIv2
                 OtherControlFunc.WriteLog(ex.Message);
             }
 
-            form.progressText.Text = $"0/{form.listView1.Items.Count}";
+            form.progressText.Text = $"{ffprobeData.Count(x => x.run == RunEnum.Done)}/{form.listView1.Items.Count}";
             form.runBtn.Enabled = form.listView1.Items.Count != 0;
         }
 
@@ -101,9 +100,9 @@ namespace X264GUIv2
             {
                 duration = double.TryParse(stuff.format?.duration, out double _duration) ? _duration : 0,
                 size = int.TryParse(stuff.format?.size, out int _size) ? _size : 0,
-                isAcc = stuff.streams.Any(x => x.codec_type?.ToLower() == "audio" && x.codec_name?.ToLower() == "aac"),
+                isAac = stuff.streams.Any(x => x.codec_type?.ToLower() == "audio" && x.codec_name?.ToLower() == "aac"),
                 InFile = input.File,
-                index = input.index,
+                idx = input.index,
                 OriDetail = new()
                 {
                     bitrate = bitrateTemp,
@@ -141,7 +140,7 @@ namespace X264GUIv2
             detailsItem.Duration = TimeSpan.FromSeconds(ffprobeOutput.duration).ToString(@"hh\:mm\:ss");
             detailsItem.Size = $"{OldCapacity} > {NewCapacity}";
             detailsItem.Progress = "00.00 %";
-            detailsItem.Status = "IDEL";
+            detailsItem.Status = ffprobeOutput.run.GetDisplayName();
             detailsItem.Time = "00:00:00";
             detailsItem.Path = ffprobeOutput.InFile ?? "";
 
@@ -180,25 +179,28 @@ namespace X264GUIv2
             return lis;
         }
 
-
         public FfprobeOutput bitRateFunc(FfprobeOutput ffprobeOutput)
         {
             if (form.bitrateCBox.Items[form.bitrateCBox.SelectedIndex] is ComboboxItem item)
             {
                 if (!int.TryParse(item.Value, out int v))
-                    throw new Exception("");
+                    throw new Exception("無效選項");
 
                 BitrateEnum bitrateEnum = (BitrateEnum)v;
 
                 if (bitrateEnum == BitrateEnum.Auto)
                 {
-                    if ((ffprobeOutput.OriDetail.bitrate - 100000) > form.bitRateDefault)
+                    if (ffprobeOutput.OriDetail.bitrate < form.bitRateDefault)
+                        ffprobeOutput.NewDetail.bitrate = ffprobeOutput.OriDetail.bitrate - 100000;
+                    else if ((ffprobeOutput.OriDetail.bitrate - 100000) > form.bitRateDefault)
                         ffprobeOutput.NewDetail.bitrate = form.bitRateDefault;
                     else
                         ffprobeOutput.NewDetail.bitrate = ffprobeOutput.OriDetail.bitrate - 100000;
                 }
                 else if (bitrateEnum == BitrateEnum.Manual)
                     ffprobeOutput.NewDetail.bitrate = (int)form.bitrateNumeric.Value * 1000;
+
+                ffprobeOutput.run = RunEnum.Idel;
             }
 
             return ffprobeOutput;
@@ -209,6 +211,7 @@ namespace X264GUIv2
             if (form.fpsCBox.Items[form.fpsCBox.SelectedIndex] is ComboboxItem item)
             {
                 ffprobeOutput.NewDetail.frameStr = item.Value == "Auto" ? ffprobeOutput.OriDetail.frameStr : item.Value;
+                ffprobeOutput.run = RunEnum.Idel;
             }
 
             return ffprobeOutput;
@@ -243,12 +246,25 @@ namespace X264GUIv2
                 ffprobeOutput.NewDetail.resolutionH = resolution;
             }
 
+            ffprobeOutput.run = RunEnum.Idel;
             return ffprobeOutput;
         }
 
         public FfprobeOutput bitRateNumericFunc(FfprobeOutput ffprobeOutput)
         {
-            ffprobeOutput.NewDetail.bitrate = (int)form.bitrateNumeric.Value * 1000;
+            if (form.bitrateCBox.Items[form.bitrateCBox.SelectedIndex] is ComboboxItem item)
+            {
+                if (!int.TryParse(item.Value, out int v))
+                    throw new Exception("無效選項");
+
+                BitrateEnum bitrateEnum = (BitrateEnum)v;
+
+                if (bitrateEnum == BitrateEnum.Manual)
+                    ffprobeOutput.NewDetail.bitrate = (int)form.bitrateNumeric.Value * 1000;
+
+                ffprobeOutput.run = RunEnum.Idel;
+            }
+
             return ffprobeOutput;
         }
 

@@ -8,6 +8,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<NoWarn>IDE1006;SYSLIB1054;SYSLIB1045;CA2249;</NoWarn>
 		<ApplicationIcon>1409863574410756177.ico</ApplicationIcon>
+		<PlatformTarget>x64</PlatformTarget>
 	</PropertyGroup>
 
 	<!--<ItemGroup>

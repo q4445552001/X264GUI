@@ -20,7 +20,7 @@ namespace X264GUIv2
             IList<ListViewItem> listViews = [.. form.listView1.CheckedItems.Cast<ListViewItem>()];
             foreach (ListViewItem listView in listViews)
             {
-                int idx = ffprobeOutputs.FindIndex(x => x.Guid == (Guid?)listView.Tag);
+                var idx = findFfprobItem(ffprobeOutputs, (Guid?)listView.Tag);
                 idxs.Add(idx);
                 action.Invoke(idx);
 
@@ -68,6 +68,17 @@ namespace X264GUIv2
             return string.Format("{0:D2}:{1:D2}:{2:D2}", Timemint.Hours, Timemint.Minutes, Timemint.Seconds);
         }
 
+        public static void openFolder(string? path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                return;
+
+            if (File.Exists(path))
+                Process.Start("explorer.exe", $@"/select,""{path}""");
+            else if (Directory.Exists(path))
+                Process.Start("explorer.exe", $@"""{path}""");
+        }
+
         /// <summary>
         /// 寫入log
         /// </summary>
@@ -87,6 +98,24 @@ namespace X264GUIv2
                 sw.Close();
             }
             catch { }
+        }
+
+        public static int findFfprobItem(List<FfprobeOutput> ffprobeOutputs, Guid? guid)
+        {
+            if (guid == null)
+                return -1;
+
+            int idx = ffprobeOutputs.FindIndex(x => x.Guid == guid);
+            return idx;
+        }
+
+        public static int findListItem(ListView listView, Guid? guid)
+        {
+            if (guid == null)
+                return -1;
+
+            int idx = listView.Items.Cast<ListViewItem>().ToList().FindIndex(x => (Guid?)x.Tag == guid);
+            return idx;
         }
     }
 }

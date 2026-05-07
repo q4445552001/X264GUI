@@ -59,6 +59,7 @@
             toolStripSeparator3 = new ToolStripSeparator();
             dbClearToolStripMenuItem = new ToolStripMenuItem();
             ViewMenuItem = new ToolStripMenuItem();
+            installPathToolStripMenuItem = new ToolStripMenuItem();
             logViewToolStripMenuItem = new ToolStripMenuItem();
             toolStripSeparator2 = new ToolStripSeparator();
             logViewClearToolStripMenuItem = new ToolStripMenuItem();
@@ -183,6 +184,7 @@
             listView1.DrawSubItem += listView1_DrawSubItem;
             listView1.DragDrop += listView1_DragDrop;
             listView1.DragEnter += listView1_DragEnter;
+            listView1.MouseUp += listView1_MouseUp;
             // 
             // runBtn
             // 
@@ -261,7 +263,7 @@
             // 
             addToolStripMenuItem.Name = "addToolStripMenuItem";
             addToolStripMenuItem.Size = new Size(146, 22);
-            addToolStripMenuItem.Text = "新增視訊檔案";
+            addToolStripMenuItem.Text = "加入視訊檔案";
             addToolStripMenuItem.Click += addToolStripMenuItem_Click;
             // 
             // diffToolStripMenuItem
@@ -294,14 +296,14 @@
             // 
             dbLoadToolStripMenuItem.Name = "dbLoadToolStripMenuItem";
             dbLoadToolStripMenuItem.Size = new Size(122, 22);
-            dbLoadToolStripMenuItem.Text = "讀取存檔";
+            dbLoadToolStripMenuItem.Text = "載入進度";
             dbLoadToolStripMenuItem.Click += dbLoadToolStripMenuItem_Click;
             // 
             // dbSaveToolStripMenuItem
             // 
             dbSaveToolStripMenuItem.Name = "dbSaveToolStripMenuItem";
             dbSaveToolStripMenuItem.Size = new Size(122, 22);
-            dbSaveToolStripMenuItem.Text = "存檔";
+            dbSaveToolStripMenuItem.Text = "儲存進度";
             dbSaveToolStripMenuItem.Click += dbSaveToolStripMenuItem_Click;
             // 
             // toolStripSeparator3
@@ -313,32 +315,39 @@
             // 
             dbClearToolStripMenuItem.Name = "dbClearToolStripMenuItem";
             dbClearToolStripMenuItem.Size = new Size(122, 22);
-            dbClearToolStripMenuItem.Text = "清除存檔";
+            dbClearToolStripMenuItem.Text = "清除進度";
             dbClearToolStripMenuItem.Click += dbClearToolStripMenuItem_Click;
             // 
             // ViewMenuItem
             // 
-            ViewMenuItem.DropDownItems.AddRange(new ToolStripItem[] { logViewToolStripMenuItem, toolStripSeparator2, logViewClearToolStripMenuItem });
+            ViewMenuItem.DropDownItems.AddRange(new ToolStripItem[] { installPathToolStripMenuItem, logViewToolStripMenuItem, toolStripSeparator2, logViewClearToolStripMenuItem });
             ViewMenuItem.Name = "ViewMenuItem";
             ViewMenuItem.Size = new Size(43, 20);
             ViewMenuItem.Text = "檢視";
             // 
+            // installPathToolStripMenuItem
+            // 
+            installPathToolStripMenuItem.Name = "installPathToolStripMenuItem";
+            installPathToolStripMenuItem.Size = new Size(180, 22);
+            installPathToolStripMenuItem.Text = "開啟安裝資料夾";
+            installPathToolStripMenuItem.Click += installPathToolStripMenuItem_Click;
+            // 
             // logViewToolStripMenuItem
             // 
             logViewToolStripMenuItem.Name = "logViewToolStripMenuItem";
-            logViewToolStripMenuItem.Size = new Size(150, 22);
+            logViewToolStripMenuItem.Size = new Size(180, 22);
             logViewToolStripMenuItem.Text = "LogView";
             logViewToolStripMenuItem.Click += logViewToolStripMenuItem_Click;
             // 
             // toolStripSeparator2
             // 
             toolStripSeparator2.Name = "toolStripSeparator2";
-            toolStripSeparator2.Size = new Size(147, 6);
+            toolStripSeparator2.Size = new Size(177, 6);
             // 
             // logViewClearToolStripMenuItem
             // 
             logViewClearToolStripMenuItem.Name = "logViewClearToolStripMenuItem";
-            logViewClearToolStripMenuItem.Size = new Size(150, 22);
+            logViewClearToolStripMenuItem.Size = new Size(180, 22);
             logViewClearToolStripMenuItem.Text = "LogView 清除";
             logViewClearToolStripMenuItem.Click += logViewClearToolStripMenuItem_Click;
             // 
@@ -353,8 +362,8 @@
             // 
             AutoTrimToolStripMenuItem.CheckOnClick = true;
             AutoTrimToolStripMenuItem.Name = "AutoTrimToolStripMenuItem";
-            AutoTrimToolStripMenuItem.Size = new Size(159, 22);
-            AutoTrimToolStripMenuItem.Text = "啟用音訊軌Trim";
+            AutoTrimToolStripMenuItem.Size = new Size(206, 22);
+            AutoTrimToolStripMenuItem.Text = "啟用音訊軌Trim (實驗性)";
             // 
             // addBtn
             // 
@@ -455,5 +464,6 @@
         private ToolStripSeparator toolStripSeparator2;
         private ToolStripMenuItem dbLoadToolStripMenuItem;
         private ToolStripSeparator toolStripSeparator3;
+        private ToolStripMenuItem installPathToolStripMenuItem;
     }
 }

@@ -4,6 +4,9 @@ namespace X264GUIv2.Enums
 {
     public enum RunEnum
     {
+        [Display(Name = "Idel")]
+        Idel,
+
         [Display(Name = "初始化")]
         Init,
 
