@@ -11,8 +11,13 @@ namespace X264GUIv2
         private readonly VideoFunc videoFunc;
         private CancellationTokenSource? Cts { get; set; }
         public int bitRateDefault = 1000000; //初始化彼特率
+
         public readonly Form2 f2;
         public readonly ContextMenuStrip listViewMenu;
+        public readonly ToolStripMenuItem listDiffViewItem;
+        public readonly ToolStripMenuItem listFolderViewItem;
+        public readonly ToolStripMenuItem listUpViewItem;
+        public readonly ToolStripMenuItem listDnViewItem;
 
         private float weightAudio => AutoTrimToolStripMenuItem.Checked ? .10f : 0f;
         private float weightOnePass => (.96f - weightAudio) / 2;
@@ -64,9 +69,9 @@ namespace X264GUIv2
             listView1.View = View.Details;
             listView1.Columns.AddRange([.. new List<ColumnHeader>
             {
-                new() { Text = "檔案", Width = 130 },
+                new() { Text = "檔案", Width = 150 },
                 new() { Text = "BitRate", Width = 140, TextAlign = HorizontalAlignment.Center },
-                new() { Text = "FPS 模式", Width = 100, TextAlign = HorizontalAlignment.Center },
+                new() { Text = "FPS 模式", Width = 90, TextAlign = HorizontalAlignment.Center },
                 new() { Text = "FPS", Width = 120, TextAlign = HorizontalAlignment.Center },
                 new() { Text = "解析度", Width = 170, TextAlign = HorizontalAlignment.Center },
                 new() { Text = "時間長度", Width = 80, TextAlign = HorizontalAlignment.Center },
@@ -74,25 +79,34 @@ namespace X264GUIv2
                 new() { Text = "進度", Width = 70, TextAlign = HorizontalAlignment.Center },
                 new() { Text = "狀態", Width = 100, TextAlign = HorizontalAlignment.Center },
                 new() { Text = "消耗時間", Width = 80, TextAlign = HorizontalAlignment.Center },
-                new() { Text = "路徑", Width = 300 },
+                new() { Text = "路徑", Width = 500 },
             }]);
+
+            settingToolStripMenuItem.DropDown.Closing += settingToolStripMenuItem_DropDownClosing;
 
             #region ContextMenuStrip
             listViewMenu = new();
 
-            ToolStripMenuItem listDiffViewItem = new()
-            {
-                Text = "移除",
-            };
-            listDiffViewItem.Click += listDiffViewItem_Click;
-            listViewMenu.Items.Add(listDiffViewItem);
-
-            ToolStripMenuItem listFolderViewItem = new()
-            {
-                Text = "檢視資料夾",
-            };
+            listFolderViewItem = new() { Text = "檢視資料夾" };
             listFolderViewItem.Click += listFolderViewItem_Click;
-            listViewMenu.Items.Add(listFolderViewItem);
+
+            listDiffViewItem = new() { Text = "移除" };
+            listDiffViewItem.Click += listDiffViewItem_Click;
+
+            listUpViewItem = new() { Text = "上移" };
+            listUpViewItem.Click += listUpViewItem_Click;
+
+            listDnViewItem = new() { Text = "下移" };
+            listDnViewItem.Click += listDnViewItem_Click;
+
+            listViewMenu.Items.AddRange([
+                listFolderViewItem,
+                new ToolStripSeparator(),
+                listDiffViewItem,
+                new ToolStripSeparator(),
+                listUpViewItem,
+                listDnViewItem,
+            ]);
             #endregion
 
             videoFunc = new(this);
@@ -110,7 +124,7 @@ namespace X264GUIv2
             else
             {
                 e.Cancel = false;
-                dbSaveToolStripMenuItem_Click(sender, e);
+                //dbSaveToolStripMenuItem_Click(sender, e);
             }
         }
 
@@ -184,12 +198,11 @@ namespace X264GUIv2
                     }
                 }
 
-                int idx = Convert.ToInt32(progressText.Text?.Split('/')[0]) - 1;
-                listView1.Items[idx].UseItemStyleForSubItems = false;
-                listView1.Items[idx].SubItems[8].Text = RunEnum.Stop.GetDisplayName();
-                var idx2 = OtherControlFunc.findFfprobItem(videoFunc.ffprobeData, (Guid?)listView1.Items[idx].Tag);
-                videoFunc.ffprobeData[idx2].run = RunEnum.Stop;
-                VideoFunc.Delete(videoFunc.ffprobeData[idx2]);
+                listView1.Items[useIdx].UseItemStyleForSubItems = false;
+                listView1.Items[useIdx].SubItems[8].Text = RunEnum.Stop.GetDisplayName();
+                var idx = OtherControlFunc.findFfprobItem(videoFunc.ffprobeData, (Guid?)listView1.Items[useIdx].Tag);
+                videoFunc.ffprobeData[idx].run = RunEnum.Stop;
+                VideoFunc.Delete(videoFunc.ffprobeData[idx]);
                 btnControl(true);
                 OtherControlFunc.ShowError("已強制停止");
             }
@@ -283,10 +296,13 @@ namespace X264GUIv2
             addToolStripMenuItem.Enabled = isClose;
             diffToolStripMenuItem.Enabled = isClose;
             clearToolStripMenuItem.Enabled = isClose;
-            dbSaveToolStripMenuItem.Enabled = isClose;
             dbLoadToolStripMenuItem.Enabled = isClose;
             dbClearToolStripMenuItem.Enabled = isClose;
             AutoTrimToolStripMenuItem.Enabled = isClose;
+
+            listDiffViewItem.Enabled = isClose;
+            listUpViewItem.Enabled = isClose;
+            listDnViewItem.Enabled = isClose;
         }
         #endregion
 
@@ -343,7 +359,7 @@ namespace X264GUIv2
             try
             {
                 using var sql = new sqlLiteFunc();
-                List<FfprobeOutput> loadData = sql.SelectTable();
+                List<FfprobeOutput> loadData = [.. sql.SelectTable().OrderBy(x => x.idx)];
                 List<FfprobeOutput> cacheData = [];
 
                 foreach (FfprobeOutput i in loadData)
@@ -434,6 +450,11 @@ namespace X264GUIv2
             }
         }
 
+        private void settingToolStripMenuItem_DropDownClosing(object? sender, ToolStripDropDownClosingEventArgs e)
+        {
+            if (e.CloseReason == ToolStripDropDownCloseReason.ItemClicked)
+                e.Cancel = true;
+        }
         #endregion
 
         #region listView
@@ -591,6 +612,48 @@ namespace X264GUIv2
                 OtherControlFunc.ShowError(ex.Message);
             }
         }
+
+        private void listUpViewItem_Click(object? sender, EventArgs e)
+        {
+            try
+            {
+                foreach (ListViewItem lvi in listView1.SelectedItems)
+                {
+                    if (lvi.Index > 0)
+                    {
+                        int index = lvi.Index - 1;
+                        listView1.Items.RemoveAt(lvi.Index);
+                        listView1.Items.Insert(index, lvi);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                OtherControlFunc.WriteLog(ex.Message);
+                OtherControlFunc.ShowError(ex.Message);
+            }
+        }
+
+        private void listDnViewItem_Click(object? sender, EventArgs e)
+        {
+            try
+            {
+                foreach (ListViewItem lvi in listView1.SelectedItems)
+                {
+                    if (lvi.Index + 1 < listView1.Items.Count)
+                    {
+                        int index = lvi.Index + 1;
+                        listView1.Items.RemoveAt(lvi.Index);
+                        listView1.Items.Insert(index, lvi);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                OtherControlFunc.WriteLog(ex.Message);
+                OtherControlFunc.ShowError(ex.Message);
+            }
+        }
         #endregion
 
         #region Changed
@@ -665,12 +728,6 @@ namespace X264GUIv2
             {
                 OtherControlFunc.WriteLog(ex.Message);
             }
-        }
-
-        private void settingToolStripMenuItem_DropDownClosing(object sender, ToolStripDropDownClosingEventArgs e)
-        {
-            if (e.CloseReason == ToolStripDropDownCloseReason.ItemClicked)
-                e.Cancel = true;
         }
         #endregion
 
@@ -980,7 +1037,10 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
                     }
 
                     if (sr.IndexOf("[error]") != -1)
-                        errProcess(ffprobeOutput, -1, out _);
+                    {
+                        ffprobeOutput.run = RunEnum.Error;
+                        throw new Exception(sr);
+                    }
                 }
             };
             exitCode = t.RunTask();
@@ -1023,7 +1083,10 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
                     }
 
                     if (sr.IndexOf("[error]") != -1)
-                        errProcess(ffprobeOutput, -1, out _);
+                    {
+                        ffprobeOutput.run = RunEnum.Error;
+                        throw new Exception(sr);
+                    }
                 }
             };
             exitCode = t.RunTask();
@@ -1049,7 +1112,7 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
             string audioFile;
             if (Path.GetExtension(ffprobeOutput.InFile).Equals(VideoExt.mkv, StringComparison.CurrentCultureIgnoreCase) || ffprobeOutput.isAac)
             {
-                if (File.Exists($"{ffprobeOutput.avsTempFile}.aac"))
+                if (File.Exists($@"{Path.GetDirectoryName(ffprobeOutput.InFile)}\{ffprobeOutput.avsTempFile}.aac"))
                     audioFile = $"{ffprobeOutput.avsTempFile}.aac";
                 else
                     audioFile = ffprobeOutput.InFile;
@@ -1073,8 +1136,8 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
                     timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
                     if (sr.IndexOf("Error") > -1)
                     {
-                        errProcess(ffprobeOutput, -1, out _);
-                        return;
+                        ffprobeOutput.run = RunEnum.Error;
+                        throw new Exception(sr);
                     }
 
                     Match match = Regex.Match(sr, @"\((\d+)/(\d+)\)");

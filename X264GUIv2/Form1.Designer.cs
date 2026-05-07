@@ -188,6 +188,7 @@
             // 
             // runBtn
             // 
+            runBtn.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             runBtn.Enabled = false;
             runBtn.Location = new Point(504, 27);
             runBtn.Name = "runBtn";
@@ -199,6 +200,7 @@
             // 
             // stopBtn
             // 
+            stopBtn.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             stopBtn.Enabled = false;
             stopBtn.Location = new Point(585, 27);
             stopBtn.Name = "stopBtn";
@@ -328,26 +330,26 @@
             // installPathToolStripMenuItem
             // 
             installPathToolStripMenuItem.Name = "installPathToolStripMenuItem";
-            installPathToolStripMenuItem.Size = new Size(180, 22);
+            installPathToolStripMenuItem.Size = new Size(158, 22);
             installPathToolStripMenuItem.Text = "開啟安裝資料夾";
             installPathToolStripMenuItem.Click += installPathToolStripMenuItem_Click;
             // 
             // logViewToolStripMenuItem
             // 
             logViewToolStripMenuItem.Name = "logViewToolStripMenuItem";
-            logViewToolStripMenuItem.Size = new Size(180, 22);
+            logViewToolStripMenuItem.Size = new Size(158, 22);
             logViewToolStripMenuItem.Text = "LogView";
             logViewToolStripMenuItem.Click += logViewToolStripMenuItem_Click;
             // 
             // toolStripSeparator2
             // 
             toolStripSeparator2.Name = "toolStripSeparator2";
-            toolStripSeparator2.Size = new Size(177, 6);
+            toolStripSeparator2.Size = new Size(155, 6);
             // 
             // logViewClearToolStripMenuItem
             // 
             logViewClearToolStripMenuItem.Name = "logViewClearToolStripMenuItem";
-            logViewClearToolStripMenuItem.Size = new Size(180, 22);
+            logViewClearToolStripMenuItem.Size = new Size(158, 22);
             logViewClearToolStripMenuItem.Text = "LogView 清除";
             logViewClearToolStripMenuItem.Click += logViewClearToolStripMenuItem_Click;
             // 

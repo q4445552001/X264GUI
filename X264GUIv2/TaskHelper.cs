@@ -174,7 +174,7 @@ namespace X264GUIv2
                     if (p.Id == pid && hWnd != IntPtr.Zero)
                     {
                         SendMessage(hWnd, WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
-                        //isClose = true;
+                        isClose = true;
                         isCloseMsg = $"{FileName} 檢查到 {AutoCloseDialogBox}，自動關閉";
                     }
                 });

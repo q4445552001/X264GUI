@@ -173,7 +173,8 @@ namespace X264GUIv2
             ListViewItem lis = new([.. row])
             {
                 Tag = ffprobeOutput.Guid,
-                ToolTipText = detailsItem.Text
+                ToolTipText = detailsItem.Text,
+                UseItemStyleForSubItems = false,
             };
 
             return lis;
