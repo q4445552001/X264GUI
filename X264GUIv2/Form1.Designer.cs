@@ -45,7 +45,6 @@
             statusStrip1 = new StatusStrip();
             toolStripStatusLabel1 = new ToolStripStatusLabel();
             progressText = new ToolStripStatusLabel();
-            timeStripStatusLabel = new ToolStripStatusLabel();
             timeStripStatus = new ToolStripStatusLabel();
             menuStrip1 = new MenuStrip();
             FileToolStripMenuItem = new ToolStripMenuItem();
@@ -60,8 +59,8 @@
             dbClearToolStripMenuItem = new ToolStripMenuItem();
             ViewMenuItem = new ToolStripMenuItem();
             installPathToolStripMenuItem = new ToolStripMenuItem();
-            logViewToolStripMenuItem = new ToolStripMenuItem();
             toolStripSeparator2 = new ToolStripSeparator();
+            logViewToolStripMenuItem = new ToolStripMenuItem();
             logViewClearToolStripMenuItem = new ToolStripMenuItem();
             settingToolStripMenuItem = new ToolStripMenuItem();
             AutoTrimToolStripMenuItem = new ToolStripMenuItem();
@@ -160,7 +159,7 @@
             progressBar1.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             progressBar1.Location = new Point(409, 58);
             progressBar1.Name = "progressBar1";
-            progressBar1.Size = new Size(254, 25);
+            progressBar1.Size = new Size(341, 25);
             progressBar1.TabIndex = 10;
             // 
             // listView1
@@ -174,7 +173,7 @@
             listView1.Name = "listView1";
             listView1.OwnerDraw = true;
             listView1.ShowItemToolTips = true;
-            listView1.Size = new Size(651, 300);
+            listView1.Size = new Size(738, 300);
             listView1.TabIndex = 12;
             listView1.UseCompatibleStateImageBehavior = false;
             listView1.View = View.Details;
@@ -190,7 +189,7 @@
             // 
             runBtn.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             runBtn.Enabled = false;
-            runBtn.Location = new Point(504, 27);
+            runBtn.Location = new Point(591, 27);
             runBtn.Name = "runBtn";
             runBtn.Size = new Size(75, 28);
             runBtn.TabIndex = 14;
@@ -202,7 +201,7 @@
             // 
             stopBtn.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             stopBtn.Enabled = false;
-            stopBtn.Location = new Point(585, 27);
+            stopBtn.Location = new Point(672, 27);
             stopBtn.Name = "stopBtn";
             stopBtn.Size = new Size(75, 28);
             stopBtn.TabIndex = 15;
@@ -212,10 +211,10 @@
             // 
             // statusStrip1
             // 
-            statusStrip1.Items.AddRange(new ToolStripItem[] { toolStripStatusLabel1, progressText, timeStripStatusLabel, timeStripStatus });
+            statusStrip1.Items.AddRange(new ToolStripItem[] { toolStripStatusLabel1, progressText, timeStripStatus });
             statusStrip1.Location = new Point(0, 408);
             statusStrip1.Name = "statusStrip1";
-            statusStrip1.Size = new Size(672, 22);
+            statusStrip1.Size = new Size(759, 22);
             statusStrip1.TabIndex = 19;
             statusStrip1.Text = "statusStrip1";
             // 
@@ -231,26 +230,21 @@
             progressText.Size = new Size(26, 17);
             progressText.Text = "0/0";
             // 
-            // timeStripStatusLabel
-            // 
-            timeStripStatusLabel.Name = "timeStripStatusLabel";
-            timeStripStatusLabel.RightToLeft = RightToLeft.No;
-            timeStripStatusLabel.Size = new Size(70, 17);
-            timeStripStatusLabel.Text = "總消耗時間:";
-            // 
             // timeStripStatus
             // 
+            timeStripStatus.ImageAlign = ContentAlignment.MiddleLeft;
             timeStripStatus.Name = "timeStripStatus";
-            timeStripStatus.RightToLeft = RightToLeft.No;
-            timeStripStatus.Size = new Size(55, 17);
+            timeStripStatus.Size = new Size(653, 17);
+            timeStripStatus.Spring = true;
             timeStripStatus.Text = "00:00:00";
+            timeStripStatus.TextAlign = ContentAlignment.MiddleRight;
             // 
             // menuStrip1
             // 
             menuStrip1.Items.AddRange(new ToolStripItem[] { FileToolStripMenuItem, dbToolStripMenuItem, ViewMenuItem, settingToolStripMenuItem });
             menuStrip1.Location = new Point(0, 0);
             menuStrip1.Name = "menuStrip1";
-            menuStrip1.Size = new Size(672, 24);
+            menuStrip1.Size = new Size(759, 24);
             menuStrip1.TabIndex = 20;
             menuStrip1.Text = "menuStrip1";
             // 
@@ -322,7 +316,7 @@
             // 
             // ViewMenuItem
             // 
-            ViewMenuItem.DropDownItems.AddRange(new ToolStripItem[] { installPathToolStripMenuItem, logViewToolStripMenuItem, toolStripSeparator2, logViewClearToolStripMenuItem });
+            ViewMenuItem.DropDownItems.AddRange(new ToolStripItem[] { installPathToolStripMenuItem, toolStripSeparator2, logViewToolStripMenuItem, logViewClearToolStripMenuItem });
             ViewMenuItem.Name = "ViewMenuItem";
             ViewMenuItem.Size = new Size(43, 20);
             ViewMenuItem.Text = "檢視";
@@ -334,17 +328,17 @@
             installPathToolStripMenuItem.Text = "開啟安裝資料夾";
             installPathToolStripMenuItem.Click += installPathToolStripMenuItem_Click;
             // 
+            // toolStripSeparator2
+            // 
+            toolStripSeparator2.Name = "toolStripSeparator2";
+            toolStripSeparator2.Size = new Size(155, 6);
+            // 
             // logViewToolStripMenuItem
             // 
             logViewToolStripMenuItem.Name = "logViewToolStripMenuItem";
             logViewToolStripMenuItem.Size = new Size(158, 22);
             logViewToolStripMenuItem.Text = "LogView";
             logViewToolStripMenuItem.Click += logViewToolStripMenuItem_Click;
-            // 
-            // toolStripSeparator2
-            // 
-            toolStripSeparator2.Name = "toolStripSeparator2";
-            toolStripSeparator2.Size = new Size(155, 6);
             // 
             // logViewClearToolStripMenuItem
             // 
@@ -392,7 +386,7 @@
             AutoScaleDimensions = new SizeF(8F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
             AutoValidate = AutoValidate.EnableAllowFocusChange;
-            ClientSize = new Size(672, 430);
+            ClientSize = new Size(759, 430);
             Controls.Add(diffBtn);
             Controls.Add(addBtn);
             Controls.Add(statusStrip1);
@@ -455,7 +449,6 @@
         private ToolStripSeparator toolStripSeparator1;
         public Button addBtn;
         public Button diffBtn;
-        public ToolStripStatusLabel timeStripStatusLabel;
         public ToolStripStatusLabel timeStripStatus;
         private ToolStripMenuItem dbToolStripMenuItem;
         private ToolStripMenuItem dbSaveToolStripMenuItem;
