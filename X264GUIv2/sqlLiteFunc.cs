@@ -18,7 +18,7 @@ namespace X264GUIv2
         {
             SqlMapper.AddTypeHandler(new GuidTypeHandler());
             string dbName = $"{Assembly.GetExecutingAssembly().EntryPoint?.DeclaringType?.Namespace}.db";
-            connection = new SqliteConnection($"Data Source={dbName}");
+            connection = new SqliteConnection($@"Data Source={AppDomain.CurrentDomain.BaseDirectory}{dbName}");
             connection.Open();
 
             CreateTable();

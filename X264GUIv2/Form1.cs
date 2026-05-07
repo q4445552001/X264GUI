@@ -8,26 +8,37 @@ namespace X264GUIv2
 {
     public partial class Form1 : Form
     {
+        #region 變數
         private readonly VideoFunc videoFunc;
         private CancellationTokenSource? Cts { get; set; }
-        public int bitRateDefault = 1000000; //初始化彼特率
 
+        /// <summary>
+        /// 初始化彼特率
+        /// </summary>
+        public int bitRateDefault = 1000000;
+
+        /// <summary>
+        /// 目前使用的ListItem
+        /// </summary>
+        private int useIdx { get; set; } = -1;
+        #endregion
+
+        #region 內鍵元件
         public readonly Form2 f2;
         public readonly ContextMenuStrip listViewMenu;
         public readonly ToolStripMenuItem listDiffViewItem;
         public readonly ToolStripMenuItem listFolderViewItem;
         public readonly ToolStripMenuItem listUpViewItem;
         public readonly ToolStripMenuItem listDnViewItem;
+        public readonly ToolStripMenuItem listRestViewItem;
+        #endregion
 
+        #region 進度分配設定
         private float weightAudio => AutoTrimToolStripMenuItem.Checked ? .10f : 0f;
         private float weightOnePass => (.96f - weightAudio) / 2;
         private float weightTwoPass => weightOnePass;
         private float weightMerge => 100f - weightOnePass;
-
-        /// <summary>
-        /// 目前使用的ListItem
-        /// </summary>
-        private int useIdx { get; set; } = -1;
+        #endregion
 
         #region 初始化
 
@@ -90,17 +101,22 @@ namespace X264GUIv2
             listFolderViewItem = new() { Text = "檢視資料夾" };
             listFolderViewItem.Click += listFolderViewItem_Click;
 
+            listRestViewItem = new() { Text = "重置狀態" };
+            listRestViewItem.Click += listRestViewItem_Click;
+
+            listDnViewItem = new() { Text = "下移" };
+            listDnViewItem.Click += listDnViewItem_Click;
+
             listDiffViewItem = new() { Text = "移除" };
             listDiffViewItem.Click += listDiffViewItem_Click;
 
             listUpViewItem = new() { Text = "上移" };
             listUpViewItem.Click += listUpViewItem_Click;
 
-            listDnViewItem = new() { Text = "下移" };
-            listDnViewItem.Click += listDnViewItem_Click;
-
             listViewMenu.Items.AddRange([
                 listFolderViewItem,
+                new ToolStripSeparator(),
+                listRestViewItem,
                 new ToolStripSeparator(),
                 listDiffViewItem,
                 new ToolStripSeparator(),
@@ -272,7 +288,7 @@ namespace X264GUIv2
                     listView1.Items.RemoveAt(item);
                 }
 
-                progressText.Text = $"{videoFunc.ffprobeData.Count(x => x.run == RunEnum.Done)}/{listView1.Items.Count}";
+                progressText.Text = $"{videoFunc.ffprobeData.Count(x => x.run == RunEnum.Done)}/{videoFunc.ffprobeData.Count}";
             }
             catch (Exception ex)
             {
@@ -313,13 +329,12 @@ namespace X264GUIv2
             try
             {
                 listView1.Items.Clear();
+                videoFunc.ffprobeData.Clear();
                 runBtn.Enabled = false;
                 stopBtn.Enabled = false;
-                progressText.Text = $"{videoFunc.ffprobeData.Count(x => x.run == RunEnum.Done)}/{listView1.Items.Count}";
+                progressText.Text = $"{videoFunc.ffprobeData.Count(x => x.run == RunEnum.Done)}/{videoFunc.ffprobeData.Count}";
                 listView1.Columns[0].Tag = false;
                 listView1.Refresh();
-
-                videoFunc.ffprobeData.Clear();
             }
             catch (Exception ex)
             {
@@ -378,7 +393,7 @@ namespace X264GUIv2
                 foreach (FfprobeOutput ffprobeOutput in cacheData)
                     listView1.Items.Add(VideoFunc.DataViewObject(ffprobeOutput));
 
-                progressText.Text = $"{videoFunc.ffprobeData.Count(x => x.run == RunEnum.Done)}/{listView1.Items.Count}";
+                progressText.Text = $"{videoFunc.ffprobeData.Count(x => x.run == RunEnum.Done)}/{videoFunc.ffprobeData.Count}";
                 runBtn.Enabled = listView1.Items.Count != 0;
             }
             catch (Exception ex)
@@ -598,13 +613,16 @@ namespace X264GUIv2
         {
             try
             {
-                var idx1 = OtherControlFunc.findFfprobItem(videoFunc.ffprobeData, (Guid?)listViewMenu.Tag);
-                var idx2 = OtherControlFunc.findListItem(listView1, (Guid?)listViewMenu.Tag);
+                foreach (ListViewItem item in listView1.SelectedItems)
+                {
+                    var idx1 = OtherControlFunc.findFfprobItem(videoFunc.ffprobeData, (Guid?)item.Tag);
+                    var idx2 = OtherControlFunc.findListItem(listView1, (Guid?)item.Tag);
 
-                videoFunc.ffprobeData.RemoveAt(idx1);
-                listView1.Items.RemoveAt(idx2);
+                    videoFunc.ffprobeData.RemoveAt(idx1);
+                    listView1.Items.RemoveAt(idx2);
+                }
 
-                progressText.Text = $"{videoFunc.ffprobeData.Count(x => x.run == RunEnum.Done)}/{listView1.Items.Count}";
+                progressText.Text = $"{videoFunc.ffprobeData.Count(x => x.run == RunEnum.Done)}/{videoFunc.ffprobeData.Count}";
             }
             catch (Exception ex)
             {
@@ -617,13 +635,13 @@ namespace X264GUIv2
         {
             try
             {
-                foreach (ListViewItem lvi in listView1.SelectedItems)
+                foreach (ListViewItem item in listView1.SelectedItems)
                 {
-                    if (lvi.Index > 0)
+                    if (item.Index > 0)
                     {
-                        int index = lvi.Index - 1;
-                        listView1.Items.RemoveAt(lvi.Index);
-                        listView1.Items.Insert(index, lvi);
+                        int index = item.Index - 1;
+                        listView1.Items.RemoveAt(item.Index);
+                        listView1.Items.Insert(index, item);
                     }
                 }
             }
@@ -638,14 +656,35 @@ namespace X264GUIv2
         {
             try
             {
-                foreach (ListViewItem lvi in listView1.SelectedItems)
+                foreach (ListViewItem item in listView1.SelectedItems)
                 {
-                    if (lvi.Index + 1 < listView1.Items.Count)
+                    if (item.Index + 1 < listView1.Items.Count)
                     {
-                        int index = lvi.Index + 1;
-                        listView1.Items.RemoveAt(lvi.Index);
-                        listView1.Items.Insert(index, lvi);
+                        int index = item.Index + 1;
+                        listView1.Items.RemoveAt(item.Index);
+                        listView1.Items.Insert(index, item);
                     }
+                }
+            }
+            catch (Exception ex)
+            {
+                OtherControlFunc.WriteLog(ex.Message);
+                OtherControlFunc.ShowError(ex.Message);
+            }
+        }
+
+        private void listRestViewItem_Click(object? sender, EventArgs e)
+        {
+            try
+            {
+                foreach (ListViewItem item in listView1.SelectedItems)
+                {
+                    var idx1 = OtherControlFunc.findFfprobItem(videoFunc.ffprobeData, (Guid?)item.Tag);
+                    var idx2 = OtherControlFunc.findListItem(listView1, (Guid?)item.Tag);
+
+                    videoFunc.ffprobeData[idx1].run = RunEnum.Idel;
+                    listView1.Items[idx2].SubItems[8].ForeColor = Color.Black;
+                    listView1.Items[idx2].SubItems[8].Text = RunEnum.Idel.GetDisplayName();
                 }
             }
             catch (Exception ex)
@@ -811,7 +850,7 @@ namespace X264GUIv2
             listView1.Items[useIdx].SubItems[8].ForeColor = Color.Black;
             listView1.Items[useIdx].SubItems[8].Text = RunEnum.Init.GetDisplayName();
             ffprobeOutput.run = RunEnum.Init;
-            progressText.Text = $"{videoFunc.ffprobeData.Count(x => x.run == RunEnum.Done)}/{listView1.Items.Count}";
+            progressText.Text = $"{videoFunc.ffprobeData.Count(x => x.run == RunEnum.Done)}/{videoFunc.ffprobeData.Count}";
 
             stopBtn.Enabled = true;
             UpdateProgres(0, 100);

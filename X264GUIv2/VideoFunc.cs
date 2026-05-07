@@ -59,7 +59,7 @@ namespace X264GUIv2
                 OtherControlFunc.WriteLog(ex.Message);
             }
 
-            form.progressText.Text = $"{ffprobeData.Count(x => x.run == RunEnum.Done)}/{form.listView1.Items.Count}";
+            form.progressText.Text = $"{ffprobeData.Count(x => x.run == RunEnum.Done)}/{ffprobeData.Count}";
             form.runBtn.Enabled = form.listView1.Items.Count != 0;
         }
 
@@ -200,8 +200,6 @@ namespace X264GUIv2
                 }
                 else if (bitrateEnum == BitrateEnum.Manual)
                     ffprobeOutput.NewDetail.bitrate = (int)form.bitrateNumeric.Value * 1000;
-
-                ffprobeOutput.run = RunEnum.Idel;
             }
 
             return ffprobeOutput;
@@ -210,10 +208,7 @@ namespace X264GUIv2
         public FfprobeOutput fpsFunc(FfprobeOutput ffprobeOutput)
         {
             if (form.fpsCBox.Items[form.fpsCBox.SelectedIndex] is ComboboxItem item)
-            {
                 ffprobeOutput.NewDetail.frameStr = item.Value == "Auto" ? ffprobeOutput.OriDetail.frameStr : item.Value;
-                ffprobeOutput.run = RunEnum.Idel;
-            }
 
             return ffprobeOutput;
         }
@@ -247,7 +242,6 @@ namespace X264GUIv2
                 ffprobeOutput.NewDetail.resolutionH = resolution;
             }
 
-            ffprobeOutput.run = RunEnum.Idel;
             return ffprobeOutput;
         }
 
@@ -262,8 +256,6 @@ namespace X264GUIv2
 
                 if (bitrateEnum == BitrateEnum.Manual)
                     ffprobeOutput.NewDetail.bitrate = (int)form.bitrateNumeric.Value * 1000;
-
-                ffprobeOutput.run = RunEnum.Idel;
             }
 
             return ffprobeOutput;
