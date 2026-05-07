@@ -45,12 +45,10 @@
 	<ItemGroup>
 	  <PackageReference Include="Dapper" Version="2.1.72" />
 	  <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.7" />
+	  <PackageReference Include="WindowsAPICodePack" Version="8.0.15.1" />
 	</ItemGroup>
 	<ItemGroup>
-	  <None Update="dotnet-runtime-10.0.7-win-x64.exe">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	  <None Update="runtime-desktop-10.0.7-windows-x64-installer.txt">
+	  <None Update="runtime-desktop-8.0.26-windows-x64-installer.txt">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
 	</ItemGroup>
