@@ -3,7 +3,6 @@ using System.Text;
 namespace X264GUIv2
 {
     //TODO: avs trim 功能尚未完整
-    //TODO: windows 工作列進度條
 
     internal static class Program
     {

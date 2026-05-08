@@ -67,7 +67,7 @@ namespace X264GUIv2
             string argument = ArgumentList.Count > 0 ? string.Join(" ", ArgumentList).Replace("\r\n", " ") : "";
 #if DEBUG
             Debug.WriteLine($@"""{FileName}"" {argument}");
-            OtherControlFunc.WriteLog($@"""{FileName}"" {argument}");
+            WriteFile.WriteLog($@"""{FileName}"" {argument}");
 #endif
 
             Process p = new()
@@ -103,7 +103,7 @@ namespace X264GUIv2
                     }
                     catch (Exception ex)
                     {
-                        OtherControlFunc.WriteLog(ex.Message);
+                        WriteFile.WriteLog(ex.Message);
                     }
                 }
             };
@@ -121,7 +121,7 @@ namespace X264GUIv2
                     }
                     catch (Exception ex)
                     {
-                        OtherControlFunc.WriteLog(ex.Message);
+                        WriteFile.WriteLog(ex.Message);
                     }
                 }
             };

@@ -7,6 +7,6 @@
         public static string mkv = "mkv";
         public static string mov = "mov";
         public static string webm = "webm";
-        public static string[] GetVideoExt => [mp4, mkv, avi, mov];
+        public static string[] GetVideoExt => [mp4, mkv, avi, mov, webm];
     }
 }

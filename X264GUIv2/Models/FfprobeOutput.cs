@@ -7,8 +7,19 @@ namespace X264GUIv2.Models
     {
         public Guid Guid { get; set; } = Guid.NewGuid();
 
+        public string InFile { get; set; } = "";
+
+        [NotMapped]
+        public string InFileName => Path.GetFileName(InFile);
+
+        [NotMapped]
+        public string InFilePath => $@"{Path.GetDirectoryName(InFile) ?? "."}";
+
         [NotMapped]
         public string avsTempFile = $"_avsTemp_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
+
+        [NotMapped]
+        public string OutFile => $@"{InFilePath}\{Path.GetFileNameWithoutExtension(InFile)}-0.mp4";
 
         public bool isAac { get; set; } = false;
 
@@ -22,14 +33,6 @@ namespace X264GUIv2.Models
         [NotMapped]
         public Detail OriDetail { get; set; } = new();
 
-        public string InFile { get; set; } = "";
-
-        [NotMapped]
-        public string InFileName => Path.GetFileName(InFile);
-
-        [NotMapped]
-        public string OutFile => $@"{Path.GetDirectoryName(InFile)}\{Path.GetFileNameWithoutExtension(InFile)}-0.mp4";
-
         public int idx { get; set; } = 0;
 
         public RunEnum run { get; set; } = RunEnum.Idel;
@@ -39,10 +42,10 @@ namespace X264GUIv2.Models
         {
             get
             {
-                if (File.Exists(Path.GetDirectoryName(InFile) + "\\" + Path.GetFileNameWithoutExtension(InFile) + ".ass"))
-                    return $@"{Path.GetDirectoryName(InFile)}\{Path.GetFileNameWithoutExtension(InFile)}.ass";
+                if (File.Exists(InFilePath + "\\" + Path.GetFileNameWithoutExtension(InFile) + ".ass"))
+                    return $@"{InFilePath}\{Path.GetFileNameWithoutExtension(InFile)}.ass";
                 else
-                    return "";
+                    return string.Empty;
             }
         }
 

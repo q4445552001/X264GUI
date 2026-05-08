@@ -79,27 +79,6 @@ namespace X264GUIv2
                 Process.Start("explorer.exe", $@"""{path}""");
         }
 
-        /// <summary>
-        /// 寫入log
-        /// </summary>
-        public static void WriteLog(string Str, Action<string>? action = null)
-        {
-            try
-            {
-                var str = $"[{DateTime.Now:yyyy/MM/dd HH:mm:ss:fff}] {Str}";
-
-#if DEBUG
-                Debug.WriteLine(str);
-#endif
-                action?.Invoke(str);
-
-                using StreamWriter sw = new($"{AppDomain.CurrentDomain.BaseDirectory}\\{Assembly.GetExecutingAssembly().EntryPoint?.DeclaringType?.Namespace}_log.txt", true);
-                sw.WriteLine(str);
-                sw.Close();
-            }
-            catch { }
-        }
-
         public static int findFfprobItem(List<FfprobeOutput> ffprobeOutputs, Guid? guid)
         {
             if (guid == null)

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows.Forms.VisualStyles;
 using X264GUIv2.Enums;
@@ -179,7 +180,7 @@ namespace X264GUIv2
                         catch (Exception ex)
                         {
                             errProcess(videoFunc.ffprobeData[idx], -1, out RunEnum isRun);
-                            OtherControlFunc.WriteLog(ex.Message);
+                            WriteFile.WriteLog(ex.Message);
                             continue;
                         }
 
@@ -220,6 +221,7 @@ namespace X264GUIv2
                 videoFunc.ffprobeData[idx].run = RunEnum.Stop;
                 VideoFunc.Delete(videoFunc.ffprobeData[idx]);
                 btnControl(true);
+                TaskbarProgress.Error();
                 OtherControlFunc.ShowError("已強制停止");
             }
         }
@@ -232,7 +234,7 @@ namespace X264GUIv2
             }
             catch (Exception ex)
             {
-                OtherControlFunc.WriteLog(ex.Message);
+                WriteFile.WriteLog(ex.Message);
                 OtherControlFunc.ShowError(ex.Message);
             }
         }
@@ -259,7 +261,7 @@ namespace X264GUIv2
             }
             catch (Exception ex)
             {
-                OtherControlFunc.WriteLog(ex.Message);
+                WriteFile.WriteLog(ex.Message);
                 OtherControlFunc.ShowError(ex.Message);
             }
         }
@@ -272,7 +274,7 @@ namespace X264GUIv2
             }
             catch (Exception ex)
             {
-                OtherControlFunc.WriteLog(ex.Message);
+                WriteFile.WriteLog(ex.Message);
                 OtherControlFunc.ShowError(ex.Message);
             }
         }
@@ -292,7 +294,7 @@ namespace X264GUIv2
             }
             catch (Exception ex)
             {
-                OtherControlFunc.WriteLog(ex.Message);
+                WriteFile.WriteLog(ex.Message);
                 OtherControlFunc.ShowError(ex.Message);
             }
         }
@@ -317,6 +319,7 @@ namespace X264GUIv2
             AutoTrimToolStripMenuItem.Enabled = isClose;
 
             listDiffViewItem.Enabled = isClose;
+            listRestViewItem.Enabled = isClose;
             listUpViewItem.Enabled = isClose;
             listDnViewItem.Enabled = isClose;
         }
@@ -338,7 +341,7 @@ namespace X264GUIv2
             }
             catch (Exception ex)
             {
-                OtherControlFunc.WriteLog(ex.Message);
+                WriteFile.WriteLog(ex.Message);
                 OtherControlFunc.ShowError(ex.Message);
             }
         }
@@ -351,7 +354,7 @@ namespace X264GUIv2
             }
             catch (Exception ex)
             {
-                OtherControlFunc.WriteLog(ex.Message);
+                WriteFile.WriteLog(ex.Message);
                 OtherControlFunc.ShowError(ex.Message);
             }
         }
@@ -364,7 +367,7 @@ namespace X264GUIv2
             }
             catch (Exception ex)
             {
-                OtherControlFunc.WriteLog(ex.Message);
+                WriteFile.WriteLog(ex.Message);
                 OtherControlFunc.ShowError(ex.Message);
             }
         }
@@ -398,7 +401,7 @@ namespace X264GUIv2
             }
             catch (Exception ex)
             {
-                OtherControlFunc.WriteLog(ex.Message);
+                WriteFile.WriteLog(ex.Message);
                 OtherControlFunc.ShowError(ex.Message);
             }
         }
@@ -431,7 +434,7 @@ namespace X264GUIv2
             }
             catch (Exception ex)
             {
-                OtherControlFunc.WriteLog(ex.Message);
+                WriteFile.WriteLog(ex.Message);
                 OtherControlFunc.ShowError(ex.Message);
             }
         }
@@ -447,7 +450,7 @@ namespace X264GUIv2
             }
             catch (Exception ex)
             {
-                OtherControlFunc.WriteLog(ex.Message);
+                WriteFile.WriteLog(ex.Message);
                 OtherControlFunc.ShowError(ex.Message);
             }
         }
@@ -456,11 +459,14 @@ namespace X264GUIv2
         {
             try
             {
-                OtherControlFunc.openFolder(AppDomain.CurrentDomain.SetupInformation.ApplicationBase);
+                if (File.Exists(WriteFile.WritePath))
+                    OtherControlFunc.openFolder(WriteFile.WritePath);
+                else
+                    OtherControlFunc.openFolder(AppDomain.CurrentDomain.SetupInformation.ApplicationBase);
             }
             catch (Exception ex)
             {
-                OtherControlFunc.WriteLog(ex.Message);
+                WriteFile.WriteLog(ex.Message);
                 OtherControlFunc.ShowError(ex.Message);
             }
         }
@@ -497,7 +503,7 @@ namespace X264GUIv2
             }
             catch (Exception ex)
             {
-                OtherControlFunc.WriteLog(ex.Message);
+                WriteFile.WriteLog(ex.Message);
             }
         }
 
@@ -516,7 +522,7 @@ namespace X264GUIv2
             }
             catch (Exception ex)
             {
-                OtherControlFunc.WriteLog(ex.Message);
+                WriteFile.WriteLog(ex.Message);
             }
         }
 
@@ -532,7 +538,7 @@ namespace X264GUIv2
             }
             catch (Exception ex)
             {
-                OtherControlFunc.WriteLog(ex.Message);
+                WriteFile.WriteLog(ex.Message);
             }
         }
 
@@ -566,7 +572,7 @@ namespace X264GUIv2
             }
             catch (Exception ex)
             {
-                OtherControlFunc.WriteLog(ex.Message);
+                WriteFile.WriteLog(ex.Message);
             }
         }
 
@@ -587,7 +593,7 @@ namespace X264GUIv2
             }
             catch (Exception ex)
             {
-                OtherControlFunc.WriteLog(ex.Message);
+                WriteFile.WriteLog(ex.Message);
                 OtherControlFunc.ShowError(ex.Message);
             }
         }
@@ -604,7 +610,7 @@ namespace X264GUIv2
             }
             catch (Exception ex)
             {
-                OtherControlFunc.WriteLog(ex.Message);
+                WriteFile.WriteLog(ex.Message);
                 OtherControlFunc.ShowError(ex.Message);
             }
         }
@@ -626,7 +632,7 @@ namespace X264GUIv2
             }
             catch (Exception ex)
             {
-                OtherControlFunc.WriteLog(ex.Message);
+                WriteFile.WriteLog(ex.Message);
                 OtherControlFunc.ShowError(ex.Message);
             }
         }
@@ -647,7 +653,7 @@ namespace X264GUIv2
             }
             catch (Exception ex)
             {
-                OtherControlFunc.WriteLog(ex.Message);
+                WriteFile.WriteLog(ex.Message);
                 OtherControlFunc.ShowError(ex.Message);
             }
         }
@@ -668,7 +674,7 @@ namespace X264GUIv2
             }
             catch (Exception ex)
             {
-                OtherControlFunc.WriteLog(ex.Message);
+                WriteFile.WriteLog(ex.Message);
                 OtherControlFunc.ShowError(ex.Message);
             }
         }
@@ -689,7 +695,7 @@ namespace X264GUIv2
             }
             catch (Exception ex)
             {
-                OtherControlFunc.WriteLog(ex.Message);
+                WriteFile.WriteLog(ex.Message);
                 OtherControlFunc.ShowError(ex.Message);
             }
         }
@@ -712,7 +718,7 @@ namespace X264GUIv2
             }
             catch (Exception ex)
             {
-                OtherControlFunc.WriteLog(ex.Message);
+                WriteFile.WriteLog(ex.Message);
             }
         }
 
@@ -725,7 +731,7 @@ namespace X264GUIv2
             }
             catch (Exception ex)
             {
-                OtherControlFunc.WriteLog(ex.Message);
+                WriteFile.WriteLog(ex.Message);
             }
         }
 
@@ -738,7 +744,7 @@ namespace X264GUIv2
             }
             catch (Exception ex)
             {
-                OtherControlFunc.WriteLog(ex.Message);
+                WriteFile.WriteLog(ex.Message);
             }
         }
 
@@ -765,7 +771,7 @@ namespace X264GUIv2
             }
             catch (Exception ex)
             {
-                OtherControlFunc.WriteLog(ex.Message);
+                WriteFile.WriteLog(ex.Message);
             }
         }
         #endregion
@@ -838,11 +844,10 @@ namespace X264GUIv2
             if (!File.Exists(ffprobeOutput.InFile))
                 throw new Exception($"無效路徑 {ffprobeOutput.InFile}");
 
-            string? path = Path.GetDirectoryName(ffprobeOutput.InFile);
-            if (string.IsNullOrWhiteSpace(path))
-                throw new Exception($"無效路徑 {path}");
+            if (string.IsNullOrWhiteSpace(ffprobeOutput.InFilePath))
+                throw new Exception($"無效路徑 {ffprobeOutput.InFilePath}");
 
-            Environment.CurrentDirectory = path;
+            Environment.CurrentDirectory = ffprobeOutput.InFilePath;
 
             int listViewCount = listView1.Items.Count;
 
@@ -853,7 +858,9 @@ namespace X264GUIv2
             progressText.Text = $"{videoFunc.ffprobeData.Count(x => x.run == RunEnum.Done)}/{videoFunc.ffprobeData.Count}";
 
             stopBtn.Enabled = true;
-            UpdateProgres(0, 100);
+            UpdateProgres(videoFunc.ffprobeData.Count(x => x.run == RunEnum.Done), videoFunc.ffprobeData.Count);
+            TaskbarProgress.Clear();
+            TaskbarProgress.Set(videoFunc.ffprobeData.Count(x => x.run == RunEnum.Done), videoFunc.ffprobeData.Count);
 
             double prodatabar;
             string avs;
@@ -877,14 +884,15 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
 
             if (File.Exists(@$".\{Path.GetFileNameWithoutExtension(ffprobeOutput.InFile)}.avs"))
             {
-                OtherControlFunc.WriteLog($"使用自訂 {@$".\{Path.GetFileNameWithoutExtension(ffprobeOutput.InFile)}.avs"}");
+                WriteFile.WriteLog($"使用自訂 {@$".\{Path.GetFileNameWithoutExtension(ffprobeOutput.InFile)}.avs"}");
                 File.Copy(@$".\{Path.GetFileNameWithoutExtension(ffprobeOutput.InFile)}.avs", @$".\{ffprobeOutput.avsTempFile}.avs", true);
             }
             else
                 File.WriteAllText(@$".\{ffprobeOutput.avsTempFile}.avs", avs);
             #endregion
 
-            ffprobeOutput = audioProcess(ffprobeOutput, path, sw1, sw2, out string audioMsg);
+            TaskbarProgress.Set(videoFunc.ffprobeData.Count(x => x.run == RunEnum.Done), videoFunc.ffprobeData.Count);
+            ffprobeOutput = audioProcess(ffprobeOutput, sw1, sw2, out string audioMsg);
             ffprobeOutput = errProcess(ffprobeOutput, 0, out RunEnum isRunAudio);
             switch (isRunAudio)
             {
@@ -893,7 +901,8 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
             }
             prodatabar = 100 * weightAudio;
 
-            ffprobeOutput = onePassProcess(ffprobeOutput, path, sw1, sw2, prodatabar, out int exitCode, out string onePassMsg);
+            TaskbarProgress.Set(videoFunc.ffprobeData.Count(x => x.run == RunEnum.Done), videoFunc.ffprobeData.Count);
+            ffprobeOutput = onePassProcess(ffprobeOutput, sw1, sw2, prodatabar, out int exitCode, out string onePassMsg);
             ffprobeOutput = errProcess(ffprobeOutput, exitCode, out RunEnum isRunOnePass);
             switch (isRunOnePass)
             {
@@ -902,7 +911,8 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
             }
             prodatabar = 100 * (weightAudio + weightOnePass);
 
-            ffprobeOutput = twoPassProcess(ffprobeOutput, path, sw1, sw2, prodatabar, out exitCode, out string twoPassMsg);
+            TaskbarProgress.Set(videoFunc.ffprobeData.Count(x => x.run == RunEnum.Done), videoFunc.ffprobeData.Count);
+            ffprobeOutput = twoPassProcess(ffprobeOutput, sw1, sw2, prodatabar, out exitCode, out string twoPassMsg);
             ffprobeOutput = errProcess(ffprobeOutput, exitCode, out RunEnum isRunTwoPass);
             switch (isRunTwoPass)
             {
@@ -911,7 +921,8 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
             }
             prodatabar = 100 * (weightAudio + weightOnePass + weightTwoPass);
 
-            ffprobeOutput = mergeProcess(ffprobeOutput, path, sw1, sw2, prodatabar, out exitCode, out string mergeMsg);
+            TaskbarProgress.Set(videoFunc.ffprobeData.Count(x => x.run == RunEnum.Done), videoFunc.ffprobeData.Count);
+            ffprobeOutput = mergeProcess(ffprobeOutput, sw1, sw2, prodatabar, out exitCode, out string mergeMsg);
             ffprobeOutput = errProcess(ffprobeOutput, exitCode, out RunEnum isRunMerge);
             switch (isRunMerge)
             {
@@ -919,11 +930,17 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
                 case RunEnum.Error: throw new Exception($"{RunEnum.Merge.GetDisplayName()} : {mergeMsg}");
             }
 
-            UpdateProgres(100, 100);
+            VideoFunc.Delete(ffprobeOutput);
             listView1.Items[useIdx].SubItems[7].Text = "100 %";
             listView1.Items[useIdx].SubItems[8].Text = RunEnum.Done.GetDisplayName();
             ffprobeOutput.run = RunEnum.Done;
-            VideoFunc.Delete(ffprobeOutput);
+
+            UpdateProgres(100, 100);
+            if (videoFunc.ffprobeData.Count(x => x.run == RunEnum.Done) == videoFunc.ffprobeData.Count)
+                TaskbarProgress.Set(videoFunc.ffprobeData.Count, videoFunc.ffprobeData.Count);
+            else
+                TaskbarProgress.Error();
+
             TimeSpan Timemint = TimeSpan.FromSeconds(sw2.Elapsed.TotalSeconds);
             listView1.Items[useIdx].SubItems[9].Text = string.Format("{0:D2}:{1:D2}:{2:D2}", Timemint.Hours, Timemint.Minutes, Timemint.Seconds);
         }
@@ -931,7 +948,7 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
         /// <summary>
         /// 音效處理
         /// </summary>
-        private FfprobeOutput audioProcess(FfprobeOutput ffprobeOutput, string path, Stopwatch sw1, Stopwatch sw2, out string isCloseMsg)
+        private FfprobeOutput audioProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, out string isCloseMsg)
         {
             isCloseMsg = string.Empty;
 
@@ -945,15 +962,15 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
                 TaskHelper t = new()
                 {
                     Cts = Cts,
-                    RunPath = path,
+                    RunPath = ffprobeOutput.InFilePath,
                     FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\ffmpeg\ffmpeg.exe",
                     ArgumentList = {
-                        $@"-i ""{Path.GetDirectoryName(ffprobeOutput.InFile)}\{ffprobeOutput.InFileName}""",
+                        $@"-i ""{ffprobeOutput.InFilePath}\{ffprobeOutput.InFileName}""",
                         $@"-ar 48000",
                         $@"-ac 2",
                         $@"-af ""aresample=48000,asetpts=PTS-STARTPTS""",
                         $@"-c:a aac",
-                        $@"-q:a 1 ""{Path.GetDirectoryName(ffprobeOutput.InFile)}\{ffprobeOutput.avsTempFile}.aac""",
+                        $@"-q:a 1 ""{ffprobeOutput.InFilePath}\{ffprobeOutput.avsTempFile}.aac""",
                         $@"-fflags +genpts",
                         $@"-avoid_negative_ts make_zero",
                         $@"-movflags +faststart",
@@ -1000,11 +1017,11 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
                 new TaskHelper
                 {
                     Cts = Cts,
-                    RunPath = path,
+                    RunPath = ffprobeOutput.InFilePath,
                     FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\mkvextract.exe",
                     ArgumentList = {
                         $@"tracks ""{ffprobeOutput.InFile}""",
-                        $@"1:""{Path.GetDirectoryName(ffprobeOutput.InFile)}\{ffprobeOutput.avsTempFile}.aac""",
+                        $@"1:""{ffprobeOutput.InFilePath}\{ffprobeOutput.avsTempFile}.aac""",
                     },
                     ActionOut = sr =>
                     {
@@ -1022,12 +1039,12 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
                     new TaskHelper
                     {
                         Cts = Cts,
-                        RunPath = path,
+                        RunPath = ffprobeOutput.InFilePath,
                         FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\eac3to\eac3to.exe",
                         ArgumentList = {
                             $@"-log=NUL",
-                            $@"{Path.GetDirectoryName(ffprobeOutput.InFile)}\{ffprobeOutput.avsTempFile}.aac""",
-                            $@"""{Path.GetDirectoryName(ffprobeOutput.InFile)}\{ffprobeOutput.avsTempFile}.mp4""",
+                            $@"""{ffprobeOutput.InFilePath}\{ffprobeOutput.avsTempFile}.aac""",
+                            $@"""{ffprobeOutput.InFilePath}\{ffprobeOutput.avsTempFile}.mp4""",
                          },
                         ActionOut = sr =>
                         {
@@ -1045,7 +1062,7 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
         /// <summary>
         /// OnePass
         /// </summary>
-        private FfprobeOutput onePassProcess(FfprobeOutput ffprobeOutput, string path, Stopwatch sw1, Stopwatch sw2, double prodatabar, out int exitCode, out string isCloseMsg)
+        private FfprobeOutput onePassProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, double prodatabar, out int exitCode, out string isCloseMsg)
         {
             exitCode = 0;
             isCloseMsg = string.Empty;
@@ -1058,7 +1075,7 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
             TaskHelper t = new()
             {
                 Cts = Cts,
-                RunPath = path,
+                RunPath = ffprobeOutput.InFilePath,
                 AutoCloseDialogBox = "Warning",
                 FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\avs4x26x.exe",
                 ArgumentList = videoFunc.Xonepass(ffprobeOutput),
@@ -1091,7 +1108,7 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
         /// <summary>
         /// TwoPass
         /// </summary>
-        private FfprobeOutput twoPassProcess(FfprobeOutput ffprobeOutput, string path, Stopwatch sw1, Stopwatch sw2, double prodatabar, out int exitCode, out string isCloseMsg)
+        private FfprobeOutput twoPassProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, double prodatabar, out int exitCode, out string isCloseMsg)
         {
             exitCode = 0;
             isCloseMsg = string.Empty;
@@ -1104,7 +1121,7 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
             TaskHelper t = new()
             {
                 Cts = Cts,
-                RunPath = path,
+                RunPath = ffprobeOutput.InFilePath,
                 AutoCloseDialogBox = "Warning",
                 FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\avs4x26x.exe",
                 ArgumentList = videoFunc.Xtwopass(ffprobeOutput),
@@ -1137,7 +1154,7 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
         /// <summary>
         /// Merge
         /// </summary>
-        private FfprobeOutput mergeProcess(FfprobeOutput ffprobeOutput, string path, Stopwatch sw1, Stopwatch sw2, double prodatabar, out int exitCode, out string isCloseMsg)
+        private FfprobeOutput mergeProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, double prodatabar, out int exitCode, out string isCloseMsg)
         {
             exitCode = 0;
             isCloseMsg = string.Empty;
@@ -1151,7 +1168,7 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
             string audioFile;
             if (Path.GetExtension(ffprobeOutput.InFile).Equals(VideoExt.mkv, StringComparison.CurrentCultureIgnoreCase) || ffprobeOutput.isAac)
             {
-                if (File.Exists($@"{Path.GetDirectoryName(ffprobeOutput.InFile)}\{ffprobeOutput.avsTempFile}.aac"))
+                if (File.Exists($@"{ffprobeOutput.InFilePath}\{ffprobeOutput.avsTempFile}.aac"))
                     audioFile = $"{ffprobeOutput.avsTempFile}.aac";
                 else
                     audioFile = ffprobeOutput.InFile;
@@ -1162,7 +1179,8 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
             TaskHelper t = new()
             {
                 Cts = Cts,
-                RunPath = path,
+                IsWait = true,
+                RunPath = ffprobeOutput.InFilePath,
                 FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\mp4box.exe",
                 ArgumentList = {
                     $@"-add ""{ffprobeOutput.avsTempFile}.264""",
@@ -1173,11 +1191,6 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
                 {
                     f2.appendText = sr;
                     timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
-                    if (sr.IndexOf("Error") > -1)
-                    {
-                        ffprobeOutput.run = RunEnum.Error;
-                        throw new Exception(sr);
-                    }
 
                     Match match = Regex.Match(sr, @"\((\d+)/(\d+)\)");
                     if (match.Success)
@@ -1207,7 +1220,10 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
             }
 
             if (ffprobeOutput.run == RunEnum.Error)
+            {
                 run = RunEnum.Error;
+                TaskbarProgress.Error();
+            }
             else
                 run = ffprobeOutput.run;
 

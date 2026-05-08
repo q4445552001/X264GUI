@@ -48,15 +48,15 @@ namespace X264GUIv2
             }
             catch (IndexOutOfRangeException print)
             {
-                OtherControlFunc.WriteLog($"格式錯誤: {print}");
+                WriteFile.WriteLog($"格式錯誤: {print}");
             }
             catch (NullReferenceException print)
             {
-                OtherControlFunc.WriteLog($"格式錯誤: {print}");
+                WriteFile.WriteLog($"格式錯誤: {print}");
             }
             catch (Exception ex)
             {
-                OtherControlFunc.WriteLog(ex.Message);
+                WriteFile.WriteLog(ex.Message);
             }
 
             form.progressText.Text = $"{ffprobeData.Count(x => x.run == RunEnum.Done)}/{ffprobeData.Count}";
@@ -270,15 +270,15 @@ namespace X264GUIv2
             {
                 Thread.Sleep(1000);
                 File.Delete($"{ffprobeOutput.InFile}.ffindex");
-                File.Delete(@$"{Path.GetDirectoryName(ffprobeOutput.InFile)}\/x2642pass.stats.temp");
-                File.Delete(@$"{Path.GetDirectoryName(ffprobeOutput.InFile)}\/x2642pass.stats.mbtree.temp");
-                File.Delete(@$"{Path.GetDirectoryName(ffprobeOutput.InFile)}\/x2642pass.stats");
-                File.Delete(@$"{Path.GetDirectoryName(ffprobeOutput.InFile)}\/x2642pass.stats.mbtree");
-                File.Delete(@$"{Path.GetDirectoryName(ffprobeOutput.InFile)}\{ffprobeOutput.avsTempFile}.avs");
-                File.Delete(@$"{Path.GetDirectoryName(ffprobeOutput.InFile)}\{ffprobeOutput.avsTempFile}.ass");
-                File.Delete(@$"{Path.GetDirectoryName(ffprobeOutput.InFile)}\{ffprobeOutput.avsTempFile}.264");
-                File.Delete(@$"{Path.GetDirectoryName(ffprobeOutput.InFile)}\{ffprobeOutput.avsTempFile}.aac");
-                File.Delete(@$"{Path.GetDirectoryName(ffprobeOutput.InFile)}\{ffprobeOutput.avsTempFile}.mp4");
+                File.Delete(@$"{ffprobeOutput.InFilePath}\x2642pass.stats.temp");
+                File.Delete(@$"{ffprobeOutput.InFilePath}\x2642pass.stats.mbtree.temp");
+                File.Delete(@$"{ffprobeOutput.InFilePath}\x2642pass.stats");
+                File.Delete(@$"{ffprobeOutput.InFilePath}\x2642pass.stats.mbtree");
+                File.Delete(@$"{ffprobeOutput.InFilePath}\{ffprobeOutput.avsTempFile}.avs");
+                File.Delete(@$"{ffprobeOutput.InFilePath}\{ffprobeOutput.avsTempFile}.ass");
+                File.Delete(@$"{ffprobeOutput.InFilePath}\{ffprobeOutput.avsTempFile}.264");
+                File.Delete(@$"{ffprobeOutput.InFilePath}\{ffprobeOutput.avsTempFile}.aac");
+                File.Delete(@$"{ffprobeOutput.InFilePath}\{ffprobeOutput.avsTempFile}.mp4");
             }
             catch
             {

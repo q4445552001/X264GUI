@@ -234,7 +234,7 @@
             // 
             timeStripStatus.ImageAlign = ContentAlignment.MiddleLeft;
             timeStripStatus.Name = "timeStripStatus";
-            timeStripStatus.Size = new Size(653, 17);
+            timeStripStatus.Size = new Size(684, 17);
             timeStripStatus.Spring = true;
             timeStripStatus.Text = "00:00:00";
             timeStripStatus.TextAlign = ContentAlignment.MiddleRight;
@@ -324,26 +324,26 @@
             // installPathToolStripMenuItem
             // 
             installPathToolStripMenuItem.Name = "installPathToolStripMenuItem";
-            installPathToolStripMenuItem.Size = new Size(158, 22);
-            installPathToolStripMenuItem.Text = "開啟安裝資料夾";
+            installPathToolStripMenuItem.Size = new Size(189, 22);
+            installPathToolStripMenuItem.Text = "開啟 ErrorLog 資料夾";
             installPathToolStripMenuItem.Click += installPathToolStripMenuItem_Click;
             // 
             // toolStripSeparator2
             // 
             toolStripSeparator2.Name = "toolStripSeparator2";
-            toolStripSeparator2.Size = new Size(155, 6);
+            toolStripSeparator2.Size = new Size(186, 6);
             // 
             // logViewToolStripMenuItem
             // 
             logViewToolStripMenuItem.Name = "logViewToolStripMenuItem";
-            logViewToolStripMenuItem.Size = new Size(158, 22);
+            logViewToolStripMenuItem.Size = new Size(189, 22);
             logViewToolStripMenuItem.Text = "LogView";
             logViewToolStripMenuItem.Click += logViewToolStripMenuItem_Click;
             // 
             // logViewClearToolStripMenuItem
             // 
             logViewClearToolStripMenuItem.Name = "logViewClearToolStripMenuItem";
-            logViewClearToolStripMenuItem.Size = new Size(158, 22);
+            logViewClearToolStripMenuItem.Size = new Size(189, 22);
             logViewClearToolStripMenuItem.Text = "LogView 清除";
             logViewClearToolStripMenuItem.Click += logViewClearToolStripMenuItem_Click;
             // 
