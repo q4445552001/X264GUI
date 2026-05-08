@@ -72,7 +72,8 @@ namespace X264GUIv2
                     x.size,
                     x.InFile,
                     x.idx,
-                    run = (int)x.run
+                    run = (int)x.run,
+                    x.videoType,
                 }));
         }
 

@@ -1,4 +1,5 @@
-﻿using X264GUIv2.Enums;
+﻿using System.Diagnostics;
+using X264GUIv2.Enums;
 using X264GUIv2.Models;
 
 namespace X264GUIv2
@@ -12,6 +13,74 @@ namespace X264GUIv2
 
             BitrateEnum bitrateEnum = (BitrateEnum)v;
             form.bitrateNumeric.Enabled = bitrateEnum == BitrateEnum.Manual;
+        }
+
+        public void ffmpegOutput(FfprobeOutput ffprobeOutput, string sr, Stopwatch sw1, Stopwatch sw2)
+        {
+            form.listView1.Items[form.useIdx].SubItems[9].Text = OtherControlFunc.timeConv(sw2);
+            form.timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
+            int str = sr.IndexOf('=');
+
+            if (str <= 0)
+                return;
+
+            string key = sr[..str];
+            string value = sr[(str + 1)..];
+
+            if (key == "out_time_ms" && double.TryParse(value, out double outTimeMs))
+            {
+                double currentSeconds = outTimeMs / 1_000_000.0;
+                double pro = currentSeconds / ffprobeOutput.duration * 100.0;
+                float weightPass = 1f;
+                float weight = 0f;
+
+                if (ffprobeOutput.run == RunEnum.OnePass)
+                    weightPass = form.weightOnePass;
+                else if (ffprobeOutput.run == RunEnum.TwoPass)
+                {
+                    weightPass = form.weightOnePass;
+                    weight = (float)form.weightOnePass * 100;
+                }
+
+                if (ffprobeOutput.videoType == VideoTypeEnum.Aviscript && form.AutoTrimToolStripMenuItem.Checked)
+                    weight += (float)form.weightAudio * 100;
+
+                double proA;
+                if (ffprobeOutput.videoType != VideoTypeEnum.Aviscript && ffprobeOutput.run == RunEnum.AudioTrim)
+                    proA = pro * form.weightAudio;
+                else
+                    proA = (pro * weightPass) + weight;
+
+                form.listView1.Items[form.useIdx].SubItems[7].Text = $"{pro:F1} %";
+                UpdateProgres((float)proA, 100);
+            }
+        }
+
+        public void btnControl(bool isClose)
+        {
+            form.stopBtn.Enabled = !isClose;
+            form.runBtn.Enabled = isClose;
+            form.addBtn.Enabled = isClose;
+            form.diffBtn.Enabled = isClose;
+            form.bitrateCBox.Enabled = isClose;
+            bitrateCBoxControl();
+            form.fpsCBox.Enabled = isClose;
+            form.resolutionCBox.Enabled = isClose;
+            form.coreCBox.Enabled = isClose;
+
+            form.addToolStripMenuItem.Enabled = isClose;
+            form.diffToolStripMenuItem.Enabled = isClose;
+            form.clearToolStripMenuItem.Enabled = isClose;
+            form.dbLoadToolStripMenuItem.Enabled = isClose;
+            form.dbClearToolStripMenuItem.Enabled = isClose;
+            form.AutoTrimToolStripMenuItem.Enabled = isClose;
+            form.loadAvsToolStripMenuItem.Enabled = isClose;
+            form.createMergeToolStripMenuItem.Enabled = isClose;
+
+            form.listDiffViewItem.Enabled = isClose;
+            form.listRestViewItem.Enabled = isClose;
+            form.listUpViewItem.Enabled = isClose;
+            form.listDnViewItem.Enabled = isClose;
         }
 
         #region 進度條

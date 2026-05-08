@@ -2,8 +2,6 @@ using System.Text;
 
 namespace X264GUIv2
 {
-    //TODO: avs trim 功能尚未完整
-
     internal static class Program
     {
         [STAThread]

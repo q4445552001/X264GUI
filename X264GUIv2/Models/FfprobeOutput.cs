@@ -23,6 +23,22 @@ namespace X264GUIv2.Models
 
         public bool isAac { get; set; } = false;
 
+        [NotMapped]
+        private VideoTypeEnum? _videoType { get; set; }
+
+        public VideoTypeEnum videoType
+        {
+            get
+            {
+                if (_videoType == null)
+                    if (Path.GetExtension(InFile).Equals($".{VideoExt.avs}", StringComparison.CurrentCultureIgnoreCase))
+                        return VideoTypeEnum.Aviscript;
+
+                return _videoType ?? VideoTypeEnum.Normal;
+            }
+            set => _videoType = value;
+        }
+
         public double duration { get; set; } = 0;
 
         public int size { get; set; } = 0;

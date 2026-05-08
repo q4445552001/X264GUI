@@ -21,7 +21,7 @@ namespace X264GUIv2
         /// <summary>
         /// 目前使用的ListItem
         /// </summary>
-        private int useIdx { get; set; } = -1;
+        public int useIdx { get; set; } = -1;
         #endregion
 
         #region 內鍵元件
@@ -35,10 +35,10 @@ namespace X264GUIv2
         #endregion
 
         #region 進度分配設定
-        private float weightAudio => AutoTrimToolStripMenuItem.Checked ? .10f : 0f;
-        private float weightOnePass => (.96f - weightAudio) / 2;
-        private float weightTwoPass => weightOnePass;
-        private float weightMerge => 1f - (weightOnePass + weightOnePass);
+        public float weightAudio => AutoTrimToolStripMenuItem.Checked ? .10f : 0f;
+        public float weightOnePass => (.96f - weightAudio) / 2;
+        public float weightTwoPass => weightOnePass;
+        public float weightMerge => 1f - (weightOnePass + weightOnePass);
         #endregion
 
         #region 初始化
@@ -107,14 +107,14 @@ namespace X264GUIv2
             listRestViewItem = new() { Text = "重置狀態" };
             listRestViewItem.Click += listRestViewItem_Click;
 
+            listUpViewItem = new() { Text = "上移" };
+            listUpViewItem.Click += listUpViewItem_Click;
+
             listDnViewItem = new() { Text = "下移" };
             listDnViewItem.Click += listDnViewItem_Click;
 
             listDiffViewItem = new() { Text = "移除" };
             listDiffViewItem.Click += listDiffViewItem_Click;
-
-            listUpViewItem = new() { Text = "上移" };
-            listUpViewItem.Click += listUpViewItem_Click;
 
             listViewMenu.Items.AddRange([
                 listFolderViewItem,
@@ -159,10 +159,11 @@ namespace X264GUIv2
                     Stopwatch sw1 = new();
                     sw1.Start();
 
-                    btnControl(false);
+                    form1Control.btnControl(false);
 
                     Stopwatch sw2 = new();
-                    for (int idx = 0; idx < videoFunc.ffprobeData.Count; idx++)
+                    List<ListViewItem> listViewItems = [.. listView1.Items.Cast<ListViewItem>()];
+                    for (int idx = 0; idx < listViewItems.Count; idx++)
                     {
                         if (Cts.Token.IsCancellationRequested)
                             return;
@@ -172,9 +173,10 @@ namespace X264GUIv2
 
                         try
                         {
-                            useIdx = OtherControlFunc.findListItem(listView1, videoFunc.ffprobeData[idx].Guid);
-                            mainProcess(videoFunc.ffprobeData[idx], sw1, sw2);
-                            if (videoFunc.ffprobeData[idx].run == RunEnum.Stop)
+                            useIdx = idx;
+                            int itemIdx = OtherControlFunc.findFfprobItem(videoFunc.ffprobeData, (Guid?)listViewItems[idx].Tag);
+                            mainProcess(videoFunc.ffprobeData[itemIdx], sw1, sw2);
+                            if (videoFunc.ffprobeData[itemIdx].run == RunEnum.Stop)
                                 break;
                         }
                         catch (Exception ex)
@@ -187,7 +189,7 @@ namespace X264GUIv2
                         sw2.Stop();
                     }
 
-                    btnControl(true);
+                    form1Control.btnControl(true);
                     Cts.Cancel();
 
                     sw1.Stop();
@@ -210,6 +212,7 @@ namespace X264GUIv2
                         case "avs4x26x":
                         case "mp4box":
                         case "eac3to":
+                        case "ffmpeg":
                             p.Kill();
                             break;
                     }
@@ -220,11 +223,61 @@ namespace X264GUIv2
                 var idx = OtherControlFunc.findFfprobItem(videoFunc.ffprobeData, (Guid?)listView1.Items[useIdx].Tag);
                 videoFunc.ffprobeData[idx].run = RunEnum.Stop;
                 VideoFunc.Delete(videoFunc.ffprobeData[idx]);
-                btnControl(true);
+                form1Control.btnControl(true);
                 TaskbarProgress.Error();
                 OtherControlFunc.ShowError("已強制停止");
             }
         }
+
+        private void addBtn_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                OpenFileDialog openfile = new()
+                {
+                    Multiselect = true
+                };
+
+                string fileStr = "";
+                foreach (string ext in VideoExt.GetVideoExt)
+                    fileStr += $"*.{ext};";
+
+                fileStr = fileStr[..^1];
+
+                openfile.Filter = $"{fileStr}|{fileStr}";
+
+                if (openfile.ShowDialog() == DialogResult.OK)
+                    videoFunc.Encode(openfile.FileNames);
+            }
+            catch (Exception ex)
+            {
+                WriteFile.WriteLog(ex.Message);
+                OtherControlFunc.ShowError(ex.Message);
+            }
+        }
+
+        private void diffBtn_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                for (int i = listView1.SelectedItems.Count - 1; i >= 0; i--)
+                {
+                    int item = listView1.SelectedIndices[i];
+                    videoFunc.ffprobeData.RemoveAt(item);
+                    listView1.Items.RemoveAt(item);
+                }
+
+                progressText.Text = $"{videoFunc.ffprobeData.Count(x => x.run == RunEnum.Done)}/{videoFunc.ffprobeData.Count}";
+            }
+            catch (Exception ex)
+            {
+                WriteFile.WriteLog(ex.Message);
+                OtherControlFunc.ShowError(ex.Message);
+            }
+        }
+        #endregion
+
+        #region ToolStrip
 
         private void addToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -239,7 +292,31 @@ namespace X264GUIv2
             }
         }
 
-        private void addBtn_Click(object sender, EventArgs e)
+        private void loadAvsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                OpenFileDialog openfile = new()
+                {
+                    Multiselect = true
+                };
+
+                string fileStr = $"*.{VideoExt.avs};";
+                fileStr = fileStr[..^1];
+
+                openfile.Filter = $"{fileStr}|{fileStr}";
+
+                if (openfile.ShowDialog() == DialogResult.OK)
+                    videoFunc.Encode(openfile.FileNames);
+            }
+            catch (Exception ex)
+            {
+                WriteFile.WriteLog(ex.Message);
+                OtherControlFunc.ShowError(ex.Message);
+            }
+        }
+
+        private void createMergeToolStripMenuItem_Click(object sender, EventArgs e)
         {
             try
             {
@@ -278,54 +355,6 @@ namespace X264GUIv2
                 OtherControlFunc.ShowError(ex.Message);
             }
         }
-
-        private void diffBtn_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                for (int i = listView1.SelectedItems.Count - 1; i >= 0; i--)
-                {
-                    int item = listView1.SelectedIndices[i];
-                    videoFunc.ffprobeData.RemoveAt(item);
-                    listView1.Items.RemoveAt(item);
-                }
-
-                progressText.Text = $"{videoFunc.ffprobeData.Count(x => x.run == RunEnum.Done)}/{videoFunc.ffprobeData.Count}";
-            }
-            catch (Exception ex)
-            {
-                WriteFile.WriteLog(ex.Message);
-                OtherControlFunc.ShowError(ex.Message);
-            }
-        }
-
-        private void btnControl(bool isClose)
-        {
-            stopBtn.Enabled = !isClose;
-            runBtn.Enabled = isClose;
-            addBtn.Enabled = isClose;
-            diffBtn.Enabled = isClose;
-            bitrateCBox.Enabled = isClose;
-            form1Control.bitrateCBoxControl();
-            fpsCBox.Enabled = isClose;
-            resolutionCBox.Enabled = isClose;
-            coreCBox.Enabled = isClose;
-
-            addToolStripMenuItem.Enabled = isClose;
-            diffToolStripMenuItem.Enabled = isClose;
-            clearToolStripMenuItem.Enabled = isClose;
-            dbLoadToolStripMenuItem.Enabled = isClose;
-            dbClearToolStripMenuItem.Enabled = isClose;
-            AutoTrimToolStripMenuItem.Enabled = isClose;
-
-            listDiffViewItem.Enabled = isClose;
-            listRestViewItem.Enabled = isClose;
-            listUpViewItem.Enabled = isClose;
-            listDnViewItem.Enabled = isClose;
-        }
-        #endregion
-
-        #region ToolStrip
 
         private void clearToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -442,7 +471,7 @@ namespace X264GUIv2
         {
             try
             {
-                if (!(MessageBox.Show("確定清除?", "提示", MessageBoxButtons.YesNo) == DialogResult.Yes))
+                if (!(MessageBox.Show("確定清除進度?", "提示", MessageBoxButtons.YesNo) == DialogResult.Yes))
                     return;
 
                 using var sql = new sqlLiteFunc();
@@ -783,6 +812,7 @@ namespace X264GUIv2
             Environment.CurrentDirectory = ffprobeOutput.InFilePath;
 
             int listViewCount = listView1.Items.Count;
+            int exitCode = 0;
 
             #region 初始化
             listView1.Items[useIdx].SubItems[8].ForeColor = Color.Black;
@@ -796,46 +826,51 @@ namespace X264GUIv2
             TaskbarProgress.Set(videoFunc.ffprobeData.Count(x => x.run == RunEnum.Done), videoFunc.ffprobeData.Count);
 
             double prodatabar;
-            string avs;
-            if (string.IsNullOrWhiteSpace(ffprobeOutput.SubtitlesFile))
+            if (ffprobeOutput.videoType != VideoTypeEnum.Aviscript)
             {
-                avs = $@"
+                string avs;
+                if (string.IsNullOrWhiteSpace(ffprobeOutput.SubtitlesFile))
+                {
+                    avs = $@"
 LoadPlugin(""{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\ffms2.dll"") 
 FFVideoSource(""{Path.GetFileName(ffprobeOutput.InFileName)}"", fpsnum={ffprobeOutput.NewDetail.fpsnum}, fpsden={ffprobeOutput.NewDetail.fpsden})
 #deinterlace #crop #resize #denoise";
-            }
-            else
-            {
-                avs = $@"
+                }
+                else
+                {
+                    avs = $@"
 LoadPlugin(""{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\ffms2.dll"") 
 FFVideoSource(""{Path.GetFileName(ffprobeOutput.InFileName)}"", fpsnum={ffprobeOutput.NewDetail.fpsnum}, fpsden={ffprobeOutput.NewDetail.fpsden})
 LoadPlugin(""{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\VSFilter.dll"")
 TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
 #deinterlace #crop #resize #denoise";
-                File.Copy(ffprobeOutput.SubtitlesFile, $"{ffprobeOutput.avsTempFile}.ass", true);
-            }
+                    File.Copy(ffprobeOutput.SubtitlesFile, $"{ffprobeOutput.avsTempFile}.ass", true);
+                }
 
-            if (File.Exists(@$".\{Path.GetFileNameWithoutExtension(ffprobeOutput.InFile)}.avs"))
-            {
-                WriteFile.WriteLog($"使用自訂 {@$".\{Path.GetFileNameWithoutExtension(ffprobeOutput.InFile)}.avs"}");
-                File.Copy(@$".\{Path.GetFileNameWithoutExtension(ffprobeOutput.InFile)}.avs", @$".\{ffprobeOutput.avsTempFile}.avs", true);
-            }
-            else
                 File.WriteAllText(@$".\{ffprobeOutput.avsTempFile}.avs", avs);
+            }
             #endregion
 
             TaskbarProgress.Set(videoFunc.ffprobeData.Count(x => x.run == RunEnum.Done), videoFunc.ffprobeData.Count);
-            ffprobeOutput = audioProcess(ffprobeOutput, sw1, sw2, out string audioMsg);
-            ffprobeOutput = errProcess(ffprobeOutput, 0, out RunEnum isRunAudio);
-            switch (isRunAudio)
+            string mapMsg = string.Empty;
+            if (ffprobeOutput.videoType != VideoTypeEnum.Aviscript)
             {
-                case RunEnum.Stop: return;
-                case RunEnum.Error: throw new Exception($"{RunEnum.SoundProcessing.GetDisplayName()} : {audioMsg}");
+                ffprobeOutput = audioProcess(ffprobeOutput, sw1, sw2, out mapMsg);
+                ffprobeOutput = errProcess(ffprobeOutput, 0, out RunEnum isRunAudio);
+                switch (isRunAudio)
+                {
+                    case RunEnum.Stop: return;
+                    case RunEnum.Error: throw new Exception($"{RunEnum.SoundProcessing.GetDisplayName()} : {mapMsg}");
+                }
             }
             prodatabar = 100 * weightAudio;
 
             TaskbarProgress.Set(videoFunc.ffprobeData.Count(x => x.run == RunEnum.Done), videoFunc.ffprobeData.Count);
-            ffprobeOutput = onePassProcess(ffprobeOutput, sw1, sw2, prodatabar, out int exitCode, out string onePassMsg);
+            string onePassMsg = string.Empty;
+            if (ffprobeOutput.videoType == VideoTypeEnum.Aviscript)
+                ffprobeOutput = onePassAvsProcess(ffprobeOutput, sw1, sw2, out exitCode, out onePassMsg);
+            else
+                ffprobeOutput = onePassProcess(ffprobeOutput, sw1, sw2, prodatabar, out exitCode, out onePassMsg);
             ffprobeOutput = errProcess(ffprobeOutput, exitCode, out RunEnum isRunOnePass);
             switch (isRunOnePass)
             {
@@ -845,7 +880,11 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
             prodatabar = 100 * (weightAudio + weightOnePass);
 
             TaskbarProgress.Set(videoFunc.ffprobeData.Count(x => x.run == RunEnum.Done), videoFunc.ffprobeData.Count);
-            ffprobeOutput = twoPassProcess(ffprobeOutput, sw1, sw2, prodatabar, out exitCode, out string twoPassMsg);
+            string twoPassMsg = string.Empty;
+            if (ffprobeOutput.videoType == VideoTypeEnum.Aviscript)
+                ffprobeOutput = twoPassAvsProcess(ffprobeOutput, sw1, sw2, out exitCode, out onePassMsg);
+            else
+                ffprobeOutput = twoPassProcess(ffprobeOutput, sw1, sw2, prodatabar, out exitCode, out twoPassMsg);
             ffprobeOutput = errProcess(ffprobeOutput, exitCode, out RunEnum isRunTwoPass);
             switch (isRunTwoPass)
             {
@@ -854,13 +893,16 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
             }
             prodatabar = 100 * (weightAudio + weightOnePass + weightTwoPass);
 
-            TaskbarProgress.Set(videoFunc.ffprobeData.Count(x => x.run == RunEnum.Done), videoFunc.ffprobeData.Count);
-            ffprobeOutput = mergeProcess(ffprobeOutput, sw1, sw2, prodatabar, out exitCode, out string mergeMsg);
-            ffprobeOutput = errProcess(ffprobeOutput, exitCode, out RunEnum isRunMerge);
-            switch (isRunMerge)
+            if (ffprobeOutput.videoType != VideoTypeEnum.Aviscript)
             {
-                case RunEnum.Stop: return;
-                case RunEnum.Error: throw new Exception($"{RunEnum.Merge.GetDisplayName()} : {mergeMsg}");
+                TaskbarProgress.Set(videoFunc.ffprobeData.Count(x => x.run == RunEnum.Done), videoFunc.ffprobeData.Count);
+                ffprobeOutput = mergeProcess(ffprobeOutput, sw1, sw2, prodatabar, out exitCode, out string mergeMsg);
+                ffprobeOutput = errProcess(ffprobeOutput, exitCode, out RunEnum isRunMerge);
+                switch (isRunMerge)
+                {
+                    case RunEnum.Stop: return;
+                    case RunEnum.Error: throw new Exception($"{RunEnum.Merge.GetDisplayName()} : {mergeMsg}");
+                }
             }
 
             VideoFunc.Delete(ffprobeOutput);
@@ -913,26 +955,8 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
                     },
                     ActionOut = sr =>
                     {
-                        listView1.Items[useIdx].SubItems[9].Text = OtherControlFunc.timeConv(sw2);
-                        timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
-                        int str = sr.IndexOf('=');
-
-                        if (str <= 0)
-                            return;
-
-                        string key = sr[..str];
-                        string value = sr[(str + 1)..];
-
-                        if (key == "out_time_ms" && double.TryParse(value, out double outTimeMs))
-                        {
-                            double currentSeconds = outTimeMs / 1_000_000.0;
-                            double pro = currentSeconds / ffprobeOutput.duration * 100.0;
-                            double proA = pro * weightAudio;
-                            listView1.Items[useIdx].SubItems[7].Text = $"{pro:F1} %";
-                            form1Control.UpdateProgres((float)proA, 100);
-                        }
-
                         f2.appendText = sr;
+                        form1Control.ffmpegOutput(ffprobeOutput, sr, sw1, sw2);
                     },
                 };
 
@@ -1141,6 +1165,81 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
 
             return ffprobeOutput;
         }
+
+        /// <summary>
+        /// OnePass
+        /// </summary>
+        private FfprobeOutput onePassAvsProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, out int exitCode, out string isCloseMsg)
+        {
+            exitCode = 0;
+            isCloseMsg = string.Empty;
+
+            if (Cts == null || Cts.Token.IsCancellationRequested)
+                return ffprobeOutput;
+
+            listView1.Items[useIdx].SubItems[8].Text = RunEnum.OnePass.GetDisplayName();
+            ffprobeOutput.run = RunEnum.OnePass;
+            TaskHelper t = new()
+            {
+                Cts = Cts,
+                IsWait = true,
+                RunPath = ffprobeOutput.InFilePath,
+                AutoCloseDialogBox = "Warning",
+                FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\ffmpeg\ffmpeg.exe",
+                ArgumentList = videoFunc.XonepassAvs(ffprobeOutput),
+                ActionOut = sr =>
+                {
+                    f2.appendText = sr;
+                    form1Control.ffmpegOutput(ffprobeOutput, sr, sw1, sw2);
+                },
+                ActionErr = sr =>
+                {
+                    f2.appendText = sr;
+                }
+            };
+            exitCode = t.RunTask();
+            isCloseMsg = t.isCloseMsg;
+
+            return ffprobeOutput;
+        }
+
+        /// <summary>
+        /// TwoPass
+        /// </summary>
+        private FfprobeOutput twoPassAvsProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, out int exitCode, out string isCloseMsg)
+        {
+            exitCode = 0;
+            isCloseMsg = string.Empty;
+
+            if (Cts == null || Cts.Token.IsCancellationRequested)
+                return ffprobeOutput;
+
+            listView1.Items[useIdx].SubItems[8].Text = RunEnum.TwoPass.GetDisplayName();
+            ffprobeOutput.run = RunEnum.TwoPass;
+            TaskHelper t = new()
+            {
+                Cts = Cts,
+                IsWait = true,
+                RunPath = ffprobeOutput.InFilePath,
+                AutoCloseDialogBox = "Warning",
+                FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\ffmpeg\ffmpeg.exe",
+                ArgumentList = videoFunc.XtwopassAvs(ffprobeOutput),
+                ActionOut = sr =>
+                {
+                    f2.appendText = sr;
+                    form1Control.ffmpegOutput(ffprobeOutput, sr, sw1, sw2);
+                },
+                ActionErr = sr =>
+                {
+                    f2.appendText = sr;
+                }
+            };
+            exitCode = t.RunTask();
+            isCloseMsg = t.isCloseMsg;
+
+            return ffprobeOutput;
+        }
+
 
         private FfprobeOutput errProcess(FfprobeOutput ffprobeOutput, int exitCode, out RunEnum run)
         {

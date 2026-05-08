@@ -49,6 +49,8 @@
             menuStrip1 = new MenuStrip();
             FileToolStripMenuItem = new ToolStripMenuItem();
             addToolStripMenuItem = new ToolStripMenuItem();
+            loadAvsToolStripMenuItem = new ToolStripMenuItem();
+            createMergeToolStripMenuItem = new ToolStripMenuItem();
             diffToolStripMenuItem = new ToolStripMenuItem();
             toolStripSeparator1 = new ToolStripSeparator();
             clearToolStripMenuItem = new ToolStripMenuItem();
@@ -250,7 +252,7 @@
             // 
             // FileToolStripMenuItem
             // 
-            FileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { addToolStripMenuItem, diffToolStripMenuItem, toolStripSeparator1, clearToolStripMenuItem });
+            FileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { addToolStripMenuItem, loadAvsToolStripMenuItem, createMergeToolStripMenuItem, diffToolStripMenuItem, toolStripSeparator1, clearToolStripMenuItem });
             FileToolStripMenuItem.Name = "FileToolStripMenuItem";
             FileToolStripMenuItem.Size = new Size(43, 20);
             FileToolStripMenuItem.Text = "檔案";
@@ -261,6 +263,20 @@
             addToolStripMenuItem.Size = new Size(146, 22);
             addToolStripMenuItem.Text = "加入視訊檔案";
             addToolStripMenuItem.Click += addToolStripMenuItem_Click;
+            // 
+            // loadAvsToolStripMenuItem
+            // 
+            loadAvsToolStripMenuItem.Name = "loadAvsToolStripMenuItem";
+            loadAvsToolStripMenuItem.Size = new Size(146, 22);
+            loadAvsToolStripMenuItem.Text = "加入Aviscript";
+            loadAvsToolStripMenuItem.Click += loadAvsToolStripMenuItem_Click;
+            // 
+            // createMergeToolStripMenuItem
+            // 
+            createMergeToolStripMenuItem.Name = "createMergeToolStripMenuItem";
+            createMergeToolStripMenuItem.Size = new Size(146, 22);
+            createMergeToolStripMenuItem.Text = "建立影片合併";
+            createMergeToolStripMenuItem.Click += createMergeToolStripMenuItem_Click;
             // 
             // diffToolStripMenuItem
             // 
@@ -445,20 +461,22 @@
         public ToolStripMenuItem FileToolStripMenuItem;
         public ToolStripMenuItem addToolStripMenuItem;
         public ToolStripMenuItem clearToolStripMenuItem;
-        private ToolStripMenuItem diffToolStripMenuItem;
-        private ToolStripSeparator toolStripSeparator1;
+        public ToolStripMenuItem diffToolStripMenuItem;
+        public ToolStripSeparator toolStripSeparator1;
         public Button addBtn;
         public Button diffBtn;
         public ToolStripStatusLabel timeStripStatus;
-        private ToolStripMenuItem dbToolStripMenuItem;
-        private ToolStripMenuItem dbSaveToolStripMenuItem;
-        private ToolStripMenuItem dbClearToolStripMenuItem;
-        private ToolStripMenuItem settingToolStripMenuItem;
-        private ToolStripMenuItem AutoTrimToolStripMenuItem;
-        private ToolStripMenuItem logViewClearToolStripMenuItem;
-        private ToolStripSeparator toolStripSeparator2;
-        private ToolStripMenuItem dbLoadToolStripMenuItem;
-        private ToolStripSeparator toolStripSeparator3;
-        private ToolStripMenuItem installPathToolStripMenuItem;
+        public ToolStripMenuItem dbToolStripMenuItem;
+        public ToolStripMenuItem dbSaveToolStripMenuItem;
+        public ToolStripMenuItem dbClearToolStripMenuItem;
+        public ToolStripMenuItem settingToolStripMenuItem;
+        public ToolStripMenuItem AutoTrimToolStripMenuItem;
+        public ToolStripMenuItem logViewClearToolStripMenuItem;
+        public ToolStripSeparator toolStripSeparator2;
+        public ToolStripMenuItem dbLoadToolStripMenuItem;
+        public ToolStripSeparator toolStripSeparator3;
+        public ToolStripMenuItem installPathToolStripMenuItem;
+        public ToolStripMenuItem loadAvsToolStripMenuItem;
+        public ToolStripMenuItem createMergeToolStripMenuItem;
     }
 }
