@@ -24,11 +24,6 @@ namespace X264GUIv2
         public string? RunPath { get; set; }
 
         /// <summary>
-        /// 是否等待
-        /// </summary>
-        public bool IsWait { get; set; } = false;
-
-        /// <summary>
         /// 自動關閉錯誤視窗
         /// </summary>
         public string AutoCloseDialogBox { get; set; } = string.Empty;
@@ -131,9 +126,6 @@ namespace X264GUIv2
             p.BeginErrorReadLine();
 
             closeDialogBox(p);
-
-            if (IsWait)
-                p.WaitForExit();
 
             do
             {

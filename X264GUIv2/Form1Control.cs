@@ -31,30 +31,37 @@ namespace X264GUIv2
             {
                 double currentSeconds = outTimeMs / 1_000_000.0;
                 double pro = currentSeconds / ffprobeOutput.duration * 100.0;
-                float weightPass = 1f;
-                float weight = 0f;
-
-                if (ffprobeOutput.run == RunEnum.OnePass)
-                    weightPass = form.weightOnePass;
-                else if (ffprobeOutput.run == RunEnum.TwoPass)
-                {
-                    weightPass = form.weightOnePass;
-                    weight = (float)form.weightOnePass * 100;
-                }
-
-                if (ffprobeOutput.videoType == VideoTypeEnum.Aviscript && form.AutoTrimToolStripMenuItem.Checked)
-                    weight += (float)form.weightAudio * 100;
-
-                double proA;
-                if (ffprobeOutput.videoType != VideoTypeEnum.Aviscript && ffprobeOutput.run == RunEnum.AudioTrim)
-                    proA = pro * form.weightAudio;
-                else
-                    proA = (pro * weightPass) + weight;
-
                 form.listView1.Items[form.useIdx].SubItems[7].Text = $"{pro:F1} %";
-                UpdateProgres((float)proA, 100);
+                calculateProgres(ffprobeOutput, now);
             }
         }
+
+        public void calculateProgres(FfprobeOutput ffprobeOutput, float pro)
+        {
+            float weight = 0f;
+
+            if (ffprobeOutput.run == RunEnum.OnePass)
+            {
+                weight += form.weightAudio;
+            }
+            else if (ffprobeOutput.run == RunEnum.TwoPass)
+            {
+                weight += form.weightAudio;
+                weight += form.weightOnePass;
+                if (ffprobeOutput.videoType == VideoTypeEnum.Aviscript)
+                    weight += form.weightTwoPass;
+            }
+            else if (ffprobeOutput.run == RunEnum.Merge)
+            {
+                weight += form.weightAudio;
+                weight += form.weightOnePass;
+                weight += form.weightTwoPass;
+            }
+
+            double proA = pro * weight;
+            UpdateProgres((float)proA, 100);
+        }
+
 
         public void btnControl(bool isClose)
         {
@@ -138,6 +145,7 @@ namespace X264GUIv2
                 Thread.Sleep(500);
             }
         }
+
         #endregion
     }
 }
