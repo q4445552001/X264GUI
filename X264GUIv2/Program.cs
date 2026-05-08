@@ -4,6 +4,12 @@ namespace X264GUIv2
 {
     internal static class Program
     {
+        //TODO: 秈兵纔て (ㄖ衡Ω)
+        //TODO: 秈兵纔てэΘず场
+        //TODO: TASK参单家Α
+        //TODO: 礚羘郎穦ERROR
+        //TODO: 紇ㄖ
+
         [STAThread]
         static void Main()
         {
