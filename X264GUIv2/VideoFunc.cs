@@ -238,8 +238,14 @@ namespace X264GUIv2
             else
             {
                 (int, int) GCD = OtherControlFunc.GetGCD(ffprobeOutput.OriDetail.resolutionW ?? 0, ffprobeOutput.OriDetail.resolutionH ?? 0);
-                ffprobeOutput.NewDetail.resolutionW = resolution / GCD.Item2 * GCD.Item1;
+                ffprobeOutput.NewDetail.resolutionW = OtherControlFunc.FixEven(resolution / GCD.Item2 * GCD.Item1);
                 ffprobeOutput.NewDetail.resolutionH = resolution;
+
+                if (ffprobeOutput.NewDetail.resolutionW == 0)
+                {
+                    ffprobeOutput.NewDetail.resolutionW = ffprobeOutput.OriDetail.resolutionW;
+                    ffprobeOutput.NewDetail.resolutionH = ffprobeOutput.OriDetail.resolutionH;
+                }
             }
 
             return ffprobeOutput;

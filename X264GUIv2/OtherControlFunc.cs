@@ -45,22 +45,24 @@ namespace X264GUIv2
         /// <summary>
         /// 歐幾里得演算法 (GCD)
         /// </summary>
-        public static (int, int) GetGCD(int w = 1920, int h = 1080)
+        public static (int, int) GetGCD(float w = 1920, float h = 1080)
         {
-            int _w = w;
-            int _h = h;
+            float _w = w;
+            float _h = h;
 
             while (h != 0)
             {
-                int temp = h;
+                float temp = h;
                 h = w % h;
                 w = temp;
             }
 
-            int ratioW = _w / w;
-            int ratioH = _h / w;
-            return (ratioW, ratioH);
+            float ratioW = _w / w;
+            float ratioH = _h / w;
+            return ((int)ratioW, (int)ratioH);
         }
+
+        public static int FixEven(int value) => value % 2 == 0 ? value : value + 1;
 
         public static string timeConv(Stopwatch sw)
         {

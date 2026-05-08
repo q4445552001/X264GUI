@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows.Forms.VisualStyles;
 using X264GUIv2.Enums;
@@ -38,7 +37,7 @@ namespace X264GUIv2
         private float weightAudio => AutoTrimToolStripMenuItem.Checked ? .10f : 0f;
         private float weightOnePass => (.96f - weightAudio) / 2;
         private float weightTwoPass => weightOnePass;
-        private float weightMerge => 100f - weightOnePass;
+        private float weightMerge => 1f - (weightOnePass + weightOnePass);
         #endregion
 
         #region 初始化
@@ -89,7 +88,7 @@ namespace X264GUIv2
                 new() { Text = "時間長度", Width = 80, TextAlign = HorizontalAlignment.Center },
                 new() { Text = "檔案大小", Width = 140, TextAlign = HorizontalAlignment.Center },
                 new() { Text = "進度", Width = 70, TextAlign = HorizontalAlignment.Center },
-                new() { Text = "狀態", Width = 100, TextAlign = HorizontalAlignment.Center },
+                new() { Text = "狀態", Width = 80, TextAlign = HorizontalAlignment.Center },
                 new() { Text = "消耗時間", Width = 80, TextAlign = HorizontalAlignment.Center },
                 new() { Text = "路徑", Width = 500 },
             }]);
@@ -306,7 +305,11 @@ namespace X264GUIv2
             addBtn.Enabled = isClose;
             diffBtn.Enabled = isClose;
             bitrateCBox.Enabled = isClose;
-            bitrateCBox_SelectedIndexChanged(bitrateCBox, EventArgs.Empty);
+            if (!int.TryParse((bitrateCBox.SelectedItem as ComboboxItem)?.Value, out int v))
+            {
+                BitrateEnum bitrateEnum = (BitrateEnum)v;
+                bitrateNumeric.Enabled = bitrateEnum == BitrateEnum.Manual;
+            }
             fpsCBox.Enabled = isClose;
             resolutionCBox.Enabled = isClose;
             coreCBox.Enabled = isClose;
@@ -858,7 +861,7 @@ namespace X264GUIv2
             progressText.Text = $"{videoFunc.ffprobeData.Count(x => x.run == RunEnum.Done)}/{videoFunc.ffprobeData.Count}";
 
             stopBtn.Enabled = true;
-            UpdateProgres(videoFunc.ffprobeData.Count(x => x.run == RunEnum.Done), videoFunc.ffprobeData.Count);
+            UpdateProgres(0, videoFunc.ffprobeData.Count);
             TaskbarProgress.Clear();
             TaskbarProgress.Set(videoFunc.ffprobeData.Count(x => x.run == RunEnum.Done), videoFunc.ffprobeData.Count);
 
@@ -1197,7 +1200,7 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
                     {
                         listView1.Items[useIdx].SubItems[9].Text = OtherControlFunc.timeConv(sw2);
                         float current = float.TryParse(match.Groups[1].Value, out float _current) ? _current : 0;
-                        float percentage = (float)prodatabar + (current * weightMerge);
+                        float percentage = (float)prodatabar + (current * (weightMerge - .0001f));
                         listView1.Items[useIdx].SubItems[7].Text = $"{current:F1} %";
                         UpdateProgres(percentage, 100);
                     }
