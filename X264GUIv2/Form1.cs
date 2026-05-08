@@ -11,6 +11,7 @@ namespace X264GUIv2
         #region 變數
         private readonly VideoFunc videoFunc;
         private CancellationTokenSource? Cts { get; set; }
+        private readonly Form1Control form1Control;
 
         /// <summary>
         /// 初始化彼特率
@@ -46,6 +47,8 @@ namespace X264GUIv2
         {
             InitializeComponent();
             f2 = new();
+            videoFunc = new(this);
+            form1Control = new(this);
 
             fpsCBox.Items.Add(new ComboboxItem("Auto", "Auto"));
             fpsCBox.Items.Add(new ComboboxItem("23.976", "24000/1001"));
@@ -124,8 +127,6 @@ namespace X264GUIv2
                 listDnViewItem,
             ]);
             #endregion
-
-            videoFunc = new(this);
         }
 
         private void Form1_Load(object sender, EventArgs e) => CheckForIllegalCrossThreadCalls = false;
@@ -305,11 +306,7 @@ namespace X264GUIv2
             addBtn.Enabled = isClose;
             diffBtn.Enabled = isClose;
             bitrateCBox.Enabled = isClose;
-            if (!int.TryParse((bitrateCBox.SelectedItem as ComboboxItem)?.Value, out int v))
-            {
-                BitrateEnum bitrateEnum = (BitrateEnum)v;
-                bitrateNumeric.Enabled = bitrateEnum == BitrateEnum.Manual;
-            }
+            form1Control.bitrateCBoxControl();
             fpsCBox.Enabled = isClose;
             resolutionCBox.Enabled = isClose;
             coreCBox.Enabled = isClose;
@@ -709,15 +706,9 @@ namespace X264GUIv2
         {
             try
             {
-                if (!int.TryParse((bitrateCBox.SelectedItem as ComboboxItem)?.Value, out int v))
-                    throw new Exception("無效選項");
+                form1Control.bitrateCBoxControl();
 
-                BitrateEnum bitrateEnum = (BitrateEnum)v;
-
-                bitrateNumeric.Enabled = bitrateEnum == BitrateEnum.Manual;
-
-                if (videoFunc != null)
-                    OtherControlFunc.listViewCheck(this, videoFunc.ffprobeData, idx => videoFunc.ffprobeData[idx] = videoFunc.bitRateFunc(videoFunc.ffprobeData[idx]));
+                OtherControlFunc.listViewCheck(this, videoFunc.ffprobeData, idx => videoFunc.ffprobeData[idx] = videoFunc.bitRateFunc(videoFunc.ffprobeData[idx]));
             }
             catch (Exception ex)
             {
@@ -729,8 +720,7 @@ namespace X264GUIv2
         {
             try
             {
-                if (videoFunc != null)
-                    OtherControlFunc.listViewCheck(this, videoFunc.ffprobeData, idx => videoFunc.ffprobeData[idx] = videoFunc.fpsFunc(videoFunc.ffprobeData[idx]));
+                OtherControlFunc.listViewCheck(this, videoFunc.ffprobeData, idx => videoFunc.ffprobeData[idx] = videoFunc.fpsFunc(videoFunc.ffprobeData[idx]));
             }
             catch (Exception ex)
             {
@@ -742,8 +732,7 @@ namespace X264GUIv2
         {
             try
             {
-                if (videoFunc != null)
-                    OtherControlFunc.listViewCheck(this, videoFunc.ffprobeData, idx => videoFunc.ffprobeData[idx] = videoFunc.resolutionFunc(videoFunc.ffprobeData[idx]));
+                OtherControlFunc.listViewCheck(this, videoFunc.ffprobeData, idx => videoFunc.ffprobeData[idx] = videoFunc.resolutionFunc(videoFunc.ffprobeData[idx]));
             }
             catch (Exception ex)
             {
@@ -769,70 +758,11 @@ namespace X264GUIv2
                 if (bitrateNumeric.Value == 0)
                     return;
 
-                if (videoFunc != null)
-                    OtherControlFunc.listViewCheck(this, videoFunc.ffprobeData, idx => videoFunc.ffprobeData[idx] = videoFunc.bitRateNumericFunc(videoFunc.ffprobeData[idx]));
+                OtherControlFunc.listViewCheck(this, videoFunc.ffprobeData, idx => videoFunc.ffprobeData[idx] = videoFunc.bitRateNumericFunc(videoFunc.ffprobeData[idx]));
             }
             catch (Exception ex)
             {
                 WriteFile.WriteLog(ex.Message);
-            }
-        }
-        #endregion
-
-        #region 進度條
-        /// <summary>
-        /// 進度條
-        /// </summary>
-        public void UpdateProgres(float now, float count, bool isPercentage = true)
-        {
-            if (now > 100)
-                return;
-
-            void del()
-            {
-                Graphics BarGraphics = progressBar1.CreateGraphics();
-                progressBar1.PerformStep();
-                float v = now / count * 100;
-                string str = isPercentage ? Math.Round(v, 2).ToString("#0.00") + " %" : $"{now:#,##0}/{count:#,##0}";
-                Font font = new("Consolas", 12, FontStyle.Bold);
-                PointF pt = new(progressBar1.Width / 2 - (str.Length * 4), progressBar1.Height / 2 - 10);
-                progressBar1.Value = v >= 100 ? 100 : (int)v;
-                BarGraphics.DrawString(str, font, v >= 50 ? Brushes.White : Brushes.Blue, pt);
-            }
-            Invoke(del);
-        }
-
-
-        /// <summary>
-        /// 進度條轉圈圈
-        /// </summary>
-        public void UpdateProgresLoop(CancellationTokenSource cts)
-        {
-            int spinnerIndex = 0;
-            char[] spinnerChars = ['|', '/', '-', '\\'];
-
-            void del()
-            {
-                Graphics BarGraphics = progressBar1.CreateGraphics();
-                progressBar1.PerformStep();
-                int spinner = spinnerChars[spinnerIndex];
-                spinnerIndex = (spinnerIndex + 1) % spinnerChars.Length;
-                Font font = new("Consolas", 12, FontStyle.Bold);
-                PointF pt = new(progressBar1.Width / 2 - 20, progressBar1.Height / 2 - 10);
-                progressBar1.Value = 100;
-                BarGraphics.DrawString($"{spinner} Loading...", font, Brushes.White, pt);
-            }
-
-            while (true)
-            {
-                if (cts.Token.IsCancellationRequested)
-                {
-                    Invoke(progressBar1.PerformStep);
-                    return;
-                }
-
-                Invoke(del);
-                Thread.Sleep(500);
             }
         }
         #endregion
@@ -861,7 +791,7 @@ namespace X264GUIv2
             progressText.Text = $"{videoFunc.ffprobeData.Count(x => x.run == RunEnum.Done)}/{videoFunc.ffprobeData.Count}";
 
             stopBtn.Enabled = true;
-            UpdateProgres(0, videoFunc.ffprobeData.Count);
+            form1Control.UpdateProgres(0, videoFunc.ffprobeData.Count);
             TaskbarProgress.Clear();
             TaskbarProgress.Set(videoFunc.ffprobeData.Count(x => x.run == RunEnum.Done), videoFunc.ffprobeData.Count);
 
@@ -938,7 +868,7 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
             listView1.Items[useIdx].SubItems[8].Text = RunEnum.Done.GetDisplayName();
             ffprobeOutput.run = RunEnum.Done;
 
-            UpdateProgres(100, 100);
+            form1Control.UpdateProgres(100, 100);
             if (videoFunc.ffprobeData.Count(x => x.run == RunEnum.Done) == videoFunc.ffprobeData.Count)
                 TaskbarProgress.Set(videoFunc.ffprobeData.Count, videoFunc.ffprobeData.Count);
             else
@@ -999,7 +929,7 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
                             double pro = currentSeconds / ffprobeOutput.duration * 100.0;
                             double proA = pro * weightAudio;
                             listView1.Items[useIdx].SubItems[7].Text = $"{pro:F1} %";
-                            UpdateProgres((float)proA, 100);
+                            form1Control.UpdateProgres((float)proA, 100);
                         }
 
                         f2.appendText = sr;
@@ -1092,7 +1022,7 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
                         double prodata1 = Math.Round(Convert.ToDouble(sr.Substring(sr.IndexOf('[') + 1, sr.LastIndexOf('%') - 1)), 2);
                         double proA = Math.Round(prodatabar + (prodata1 * weightOnePass), 2);
                         listView1.Items[useIdx].SubItems[7].Text = $"{prodata1:F1} %";
-                        UpdateProgres((float)proA, 100);
+                        form1Control.UpdateProgres((float)proA, 100);
                     }
 
                     if (sr.IndexOf("[error]") != -1)
@@ -1138,7 +1068,7 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
                         double prodata1 = Math.Round(Convert.ToDouble(sr.Substring(sr.IndexOf('[') + 1, sr.LastIndexOf('%') - 1)), 2);
                         double proB = Math.Round(prodatabar + (prodata1 * weightTwoPass), 2);
                         listView1.Items[useIdx].SubItems[7].Text = $"{prodata1:F1} %";
-                        UpdateProgres((float)proB, 100);
+                        form1Control.UpdateProgres((float)proB, 100);
                     }
 
                     if (sr.IndexOf("[error]") != -1)
@@ -1202,7 +1132,7 @@ TextSub(""{ffprobeOutput.avsTempFile}.ass"",1)
                         float current = float.TryParse(match.Groups[1].Value, out float _current) ? _current : 0;
                         float percentage = (float)prodatabar + (current * (weightMerge - .0001f));
                         listView1.Items[useIdx].SubItems[7].Text = $"{current:F1} %";
-                        UpdateProgres(percentage, 100);
+                        form1Control.UpdateProgres(percentage, 100);
                     }
                 },
             };
