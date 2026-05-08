@@ -691,11 +691,14 @@ namespace X264GUIv2
         {
             try
             {
-                foreach (ListViewItem item in listView1.SelectedItems)
+                for (int i = listView1.SelectedItems.Count - 1; i >= 0; i--)
                 {
-                    if (item.Index + 1 < listView1.Items.Count)
+                    ListViewItem item = listView1.SelectedItems[i];
+
+                    if (item.Index < listView1.Items.Count - 1)
                     {
                         int index = item.Index + 1;
+
                         listView1.Items.RemoveAt(item.Index);
                         listView1.Items.Insert(index, item);
                     }
