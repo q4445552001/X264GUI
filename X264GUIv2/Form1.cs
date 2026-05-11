@@ -203,21 +203,6 @@ namespace X264GUIv2
             if (Cts != null && !Cts.Token.IsCancellationRequested)
             {
                 Cts.Cancel();
-                Process[] localAll = Process.GetProcesses();
-                //foreach (Process p in localAll)
-                //{
-                //    switch (p.ProcessName)
-                //    {
-                //        case "x264":
-                //        case "avs4x26x":
-                //        case "mp4box":
-                //        case "eac3to":
-                //        case "ffmpeg":
-                //            p.Kill();
-                //            break;
-                //    }
-                //}
-
                 listView1.Items[useIdx].UseItemStyleForSubItems = false;
                 listView1.Items[useIdx].SubItems[8].Text = RunEnum.Stop.GetDisplayName();
                 var idx = OtherControlFunc.findFfprobItem(videoFunc.ffprobeData, (Guid?)listView1.Items[useIdx].Tag);
