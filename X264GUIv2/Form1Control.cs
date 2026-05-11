@@ -38,7 +38,7 @@ namespace X264GUIv2
 
         public void calculateProgres(FfprobeOutput ffprobeOutput, float pro)
         {
-            WeighAllot weighAllot = new(form.AutoTrimToolStripMenuItem.Checked);
+            WeighAllot weighAllot = new(ffprobeOutput.audioMap > 0 ? form.AutoTrimToolStripMenuItem.Checked : false);
 
             float audioWeight = ffprobeOutput.MainData.videoType switch
             {
