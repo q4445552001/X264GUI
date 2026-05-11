@@ -374,8 +374,8 @@
             // 
             AutoTrimToolStripMenuItem.CheckOnClick = true;
             AutoTrimToolStripMenuItem.Name = "AutoTrimToolStripMenuItem";
-            AutoTrimToolStripMenuItem.Size = new Size(206, 22);
-            AutoTrimToolStripMenuItem.Text = "啟用音訊軌Trim (實驗性)";
+            AutoTrimToolStripMenuItem.Size = new Size(180, 22);
+            AutoTrimToolStripMenuItem.Text = "啟用音軌修剪";
             // 
             // addBtn
             // 

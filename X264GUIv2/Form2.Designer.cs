@@ -33,6 +33,7 @@
             // 
             // LogBox
             // 
+            LogBox.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             LogBox.Location = new Point(12, 12);
             LogBox.Multiline = true;
             LogBox.Name = "LogBox";

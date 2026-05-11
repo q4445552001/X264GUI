@@ -3,7 +3,7 @@ using X264GUIv2.Enums;
 
 namespace X264GUIv2.Models
 {
-    public class FfprobeOutput
+    public class FfprobeOutputMain
     {
         public Guid Guid { get; set; } = Guid.NewGuid();
 
@@ -45,15 +45,15 @@ namespace X264GUIv2.Models
 
         public int size { get; set; } = 0;
 
-        [NotMapped]
-        public Detail NewDetail { get; set; } = new();
-
-        [NotMapped]
-        public Detail OriDetail { get; set; } = new();
-
         public int idx { get; set; } = 0;
 
         public RunEnum run { get; set; } = RunEnum.Idel;
+
+        [NotMapped]
+        public FfprobeOutputDetail NewDetail { get; set; } = new();
+
+        [NotMapped]
+        public FfprobeOutputDetail OriDetail { get; set; } = new();
 
         [NotMapped]
         public string SubtitlesFile
@@ -66,34 +66,40 @@ namespace X264GUIv2.Models
                     return string.Empty;
             }
         }
+    }
 
-        public class Detail
-        {
-            public int bitrate { get; set; } = 0;
+    public class FfprobeOutputDetail
+    {
+        public int bitrate { get; set; } = 0;
 
-            public FrameModeEnum frameMode { get; set; } = FrameModeEnum.CBR;
+        public FrameModeEnum frameMode { get; set; } = FrameModeEnum.CBR;
 
-            public string frameStr { get; set; } = "24000/1001";
+        public string frameStr { get; set; } = "24000/1001";
 
-            [NotMapped]
-            public decimal fpsnum => decimal.TryParse(frameStr.Split("/")[0], out decimal _fps) ? _fps : 1;
+        [NotMapped]
+        public decimal fpsnum => decimal.TryParse(frameStr.Split("/")[0], out decimal _fps) ? _fps : 1;
 
-            [NotMapped]
-            public decimal fpsden => decimal.TryParse(frameStr.Split("/")[1], out decimal _frames) ? _frames : 1;
+        [NotMapped]
+        public decimal fpsden => decimal.TryParse(frameStr.Split("/")[1], out decimal _frames) ? _frames : 1;
 
-            [NotMapped]
-            public decimal frameRate => fpsnum / fpsden;
+        [NotMapped]
+        public decimal frameRate => fpsnum / fpsden;
 
-            public int? resolutionW { get; set; } = 1920;
+        public int? resolutionW { get; set; } = 1920;
 
-            public int? resolutionH { get; set; } = 1080;
+        public int? resolutionH { get; set; } = 1080;
 
-            [NotMapped]
-            public string resolution => $"{resolutionW}x{resolutionH}";
+        [NotMapped]
+        public string resolution => $"{resolutionW}x{resolutionH}";
 
-            //DB
-            public Guid Guid { get; set; }
-            public int? isNew { get; set; }
-        }
+        //DB
+        public Guid Guid { get; set; }
+        public int? isNew { get; set; }
+    }
+
+    public class FfprobeOutput
+    {
+        public FfprobeOutputMain MainData { get; set; } = new();
+        public List<FfprobeOutputMain>? MergeData { get; set; }
     }
 }

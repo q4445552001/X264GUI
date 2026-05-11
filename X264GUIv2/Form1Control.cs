@@ -17,7 +17,7 @@ namespace X264GUIv2
 
         public void ffmpegOutput(FfprobeOutput ffprobeOutput, string sr, Stopwatch sw1, Stopwatch sw2)
         {
-            form.listView1.Items[form.useIdx].SubItems[9].Text = OtherControlFunc.timeConv(sw2);
+            form.listView1.Items[form.useIdx].SubItems[form.listView1.findSubitemIdx(nameof(DetailsItem.Time))]!.Text = OtherControlFunc.timeConv(sw2);
             form.timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
             int str = sr.IndexOf('=');
 
@@ -30,37 +30,39 @@ namespace X264GUIv2
             if (key == "out_time_ms" && double.TryParse(value, out double outTimeMs))
             {
                 double currentSeconds = outTimeMs / 1_000_000.0;
-                double pro = currentSeconds / ffprobeOutput.duration * 100.0;
-                form.listView1.Items[form.useIdx].SubItems[7].Text = $"{pro:F1} %";
+                double pro = currentSeconds / ffprobeOutput.MainData.duration * 100.0;
+                form.listView1.Items[form.useIdx].SubItems[form.listView1.findSubitemIdx(nameof(DetailsItem.Progress))]!.Text = $"{pro:F1} %";
                 calculateProgres(ffprobeOutput, (float)pro);
             }
         }
 
         public void calculateProgres(FfprobeOutput ffprobeOutput, float pro)
         {
-            float audioWeight = ffprobeOutput.videoType switch
+            WeighAllot weighAllot = new(form.AutoTrimToolStripMenuItem.Checked);
+
+            float audioWeight = ffprobeOutput.MainData.videoType switch
             {
-                VideoTypeEnum.Normal => form.weightAudio,
-                VideoTypeEnum.Aviscript or VideoTypeEnum.Merge => form.weightAudio / 2,
+                VideoTypeEnum.Normal => weighAllot.weightAudio,
+                VideoTypeEnum.Aviscript or VideoTypeEnum.Merge => weighAllot.weightAudio / 2,
                 _ => 0f
             };
 
-            float mergeWeight = ffprobeOutput.videoType switch
+            float mergeWeight = ffprobeOutput.MainData.videoType switch
             {
-                VideoTypeEnum.Aviscript or VideoTypeEnum.Merge => form.weightMerge / 2,
+                VideoTypeEnum.Aviscript or VideoTypeEnum.Merge => weighAllot.weightMerge / 2,
                 _ => 0f
             };
 
             float completedWeight = 0f;
             float currentWeight = 0f;
 
-            if (ffprobeOutput.videoType == VideoTypeEnum.Aviscript)
+            if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Aviscript)
             {
-                currentWeight += form.weightAudio / 2f;
-                currentWeight += form.weightMerge / 2f;
+                currentWeight += weighAllot.weightAudio / 2f;
+                currentWeight += weighAllot.weightMerge / 2f;
             }
 
-            switch (ffprobeOutput.run)
+            switch (ffprobeOutput.MainData.run)
             {
                 case RunEnum.AudioTrim:
                     completedWeight = mergeWeight;
@@ -68,21 +70,21 @@ namespace X264GUIv2
                     break;
 
                 case RunEnum.OnePass:
-                    if (ffprobeOutput.videoType == VideoTypeEnum.Aviscript)
+                    if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Aviscript)
                         completedWeight = 0f;
                     else
                         completedWeight = audioWeight + mergeWeight;
-                    currentWeight += form.weightOnePass;
+                    currentWeight += weighAllot.weightOnePass;
                     break;
 
                 case RunEnum.TwoPass:
-                    completedWeight = audioWeight + form.weightOnePass + mergeWeight;
-                    currentWeight += form.weightTwoPass;
+                    completedWeight = audioWeight + weighAllot.weightOnePass + mergeWeight;
+                    currentWeight += weighAllot.weightTwoPass;
                     break;
 
                 case RunEnum.Merge:
-                    completedWeight = audioWeight + form.weightOnePass + form.weightTwoPass + mergeWeight;
-                    currentWeight += form.weightMerge;
+                    completedWeight = audioWeight + weighAllot.weightOnePass + weighAllot.weightTwoPass + mergeWeight;
+                    currentWeight += weighAllot.weightMerge;
                     break;
             }
 
@@ -124,7 +126,7 @@ namespace X264GUIv2
         /// </summary>
         public void UpdateProgres(float now, float count, bool isPercentage = true)
         {
-            if (now > 100)
+            if (now > 100 || now < 0)
                 return;
 
             void del()

@@ -14,7 +14,7 @@ namespace X264GUIv2
         /// 產生編碼
         /// </summary>
         /// <param name="file"></param>
-        public void Encode(string[] files)
+        public void Encode(string[] files, bool isMerge = false)
         {
             try
             {
@@ -24,23 +24,45 @@ namespace X264GUIv2
                     index = idx,
                 })];
 
-                ConcurrentBag<FfprobeOutput> _ffprobe = [];
+                ConcurrentBag<FfprobeOutputMain> _ffprobe = [];
                 Parallel.ForEach(loadFiles,
                     () => new HashSet<object>(), // 每個 thread 一份
                     (file, state, localVisited) =>
                     {
                         if (file.videoType == VideoTypeEnum.Aviscript)
                             _ffprobe.Add(avsffprobe(file));
-                        else if (file.videoType == VideoTypeEnum.Merge)
-                            _ffprobe.Add(mergeffprobe(file));
                         else
-                            _ffprobe.Add(ffprobe(file));
+                        {
+                            FfprobeOutputMain main = ffprobe(file);
+                            main.videoType = isMerge ? VideoTypeEnum.Merge : main.videoType;
+                            _ffprobe.Add(main);
+                        }
                         return localVisited;
                     },
                     _ => { }
                 );
 
-                List<FfprobeOutput> data = [.. _ffprobe.OrderBy(x => x.idx).ToList()];
+                List<FfprobeOutput> data = [];
+                if (_ffprobe.FirstOrDefault()?.videoType == VideoTypeEnum.Merge)
+                {
+                    FfprobeOutput merge = new()
+                    {
+                        MainData = _ffprobe.First(x => x.idx == 0),
+                        MergeData = [.. _ffprobe.Where(x => x.idx > 0)],
+                    };
+
+                    for (int i = 0; i < merge.MergeData.Count; i++)
+                    {
+                        merge.MergeData[i].Guid = merge.MainData.Guid;
+                    }
+
+                    data = [new FfprobeOutput { MainData = merge.MainData, MergeData = merge.MergeData }];
+                }
+                else
+                {
+                    data = [.. _ffprobe.OrderBy(x => x.idx).Select(x => new FfprobeOutput { MainData = x }).ToList()];
+                }
+
                 for (int i = 0; i < data.Count; i++)
                 {
                     data[i] = bitRateFunc(data[i]);
@@ -64,7 +86,7 @@ namespace X264GUIv2
                 WriteFile.WriteLog(ex.Message);
             }
 
-            form.progressText.Text = $"{ffprobeData.Count(x => x.run == RunEnum.Done)}/{ffprobeData.Count}";
+            form.progressText.Text = $"{ffprobeData.Count(x => x.MainData.run == RunEnum.Done)}/{ffprobeData.Count}";
             form.runBtn.Enabled = form.listView1.Items.Count != 0;
         }
 
@@ -73,9 +95,9 @@ namespace X264GUIv2
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
-        public static FfprobeOutput ffprobe(LoadFile input)
+        public static FfprobeOutputMain ffprobe(LoadFile input)
         {
-            FfprobeOutput ffprobeOutput = new();
+            FfprobeOutputMain ffprobeOutput = new();
             string standardOutput = "";
 
             TaskHelper task = new()
@@ -133,81 +155,9 @@ namespace X264GUIv2
         /// <summary>
         /// avsffprobe
         /// </summary>
-        public static FfprobeOutput avsffprobe(LoadFile input)
+        public static FfprobeOutputMain avsffprobe(LoadFile input)
         {
-            FfprobeOutput ffprobeOutput = new();
-            double frames = 0;
-            string fpsStr = "24000/1001";
-            double fps = 0;
-            int width = 0;
-            int height = 0;
-
-            TaskHelper task = new()
-            {
-                Cts = new(),
-                FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\avs4x26x.exe",
-                ArgumentList = {
-                            $@"--info",
-                            $@"""{input.File}""",
-                        },
-                ActionOut = sr =>
-                {
-                    // Framecount
-                    var _frame = Regex.Match(sr, @"Video framecount:\s*(\d+)");
-                    if (_frame.Success)
-                        frames = double.Parse(_frame.Groups[1].Value);
-
-                    // FPS (24000/1001)
-                    var _fps = Regex.Match(sr, @"Video framerate:\s*(\d+)/(\d+)");
-                    if (_fps.Success)
-                    {
-                        double num = double.Parse(_fps.Groups[1].Value);
-                        double den = double.Parse(_fps.Groups[2].Value);
-                        fpsStr = $"{_fps.Groups[1]}/{_fps.Groups[2]}";
-                        fps = num / den;
-                    }
-
-                    var match = Regex.Match(sr, @"Video resolution:\s*(\d+)x(\d+)");
-                    if (match.Success)
-                    {
-                        width = int.Parse(match.Groups[1].Value);
-                        height = int.Parse(match.Groups[2].Value);
-                    }
-                }
-            };
-            task.RunTask();
-
-            ffprobeOutput = new()
-            {
-                duration = frames / fps,
-                InFile = input.File,
-                idx = input.index,
-                OriDetail = new()
-                {
-                    frameStr = fpsStr,
-                    resolutionW = width,
-                    resolutionH = height,
-                }
-            };
-
-            ffprobeOutput.NewDetail = new()
-            {
-                bitrate = ffprobeOutput.OriDetail.bitrate,
-                frameMode = ffprobeOutput.OriDetail.frameMode,
-                frameStr = ffprobeOutput.OriDetail.frameStr,
-                resolutionW = ffprobeOutput.OriDetail.resolutionW,
-                resolutionH = ffprobeOutput.OriDetail.resolutionH,
-            };
-
-            return ffprobeOutput;
-        }
-
-        /// <summary>
-        /// mergeffprobe
-        /// </summary>
-        public static FfprobeOutput mergeffprobe(LoadFile input)
-        {
-            FfprobeOutput ffprobeOutput = new();
+            FfprobeOutputMain ffprobeOutput = new();
             double frames = 0;
             string fpsStr = "24000/1001";
             double fps = 0;
@@ -278,26 +228,26 @@ namespace X264GUIv2
         {
             DetailsItem detailsItem = new();
 
-            string OldCapacity = Math.Round(Convert.ToDouble(ffprobeOutput.size) / 1024 / 1024, 2).ToString(); //原始大小
-            double Audio_capacity = Convert.ToDouble(ffprobeOutput.size) - (Convert.ToDouble(ffprobeOutput.OriDetail.bitrate) * Convert.ToDouble(ffprobeOutput.duration) / 8); //計算Audio大小
-            string NewCapacity = Math.Round((Audio_capacity + Convert.ToDouble(ffprobeOutput.NewDetail.bitrate) * ffprobeOutput.duration / 8) / 1024 / 1024, 2).ToString() + " MB"; //Video預估大小
+            string OldCapacity = Math.Round(Convert.ToDouble(ffprobeOutput.MainData.size) / 1024 / 1024, 2).ToString(); //原始大小
+            double Audio_capacity = Convert.ToDouble(ffprobeOutput.MainData.size) - (Convert.ToDouble(ffprobeOutput.MainData.OriDetail.bitrate) * Convert.ToDouble(ffprobeOutput.MainData.duration) / 8); //計算Audio大小
+            string NewCapacity = Math.Round((Audio_capacity + Convert.ToDouble(ffprobeOutput.MainData.NewDetail.bitrate) * ffprobeOutput.MainData.duration / 8) / 1024 / 1024, 2).ToString() + " MB"; //Video預估大小
 
-            detailsItem.BitRate = $"{(ffprobeOutput.OriDetail.bitrate == 0 ? "NUL" : ffprobeOutput.OriDetail.bitrate / 1000)} > {ffprobeOutput.NewDetail.bitrate / 1000} kb/s";
-            detailsItem.FpsMode = $"{(ffprobeOutput.videoType == VideoTypeEnum.Aviscript ? "NUL" : ffprobeOutput.OriDetail.frameMode)} > {FrameModeEnum.CBR}";
-            detailsItem.Fps = $"{Math.Round(ffprobeOutput.OriDetail.frameRate, 3)} > {Math.Round(ffprobeOutput.NewDetail.frameRate, 3)}";
-            detailsItem.Resolution = $"{ffprobeOutput.OriDetail.resolution} > {ffprobeOutput.NewDetail.resolution}";
-            detailsItem.Duration = TimeSpan.FromSeconds(ffprobeOutput.duration).ToString(@"hh\:mm\:ss");
+            detailsItem.BitRate = $"{(ffprobeOutput.MainData.OriDetail.bitrate == 0 ? "NUL" : ffprobeOutput.MainData.OriDetail.bitrate / 1000)} > {ffprobeOutput.MainData.NewDetail.bitrate / 1000} kb/s";
+            detailsItem.FpsMode = $"{(ffprobeOutput.MainData.videoType == VideoTypeEnum.Aviscript ? "NUL" : ffprobeOutput.MainData.OriDetail.frameMode)} > {FrameModeEnum.CBR}";
+            detailsItem.Fps = $"{Math.Round(ffprobeOutput.MainData.OriDetail.frameRate, 3)} > {Math.Round(ffprobeOutput.MainData.NewDetail.frameRate, 3)}";
+            detailsItem.Resolution = $"{ffprobeOutput.MainData.OriDetail.resolution} > {ffprobeOutput.MainData.NewDetail.resolution}";
+            detailsItem.Duration = TimeSpan.FromSeconds(ffprobeOutput.MainData.duration).ToString(@"hh\:mm\:ss");
             detailsItem.Size = $"{(OldCapacity == "0" ? "NUL" : OldCapacity)} > {NewCapacity}";
             detailsItem.Progress = "00.00 %";
-            detailsItem.Status = ffprobeOutput.run.GetDisplayName();
+            detailsItem.Status = ffprobeOutput.MainData.run.GetDisplayName();
             detailsItem.Time = "00:00:00";
-            detailsItem.Path = ffprobeOutput.InFile ?? "";
+            detailsItem.Path = ffprobeOutput.MainData.InFile ?? "";
 
-            detailsItem.Text = Path.GetFileName(ffprobeOutput.InFile) +
-                    $"\nBitRate: {(ffprobeOutput.OriDetail.bitrate == 0 ? "NUL" : ffprobeOutput.OriDetail.bitrate / 1000)} kb/s" +
-                    $"\nFPS模式: {Enum.GetName(ffprobeOutput.OriDetail.frameMode)}" +
-                    $"\nFPS: {Math.Round(ffprobeOutput.OriDetail.frameRate, 3)}" +
-                    $"\n解析度: {ffprobeOutput.OriDetail.resolution}" +
+            detailsItem.Text = Path.GetFileName(ffprobeOutput.MainData.InFile) +
+                    $"\nBitRate: {(ffprobeOutput.MainData.OriDetail.bitrate == 0 ? "NUL" : ffprobeOutput.MainData.OriDetail.bitrate / 1000)} kb/s" +
+                    $"\nFPS模式: {Enum.GetName(ffprobeOutput.MainData.OriDetail.frameMode)}" +
+                    $"\nFPS: {Math.Round(ffprobeOutput.MainData.OriDetail.frameRate, 3)}" +
+                    $"\n解析度: {ffprobeOutput.MainData.OriDetail.resolution}" +
                     $"\n檔案大小: {(OldCapacity == "0" ? "NUL" : OldCapacity)} MB";
 
             return detailsItem;
@@ -305,23 +255,22 @@ namespace X264GUIv2
 
         public static ListViewItem DataViewObject(FfprobeOutput ffprobeOutput)
         {
-            List<string> row = [ffprobeOutput.InFileName];
-
+            List<string> row = [ffprobeOutput.MainData.InFileName];
             DetailsItem detailsItem = DataViewText(ffprobeOutput);
-            row.Add(detailsItem.BitRate);
-            row.Add(detailsItem.FpsMode);
-            row.Add(detailsItem.Fps);
-            row.Add(detailsItem.Resolution);
-            row.Add(detailsItem.Duration);
-            row.Add(detailsItem.Size);
-            row.Add(detailsItem.Progress);
-            row.Add(detailsItem.Status);
-            row.Add(detailsItem.Time);
-            row.Add(detailsItem.Path);
+            row.Add(typeof(DetailsItem).GetProperty(nameof(DetailsItem.BitRate))?.GetValue(detailsItem) as string ?? string.Empty);
+            row.Add(typeof(DetailsItem).GetProperty(nameof(DetailsItem.FpsMode))?.GetValue(detailsItem) as string ?? string.Empty);
+            row.Add(typeof(DetailsItem).GetProperty(nameof(DetailsItem.Fps))?.GetValue(detailsItem) as string ?? string.Empty);
+            row.Add(typeof(DetailsItem).GetProperty(nameof(DetailsItem.Resolution))?.GetValue(detailsItem) as string ?? string.Empty);
+            row.Add(typeof(DetailsItem).GetProperty(nameof(DetailsItem.Duration))?.GetValue(detailsItem) as string ?? string.Empty);
+            row.Add(typeof(DetailsItem).GetProperty(nameof(DetailsItem.Size))?.GetValue(detailsItem) as string ?? string.Empty);
+            row.Add(typeof(DetailsItem).GetProperty(nameof(DetailsItem.Progress))?.GetValue(detailsItem) as string ?? string.Empty);
+            row.Add(typeof(DetailsItem).GetProperty(nameof(DetailsItem.Status))?.GetValue(detailsItem) as string ?? string.Empty);
+            row.Add(typeof(DetailsItem).GetProperty(nameof(DetailsItem.Time))?.GetValue(detailsItem) as string ?? string.Empty);
+            row.Add(typeof(DetailsItem).GetProperty(nameof(DetailsItem.Path))?.GetValue(detailsItem) as string ?? string.Empty);
 
             ListViewItem lis = new([.. row])
             {
-                Tag = ffprobeOutput.Guid,
+                Tag = ffprobeOutput.MainData.Guid,
                 ToolTipText = detailsItem.Text,
                 UseItemStyleForSubItems = false,
             };
@@ -340,20 +289,20 @@ namespace X264GUIv2
 
                 if (bitrateEnum == BitrateEnum.Auto)
                 {
-                    if (ffprobeOutput.videoType == VideoTypeEnum.Aviscript)
-                        ffprobeOutput.NewDetail.bitrate = form.bitRateDefault;
+                    if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Aviscript)
+                        ffprobeOutput.MainData.NewDetail.bitrate = form.bitRateDefault;
                     else
                     {
-                        if (ffprobeOutput.OriDetail.bitrate < form.bitRateDefault)
-                            ffprobeOutput.NewDetail.bitrate = ffprobeOutput.OriDetail.bitrate - 100000;
-                        else if ((ffprobeOutput.OriDetail.bitrate - 100000) > form.bitRateDefault)
-                            ffprobeOutput.NewDetail.bitrate = form.bitRateDefault;
+                        if (ffprobeOutput.MainData.OriDetail.bitrate < form.bitRateDefault)
+                            ffprobeOutput.MainData.NewDetail.bitrate = ffprobeOutput.MainData.OriDetail.bitrate - 100000;
+                        else if ((ffprobeOutput.MainData.OriDetail.bitrate - 100000) > form.bitRateDefault)
+                            ffprobeOutput.MainData.NewDetail.bitrate = form.bitRateDefault;
                         else
-                            ffprobeOutput.NewDetail.bitrate = ffprobeOutput.OriDetail.bitrate - 100000;
+                            ffprobeOutput.MainData.NewDetail.bitrate = ffprobeOutput.MainData.OriDetail.bitrate - 100000;
                     }
                 }
                 else if (bitrateEnum == BitrateEnum.Manual)
-                    ffprobeOutput.NewDetail.bitrate = (int)form.bitrateNumeric.Value * 1000;
+                    ffprobeOutput.MainData.NewDetail.bitrate = (int)form.bitrateNumeric.Value * 1000;
             }
 
             return ffprobeOutput;
@@ -362,7 +311,7 @@ namespace X264GUIv2
         public FfprobeOutput fpsFunc(FfprobeOutput ffprobeOutput)
         {
             if (form.fpsCBox.Items[form.fpsCBox.SelectedIndex] is ComboboxItem item)
-                ffprobeOutput.NewDetail.frameStr = item.Value == "Auto" ? ffprobeOutput.OriDetail.frameStr : item.Value;
+                ffprobeOutput.MainData.NewDetail.frameStr = item.Value == "Auto" ? ffprobeOutput.MainData.OriDetail.frameStr : item.Value;
 
             return ffprobeOutput;
         }
@@ -386,19 +335,19 @@ namespace X264GUIv2
 
             if (resolutionEnum == ResolutionEnum.Auto)
             {
-                ffprobeOutput.NewDetail.resolutionW = ffprobeOutput.OriDetail.resolutionW;
-                ffprobeOutput.NewDetail.resolutionH = ffprobeOutput.OriDetail.resolutionH;
+                ffprobeOutput.MainData.NewDetail.resolutionW = ffprobeOutput.MainData.OriDetail.resolutionW;
+                ffprobeOutput.MainData.NewDetail.resolutionH = ffprobeOutput.MainData.OriDetail.resolutionH;
             }
             else
             {
-                (int, int) GCD = OtherControlFunc.GetGCD(ffprobeOutput.OriDetail.resolutionW ?? 0, ffprobeOutput.OriDetail.resolutionH ?? 0);
-                ffprobeOutput.NewDetail.resolutionW = OtherControlFunc.FixEven(resolution / GCD.Item2 * GCD.Item1);
-                ffprobeOutput.NewDetail.resolutionH = resolution;
+                (int, int) GCD = OtherControlFunc.GetGCD(ffprobeOutput.MainData.OriDetail.resolutionW ?? 0, ffprobeOutput.MainData.OriDetail.resolutionH ?? 0);
+                ffprobeOutput.MainData.NewDetail.resolutionW = OtherControlFunc.FixEven(resolution / GCD.Item2 * GCD.Item1);
+                ffprobeOutput.MainData.NewDetail.resolutionH = resolution;
 
-                if (ffprobeOutput.NewDetail.resolutionW == 0)
+                if (ffprobeOutput.MainData.NewDetail.resolutionW == 0)
                 {
-                    ffprobeOutput.NewDetail.resolutionW = ffprobeOutput.OriDetail.resolutionW;
-                    ffprobeOutput.NewDetail.resolutionH = ffprobeOutput.OriDetail.resolutionH;
+                    ffprobeOutput.MainData.NewDetail.resolutionW = ffprobeOutput.MainData.OriDetail.resolutionW;
+                    ffprobeOutput.MainData.NewDetail.resolutionH = ffprobeOutput.MainData.OriDetail.resolutionH;
                 }
             }
 
@@ -415,7 +364,7 @@ namespace X264GUIv2
                 BitrateEnum bitrateEnum = (BitrateEnum)v;
 
                 if (bitrateEnum == BitrateEnum.Manual)
-                    ffprobeOutput.NewDetail.bitrate = (int)form.bitrateNumeric.Value * 1000;
+                    ffprobeOutput.MainData.NewDetail.bitrate = (int)form.bitrateNumeric.Value * 1000;
             }
 
             return ffprobeOutput;
@@ -429,16 +378,16 @@ namespace X264GUIv2
             try
             {
                 Thread.Sleep(1000);
-                File.Delete($"{ffprobeOutput.InFile}.ffindex");
-                File.Delete(@$"{ffprobeOutput.InFilePath}\x2642pass.stats.temp");
-                File.Delete(@$"{ffprobeOutput.InFilePath}\x2642pass.stats.mbtree.temp");
-                File.Delete(@$"{ffprobeOutput.InFilePath}\x2642pass.stats");
-                File.Delete(@$"{ffprobeOutput.InFilePath}\x2642pass.stats.mbtree");
-                File.Delete(@$"{ffprobeOutput.InFilePath}\{ffprobeOutput.avsTempFile}.avs");
-                File.Delete(@$"{ffprobeOutput.InFilePath}\{ffprobeOutput.avsTempFile}.ass");
-                File.Delete(@$"{ffprobeOutput.InFilePath}\{ffprobeOutput.avsTempFile}.264");
-                File.Delete(@$"{ffprobeOutput.InFilePath}\{ffprobeOutput.avsTempFile}.aac");
-                File.Delete(@$"{ffprobeOutput.InFilePath}\{ffprobeOutput.avsTempFile}.mp4");
+                File.Delete($"{ffprobeOutput.MainData.InFile}.ffindex");
+                File.Delete(@$"{ffprobeOutput.MainData.InFilePath}\x2642pass.stats.temp");
+                File.Delete(@$"{ffprobeOutput.MainData.InFilePath}\x2642pass.stats.mbtree.temp");
+                File.Delete(@$"{ffprobeOutput.MainData.InFilePath}\x2642pass.stats");
+                File.Delete(@$"{ffprobeOutput.MainData.InFilePath}\x2642pass.stats.mbtree");
+                File.Delete(@$"{ffprobeOutput.MainData.InFilePath}\{ffprobeOutput.MainData.avsTempFile}.avs");
+                File.Delete(@$"{ffprobeOutput.MainData.InFilePath}\{ffprobeOutput.MainData.avsTempFile}.ass");
+                File.Delete(@$"{ffprobeOutput.MainData.InFilePath}\{ffprobeOutput.MainData.avsTempFile}.264");
+                File.Delete(@$"{ffprobeOutput.MainData.InFilePath}\{ffprobeOutput.MainData.avsTempFile}.aac");
+                File.Delete(@$"{ffprobeOutput.MainData.InFilePath}\{ffprobeOutput.MainData.avsTempFile}.mp4");
             }
             catch
             {
@@ -453,11 +402,11 @@ namespace X264GUIv2
 
             arr.Add($@"--x26x-binary ""{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\x264.exe""");
             arr.Add($@"--bframes 0");
-            arr.Add($@"--bitrate {ffprobeOutput.NewDetail.bitrate / 1000}");
+            arr.Add($@"--bitrate {ffprobeOutput.MainData.NewDetail.bitrate / 1000}");
             arr.Add($@"--pass 1");
             arr.Add($@"--threads {threads}");
             arr.Add($@"--stats ""x2642pass.stats""");
-            arr.Add($@"-o NUL ""{ffprobeOutput.avsTempFile}.avs""");
+            arr.Add($@"-o NUL ""{ffprobeOutput.MainData.avsTempFile}.avs""");
             return [.. arr];
         }
 
@@ -467,9 +416,31 @@ namespace X264GUIv2
 
             string threads = form.coreCBox.SelectedItem?.ToString() ?? "0";
 
-            arr.Add($@"-i {ffprobeOutput.InFile}");
+            arr.Add($@"-i {ffprobeOutput.MainData.InFile}");
             arr.Add($@"-c:v libx264");
-            arr.Add($@"-b:v {ffprobeOutput.NewDetail.bitrate / 1000}k");
+            arr.Add($@"-b:v {ffprobeOutput.MainData.NewDetail.bitrate / 1000}k");
+            arr.Add($@"-pass 1");
+            arr.Add($@"-an");
+            arr.Add($@"-f mp4 NUL");
+            arr.Add($@"-y");
+            arr.Add($@"-threads {threads}");
+            arr.Add($@"-progress pipe:1");
+            arr.Add($@"-nostats");
+            arr.Add($@"-loglevel error");
+            return [.. arr];
+        }
+
+        public string[] XonepassMerge(FfprobeOutput ffprobeOutput)
+        {
+            List<string> arr = [];
+
+            string threads = form.coreCBox.SelectedItem?.ToString() ?? "0";
+
+            arr.Add($@"-f concat");
+            arr.Add($@"-safe 0");
+            arr.Add($@"-i {ffprobeOutput.MainData.avsTempFile}.merge");
+            arr.Add($@"-c:v libx264");
+            arr.Add($@"-b:v {ffprobeOutput.MainData.NewDetail.bitrate / 1000}k");
             arr.Add($@"-pass 1");
             arr.Add($@"-an");
             arr.Add($@"-f mp4 NUL");
@@ -486,26 +457,26 @@ namespace X264GUIv2
             List<string> arr = [];
 
             string threads = form.coreCBox.SelectedItem?.ToString() ?? "0";
-            if (ffprobeOutput.NewDetail.resolutionW == null || ffprobeOutput.NewDetail.resolutionH == null)
+            if (ffprobeOutput.MainData.NewDetail.resolutionW == null || ffprobeOutput.MainData.NewDetail.resolutionH == null)
             {
                 arr.Add($@"--x26x-binary ""{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\x264.exe""");
                 arr.Add($@"--bframes 0");
-                arr.Add($@"--bitrate {ffprobeOutput.NewDetail.bitrate / 1000}");
+                arr.Add($@"--bitrate {ffprobeOutput.MainData.NewDetail.bitrate / 1000}");
                 arr.Add($@"--pass 2");
                 arr.Add($@"--threads {threads}");
                 arr.Add($@"--stats ""x2642pass.stats""");
-                arr.Add($@"-o ""{ffprobeOutput.avsTempFile}.264"" ""{ffprobeOutput.avsTempFile}.avs""");
+                arr.Add($@"-o ""{ffprobeOutput.MainData.avsTempFile}.264"" ""{ffprobeOutput.MainData.avsTempFile}.avs""");
             }
             else
             {
                 arr.Add($@"--x26x-binary ""{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\x264.exe""");
                 arr.Add($@"--bframes 0");
-                arr.Add($@"--bitrate {ffprobeOutput.NewDetail.bitrate / 1000}");
+                arr.Add($@"--bitrate {ffprobeOutput.MainData.NewDetail.bitrate / 1000}");
                 arr.Add($@"--pass 2");
                 arr.Add($@"--threads {threads}");
                 arr.Add($@"--stats ""x2642pass.stats""");
-                arr.Add($@"--vf resize:width={ffprobeOutput.NewDetail.resolutionW},height={ffprobeOutput.NewDetail.resolutionH},sar=1:1");
-                arr.Add($@"-o ""{ffprobeOutput.avsTempFile}.264"" ""{ffprobeOutput.avsTempFile}.avs""");
+                arr.Add($@"--vf resize:width={ffprobeOutput.MainData.NewDetail.resolutionW},height={ffprobeOutput.MainData.NewDetail.resolutionH},sar=1:1");
+                arr.Add($@"-o ""{ffprobeOutput.MainData.avsTempFile}.264"" ""{ffprobeOutput.MainData.avsTempFile}.avs""");
             }
 
             return [.. arr];
@@ -517,9 +488,9 @@ namespace X264GUIv2
 
             string threads = form.coreCBox.SelectedItem?.ToString() ?? "0";
 
-            arr.Add($@"-i {ffprobeOutput.InFile}");
+            arr.Add($@"-i {ffprobeOutput.MainData.InFile}");
             arr.Add($@"-c:v libx264");
-            arr.Add($@"-b:v {ffprobeOutput.NewDetail.bitrate / 1000}k");
+            arr.Add($@"-b:v {ffprobeOutput.MainData.NewDetail.bitrate / 1000}k");
             arr.Add($@"-pass 2");
             if (form.AutoTrimToolStripMenuItem.Checked)
             {
@@ -532,7 +503,39 @@ namespace X264GUIv2
             {
                 arr.Add($@"-c:a aac");
             }
-            arr.Add($@"{ffprobeOutput.OutFile}");
+            arr.Add($@"{ffprobeOutput.MainData.OutFile}");
+            arr.Add($@"-y");
+            arr.Add($@"-threads {threads}");
+            arr.Add($@"-progress pipe:1");
+            arr.Add($@"-nostats");
+            arr.Add($@"-loglevel error");
+            return [.. arr];
+        }
+
+        public string[] XtwopassMerge(FfprobeOutput ffprobeOutput)
+        {
+            List<string> arr = [];
+
+            string threads = form.coreCBox.SelectedItem?.ToString() ?? "0";
+
+            arr.Add($@"-f concat");
+            arr.Add($@"-safe 0");
+            arr.Add($@"-i {ffprobeOutput.MainData.avsTempFile}.merge");
+            arr.Add($@"-c:v libx264");
+            arr.Add($@"-b:v {ffprobeOutput.MainData.NewDetail.bitrate / 1000}k");
+            arr.Add($@"-pass 2");
+            if (form.AutoTrimToolStripMenuItem.Checked)
+            {
+                arr.Add($@"-c:a aac");
+                arr.Add($@"-ar 48000");
+                arr.Add($@"-ac 2");
+                arr.Add($@"-movflags +faststart");
+            }
+            else
+            {
+                arr.Add($@"-c:a aac");
+            }
+            arr.Add($@"{ffprobeOutput.MainData.OutFile}");
             arr.Add($@"-y");
             arr.Add($@"-threads {threads}");
             arr.Add($@"-progress pipe:1");

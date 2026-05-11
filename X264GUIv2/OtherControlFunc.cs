@@ -13,22 +13,33 @@ namespace X264GUIv2
         /// <param name="MessageText"></param>
         public static void ShowError(string MessageText) => MessageBox.Show(MessageText, "錯誤", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
-        public static void listViewCheck(Form1 form, List<FfprobeOutput> ffprobeOutputs, Action<int> action)
+        public static List<FfprobeOutput> SortIdx(ListView listView, List<FfprobeOutput> ffprobeOutputs)
+        {
+            for (int i = 0; i < ffprobeOutputs.Count; i++)
+            {
+                var idx = findListItem(listView, ffprobeOutputs[i].MainData.Guid);
+                ffprobeOutputs[i].MainData.idx = idx;
+            }
+
+            return ffprobeOutputs;
+        }
+
+        public static void listViewCheck(ListView listView, List<FfprobeOutput> ffprobeOutputs, Action<int> action)
         {
             IList<int> idxs = [];
 
-            IList<ListViewItem> listViews = [.. form.listView1.CheckedItems.Cast<ListViewItem>()];
-            foreach (ListViewItem listView in listViews)
+            IList<ListViewItem> listViews = [.. listView.CheckedItems.Cast<ListViewItem>()];
+            foreach (ListViewItem item in listViews)
             {
-                var idx = findFfprobItem(ffprobeOutputs, (Guid?)listView.Tag);
+                var idx = findFfprobItem(ffprobeOutputs, (Guid?)item.Tag);
                 idxs.Add(idx);
                 action.Invoke(idx);
 
-                form.listView1.Items[idx] = VideoFunc.DataViewObject(ffprobeOutputs[idx]);
+                listView.Items[ffprobeOutputs[idx].MainData.idx] = VideoFunc.DataViewObject(ffprobeOutputs[idx]);
             }
 
             foreach (int idx in idxs)
-                form.listView1.Items[idx].Checked = true;
+                listView.Items[ffprobeOutputs[idx].MainData.idx].Checked = true;
         }
 
         /// <summary>
@@ -86,7 +97,7 @@ namespace X264GUIv2
             if (guid == null)
                 return -1;
 
-            int idx = ffprobeOutputs.FindIndex(x => x.Guid == guid);
+            int idx = ffprobeOutputs.FindIndex(x => x.MainData.Guid == guid);
             return idx;
         }
 
@@ -96,6 +107,12 @@ namespace X264GUIv2
                 return -1;
 
             int idx = listView.Items.Cast<ListViewItem>().ToList().FindIndex(x => (Guid?)x.Tag == guid);
+            return idx;
+        }
+
+        public static int findSubitemIdx(this ListView listView, string name)
+        {
+            int idx = listView.Columns.Cast<ColumnHeader>().Select((x, idx) => new { name = x.Name, idx }).FirstOrDefault(x => x.name == name)?.idx ?? -1;
             return idx;
         }
     }
