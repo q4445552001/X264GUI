@@ -74,6 +74,7 @@ namespace X264GUIv2
                     x.idx,
                     run = (int)x.run,
                     x.videoType,
+                    x.audioMap,
                 }));
         }
 

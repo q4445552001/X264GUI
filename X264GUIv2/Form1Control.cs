@@ -32,34 +32,62 @@ namespace X264GUIv2
                 double currentSeconds = outTimeMs / 1_000_000.0;
                 double pro = currentSeconds / ffprobeOutput.duration * 100.0;
                 form.listView1.Items[form.useIdx].SubItems[7].Text = $"{pro:F1} %";
-                calculateProgres(ffprobeOutput, now);
+                calculateProgres(ffprobeOutput, (float)pro);
             }
         }
 
         public void calculateProgres(FfprobeOutput ffprobeOutput, float pro)
         {
-            float weight = 0f;
+            float audioWeight = ffprobeOutput.videoType switch
+            {
+                VideoTypeEnum.Normal => form.weightAudio,
+                VideoTypeEnum.Aviscript or VideoTypeEnum.Merge => form.weightAudio / 2,
+                _ => 0f
+            };
 
-            if (ffprobeOutput.run == RunEnum.OnePass)
+            float mergeWeight = ffprobeOutput.videoType switch
             {
-                weight += form.weightAudio;
-            }
-            else if (ffprobeOutput.run == RunEnum.TwoPass)
+                VideoTypeEnum.Aviscript or VideoTypeEnum.Merge => form.weightMerge / 2,
+                _ => 0f
+            };
+
+            float completedWeight = 0f;
+            float currentWeight = 0f;
+
+            if (ffprobeOutput.videoType == VideoTypeEnum.Aviscript)
             {
-                weight += form.weightAudio;
-                weight += form.weightOnePass;
-                if (ffprobeOutput.videoType == VideoTypeEnum.Aviscript)
-                    weight += form.weightTwoPass;
-            }
-            else if (ffprobeOutput.run == RunEnum.Merge)
-            {
-                weight += form.weightAudio;
-                weight += form.weightOnePass;
-                weight += form.weightTwoPass;
+                currentWeight += form.weightAudio / 2f;
+                currentWeight += form.weightMerge / 2f;
             }
 
-            double proA = pro * weight;
-            UpdateProgres((float)proA, 100);
+            switch (ffprobeOutput.run)
+            {
+                case RunEnum.AudioTrim:
+                    completedWeight = mergeWeight;
+                    currentWeight += audioWeight;
+                    break;
+
+                case RunEnum.OnePass:
+                    if (ffprobeOutput.videoType == VideoTypeEnum.Aviscript)
+                        completedWeight = 0f;
+                    else
+                        completedWeight = audioWeight + mergeWeight;
+                    currentWeight += form.weightOnePass;
+                    break;
+
+                case RunEnum.TwoPass:
+                    completedWeight = audioWeight + form.weightOnePass + mergeWeight;
+                    currentWeight += form.weightTwoPass;
+                    break;
+
+                case RunEnum.Merge:
+                    completedWeight = audioWeight + form.weightOnePass + form.weightTwoPass + mergeWeight;
+                    currentWeight += form.weightMerge;
+                    break;
+            }
+
+            float totalProgress = (completedWeight * 100f) + (currentWeight * pro);
+            UpdateProgres(totalProgress, 100);
         }
 
 

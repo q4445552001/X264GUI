@@ -23,6 +23,8 @@ namespace X264GUIv2.Models
 
         public bool isAac { get; set; } = false;
 
+        public int audioMap { get; set; } = 0;
+
         [NotMapped]
         private VideoTypeEnum? _videoType { get; set; }
 

@@ -84,40 +84,56 @@ namespace X264GUIv2
                 }
             };
 
+            AutoResetEvent outputWaitHandle = new(false);
+            AutoResetEvent errorWaitHandle = new(false);
+
             p.OutputDataReceived += (s, e) =>
             {
-                if (!string.IsNullOrEmpty(e.Data))
+                if (e.Data == null)
                 {
+                    outputWaitHandle.Set();
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(e.Data))
+                    return;
+
 #if DEBUG
-                    Debug.WriteLine(e.Data);
+                Debug.WriteLine($"Out: {e.Data}");
 #endif
 
-                    try
-                    {
-                        ActionOut?.Invoke(e.Data);
-                    }
-                    catch (Exception ex)
-                    {
-                        WriteFile.WriteLog(ex.Message);
-                    }
+                try
+                {
+                    ActionOut?.Invoke(e.Data);
+                }
+                catch (Exception ex)
+                {
+                    WriteFile.WriteLog(ex.Message);
                 }
             };
 
             p.ErrorDataReceived += (s, e) =>
             {
-                if (!string.IsNullOrEmpty(e.Data))
+                if (e.Data == null)
                 {
+                    errorWaitHandle.Set();
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(e.Data))
+                    return;
+
 #if DEBUG
-                    Debug.WriteLine(e.Data);
+                Debug.WriteLine($"Err: {e.Data}");
 #endif
-                    try
-                    {
-                        ActionErr?.Invoke(e.Data);
-                    }
-                    catch (Exception ex)
-                    {
-                        WriteFile.WriteLog(ex.Message);
-                    }
+
+                try
+                {
+                    ActionErr?.Invoke(e.Data);
+                }
+                catch (Exception ex)
+                {
+                    WriteFile.WriteLog(ex.Message);
                 }
             };
 
@@ -137,7 +153,11 @@ namespace X264GUIv2
                     }
                 }
             }
-            while (!p.WaitForExit(1000));
+            while (!p.WaitForExit(500));
+
+            outputWaitHandle.WaitOne();
+            errorWaitHandle.WaitOne();
+            p.WaitForExit();
 
             Environment.CurrentDirectory = Path.GetDirectoryName(Environment.ProcessPath) ?? throw new Exception("路徑失敗");
 

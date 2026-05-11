@@ -12,7 +12,8 @@ namespace X264GUIv2
                 value = max;
             float count = (float)value / max * 100f;
 
-            TaskbarManager.Instance.SetProgressValue((int)Math.Round(count, 0), 100);
+            //TaskbarManager.Instance.SetProgressValue((int)Math.Round(count, 0), 100);
+            TaskbarManager.Instance.SetProgressValue(value, max);
         }
 
         public static void Error()

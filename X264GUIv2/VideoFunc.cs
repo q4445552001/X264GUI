@@ -88,7 +88,6 @@ namespace X264GUIv2
                     $@"-show_format",
                     $@"-v quiet ""{input.File}"""
                 },
-                IsWait = true,
                 ActionOut = sr => standardOutput += sr
             };
             task.RunTask();
@@ -106,6 +105,7 @@ namespace X264GUIv2
                 duration = double.TryParse(stuff.format?.duration, out double _duration) ? _duration : 0,
                 size = int.TryParse(stuff.format?.size, out int _size) ? _size : 0,
                 isAac = stuff.streams.Any(x => x.codec_type?.ToLower() == "audio" && x.codec_name?.ToLower() == "aac"),
+                audioMap = stuff.streams.FirstOrDefault(x => x.codec_type?.ToLower() == "audio")?.index ?? 0,
                 InFile = input.File,
                 idx = input.index,
                 OriDetail = new()
@@ -150,7 +150,6 @@ namespace X264GUIv2
                             $@"--info",
                             $@"""{input.File}""",
                         },
-                IsWait = true,
                 ActionOut = sr =>
                 {
                     // Framecount
@@ -223,7 +222,6 @@ namespace X264GUIv2
                             $@"--info",
                             $@"""{input.File}""",
                         },
-                IsWait = true,
                 ActionOut = sr =>
                 {
                     // Framecount
