@@ -6,7 +6,6 @@ namespace X264GUIv2
     {
         //TODO: Merge db Select 出來的資料有問題 (要再多存guid當作個別判斷)
         //TODO: 影片合併GUI編輯功能(目前僅只有單純建立)
-        //TODO: listview再加處理方式欄位
 
         [STAThread]
         static void Main()

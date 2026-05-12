@@ -252,7 +252,7 @@
             // 
             // FileToolStripMenuItem
             // 
-            FileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { addToolStripMenuItem, loadAvsToolStripMenuItem, createMergeToolStripMenuItem, diffToolStripMenuItem, toolStripSeparator1, clearToolStripMenuItem });
+            FileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { addToolStripMenuItem, loadAvsToolStripMenuItem, createMergeToolStripMenuItem, toolStripSeparator1, diffToolStripMenuItem, clearToolStripMenuItem });
             FileToolStripMenuItem.Name = "FileToolStripMenuItem";
             FileToolStripMenuItem.Size = new Size(43, 20);
             FileToolStripMenuItem.Text = "檔案";
@@ -374,7 +374,7 @@
             // 
             AutoTrimToolStripMenuItem.CheckOnClick = true;
             AutoTrimToolStripMenuItem.Name = "AutoTrimToolStripMenuItem";
-            AutoTrimToolStripMenuItem.Size = new Size(180, 22);
+            AutoTrimToolStripMenuItem.Size = new Size(146, 22);
             AutoTrimToolStripMenuItem.Text = "啟用音軌修剪";
             // 
             // addBtn

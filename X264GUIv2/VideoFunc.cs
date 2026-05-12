@@ -54,8 +54,12 @@ namespace X264GUIv2
                     for (int i = 0; i < merge.MergeData.Count; i++)
                     {
                         merge.MergeData[i].Guid = merge.MainData.Guid;
+                        merge.MainData.duration += merge.MergeData[i].duration;
+                        merge.MainData.size += merge.MergeData[i].size;
+                        merge.MainData.OriDetail.bitrate += merge.MergeData[i].OriDetail.bitrate;
                     }
 
+                    merge.MainData.OriDetail.bitrate = merge.MainData.OriDetail.bitrate / (merge.MergeData.Count + 1);
                     data = [new FfprobeOutput { MainData = merge.MainData, MergeData = merge.MergeData }];
                 }
                 else
@@ -69,7 +73,7 @@ namespace X264GUIv2
                     data[i] = fpsFunc(data[i]);
                     data[i] = resolutionFunc(data[i]);
                     data[i] = bitRateNumericFunc(data[i]);
-                    form.listView1.Items.Add(DataViewObject(data[i]));
+                    form.listView1.Items.Add(form.listView1.DataViewObject(data[i]));
                     ffprobeData.Add(data[i]);
                 }
             }
@@ -222,60 +226,6 @@ namespace X264GUIv2
             };
 
             return ffprobeOutput;
-        }
-
-        public static DetailsItem DataViewText(FfprobeOutput ffprobeOutput)
-        {
-            DetailsItem detailsItem = new();
-
-            string OldCapacity = Math.Round(Convert.ToDouble(ffprobeOutput.MainData.size) / 1024 / 1024, 2).ToString(); //原始大小
-            double Audio_capacity = Convert.ToDouble(ffprobeOutput.MainData.size) - (Convert.ToDouble(ffprobeOutput.MainData.OriDetail.bitrate) * Convert.ToDouble(ffprobeOutput.MainData.duration) / 8); //計算Audio大小
-            string NewCapacity = Math.Round((Audio_capacity + Convert.ToDouble(ffprobeOutput.MainData.NewDetail.bitrate) * ffprobeOutput.MainData.duration / 8) / 1024 / 1024, 2).ToString() + " MB"; //Video預估大小
-
-            detailsItem.BitRate = $"{(ffprobeOutput.MainData.OriDetail.bitrate == 0 ? "NUL" : ffprobeOutput.MainData.OriDetail.bitrate / 1000)} > {ffprobeOutput.MainData.NewDetail.bitrate / 1000} kb/s";
-            detailsItem.FpsMode = $"{(ffprobeOutput.MainData.videoType == VideoTypeEnum.Aviscript ? "NUL" : ffprobeOutput.MainData.OriDetail.frameMode)} > {FrameModeEnum.CBR}";
-            detailsItem.Fps = $"{Math.Round(ffprobeOutput.MainData.OriDetail.frameRate, 3)} > {Math.Round(ffprobeOutput.MainData.NewDetail.frameRate, 3)}";
-            detailsItem.Resolution = $"{ffprobeOutput.MainData.OriDetail.resolution} > {ffprobeOutput.MainData.NewDetail.resolution}";
-            detailsItem.Duration = TimeSpan.FromSeconds(ffprobeOutput.MainData.duration).ToString(@"hh\:mm\:ss");
-            detailsItem.Size = $"{(OldCapacity == "0" ? "NUL" : OldCapacity)} > {NewCapacity}";
-            detailsItem.Progress = "00.00 %";
-            detailsItem.Status = ffprobeOutput.MainData.run.GetDisplayName();
-            detailsItem.Time = "00:00:00";
-            detailsItem.Path = ffprobeOutput.MainData.InFile ?? "";
-
-            detailsItem.Text = Path.GetFileName(ffprobeOutput.MainData.InFile) +
-                    $"\nBitRate: {(ffprobeOutput.MainData.OriDetail.bitrate == 0 ? "NUL" : ffprobeOutput.MainData.OriDetail.bitrate / 1000)} kb/s" +
-                    $"\nFPS模式: {Enum.GetName(ffprobeOutput.MainData.OriDetail.frameMode)}" +
-                    $"\nFPS: {Math.Round(ffprobeOutput.MainData.OriDetail.frameRate, 3)}" +
-                    $"\n解析度: {ffprobeOutput.MainData.OriDetail.resolution}" +
-                    $"\n檔案大小: {(OldCapacity == "0" ? "NUL" : OldCapacity)} MB";
-
-            return detailsItem;
-        }
-
-        public static ListViewItem DataViewObject(FfprobeOutput ffprobeOutput)
-        {
-            List<string> row = [ffprobeOutput.MainData.InFileName];
-            DetailsItem detailsItem = DataViewText(ffprobeOutput);
-            row.Add(typeof(DetailsItem).GetProperty(nameof(DetailsItem.BitRate))?.GetValue(detailsItem) as string ?? string.Empty);
-            row.Add(typeof(DetailsItem).GetProperty(nameof(DetailsItem.FpsMode))?.GetValue(detailsItem) as string ?? string.Empty);
-            row.Add(typeof(DetailsItem).GetProperty(nameof(DetailsItem.Fps))?.GetValue(detailsItem) as string ?? string.Empty);
-            row.Add(typeof(DetailsItem).GetProperty(nameof(DetailsItem.Resolution))?.GetValue(detailsItem) as string ?? string.Empty);
-            row.Add(typeof(DetailsItem).GetProperty(nameof(DetailsItem.Duration))?.GetValue(detailsItem) as string ?? string.Empty);
-            row.Add(typeof(DetailsItem).GetProperty(nameof(DetailsItem.Size))?.GetValue(detailsItem) as string ?? string.Empty);
-            row.Add(typeof(DetailsItem).GetProperty(nameof(DetailsItem.Progress))?.GetValue(detailsItem) as string ?? string.Empty);
-            row.Add(typeof(DetailsItem).GetProperty(nameof(DetailsItem.Status))?.GetValue(detailsItem) as string ?? string.Empty);
-            row.Add(typeof(DetailsItem).GetProperty(nameof(DetailsItem.Time))?.GetValue(detailsItem) as string ?? string.Empty);
-            row.Add(typeof(DetailsItem).GetProperty(nameof(DetailsItem.Path))?.GetValue(detailsItem) as string ?? string.Empty);
-
-            ListViewItem lis = new([.. row])
-            {
-                Tag = ffprobeOutput.MainData.Guid,
-                ToolTipText = detailsItem.Text,
-                UseItemStyleForSubItems = false,
-            };
-
-            return lis;
         }
 
         public FfprobeOutput bitRateFunc(FfprobeOutput ffprobeOutput)

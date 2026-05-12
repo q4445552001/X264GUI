@@ -83,6 +83,7 @@ namespace X264GUIv2
                 new() { Name = nameof(DetailsItem.Resolution), Text = "解析度", Width = 170, TextAlign = HorizontalAlignment.Center },
                 new() { Name = nameof(DetailsItem.Duration), Text = "時間長度", Width = 80, TextAlign = HorizontalAlignment.Center },
                 new() { Name = nameof(DetailsItem.Size), Text = "檔案大小", Width = 140, TextAlign = HorizontalAlignment.Center },
+                new() { Name = nameof(DetailsItem.VideoType), Text = "處理方式", Width = 70, TextAlign = HorizontalAlignment.Center },
                 new() { Name = nameof(DetailsItem.Progress), Text = "進度", Width = 70, TextAlign = HorizontalAlignment.Center },
                 new() { Name = nameof(DetailsItem.Status), Text = "狀態", Width = 80, TextAlign = HorizontalAlignment.Center },
                 new() { Name = nameof(DetailsItem.Time), Text = "消耗時間", Width = 80, TextAlign = HorizontalAlignment.Center },
@@ -407,7 +408,7 @@ namespace X264GUIv2
                 videoFunc.ffprobeData.AddRange(cacheData);
 
                 foreach (FfprobeOutput ffprobeOutput in cacheData)
-                    listView1.Items.Add(VideoFunc.DataViewObject(ffprobeOutput));
+                    listView1.Items.Add(listView1.DataViewObject(ffprobeOutput));
 
                 videoFunc.ffprobeData = OtherControlFunc.SortIdx(listView1, videoFunc.ffprobeData);
                 progressText.Text = $"{videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done)}/{videoFunc.ffprobeData.Count}";
@@ -632,7 +633,7 @@ namespace X264GUIv2
                 foreach (ListViewItem item in listView1.SelectedItems)
                 {
                     var idx1 = OtherControlFunc.findFfprobItem(videoFunc.ffprobeData, (Guid?)item.Tag);
-                    var idx2 = OtherControlFunc.findListItem(listView1, (Guid?)item.Tag);
+                    var idx2 = listView1.findListItem((Guid?)item.Tag);
 
                     videoFunc.ffprobeData.RemoveAt(idx1);
                     listView1.Items.RemoveAt(idx2);
@@ -704,7 +705,7 @@ namespace X264GUIv2
                 foreach (ListViewItem item in listView1.SelectedItems)
                 {
                     var idx1 = OtherControlFunc.findFfprobItem(videoFunc.ffprobeData, (Guid?)item.Tag);
-                    var idx2 = OtherControlFunc.findListItem(listView1, (Guid?)item.Tag);
+                    var idx2 = listView1.findListItem((Guid?)item.Tag);
 
                     videoFunc.ffprobeData[idx1].MainData.run = RunEnum.Idel;
                     listView1.Items[idx2].SubItems[listView1.findSubitemIdx(nameof(DetailsItem.Status))]!.ForeColor = Color.Black;
@@ -839,10 +840,10 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"",1)
             }
             else if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Merge)
             {
-                string mergeTxt = $"file '{ffprobeOutput.MainData.InFile}'\r\n";
+                string mergeTxt = @$"file '{ffprobeOutput.MainData.InFile}'" + "\r\n";
                 if (ffprobeOutput.MergeData != null)
                     foreach (FfprobeOutputMain outputMain in ffprobeOutput.MergeData.OrderBy(x => x.idx))
-                        mergeTxt += $"file '{outputMain.InFile}'\r\n";
+                        mergeTxt += @$"file '{outputMain.InFile}'" + "\r\n";
 
                 File.WriteAllText(@$".\{ffprobeOutput.MainData.avsTempFile}.merge", mergeTxt);
             }
@@ -958,6 +959,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"",1)
                         f2.appendText = sr;
                         form1Control.ffmpegOutput(ffprobeOutput, sr, sw1, sw2);
                     },
+                    ActionErr = sr => WriteFile.WriteLog(sr),
                 };
 
                 int exitCode = t.RunTask();
@@ -1196,6 +1198,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"",1)
                 ActionErr = sr =>
                 {
                     f2.appendText = sr;
+                    WriteFile.WriteLog(sr);
                 }
             };
             exitCode = t.RunTask();
@@ -1232,6 +1235,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"",1)
                 ActionErr = sr =>
                 {
                     f2.appendText = sr;
+                    WriteFile.WriteLog(sr);
                 }
             };
             exitCode = t.RunTask();
@@ -1267,6 +1271,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"",1)
                 ActionErr = sr =>
                 {
                     f2.appendText = sr;
+                    WriteFile.WriteLog(sr);
                 }
             };
             exitCode = t.RunTask();
@@ -1303,6 +1308,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"",1)
                 ActionErr = sr =>
                 {
                     f2.appendText = sr;
+                    WriteFile.WriteLog(sr);
                 }
             };
             exitCode = t.RunTask();
