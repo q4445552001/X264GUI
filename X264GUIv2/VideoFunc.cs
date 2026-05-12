@@ -470,7 +470,7 @@ namespace X264GUIv2
             arr.Add($@"-c:v libx264");
             arr.Add($@"-b:v {ffprobeOutput.MainData.NewDetail.bitrate / 1000}k");
             arr.Add($@"-pass 2");
-            arr.Add($@"{ffprobeOutput.MainData.OutFile}");
+            arr.Add($@"""{ffprobeOutput.MainData.OutFile}""");
             arr.Add($@"-y");
             arr.Add($@"-threads {threads}");
             if (form.AutoTrimToolStripMenuItem.Checked)
@@ -509,7 +509,7 @@ namespace X264GUIv2
             arr.Add($@"-c:v libx264");
             arr.Add($@"-b:v {ffprobeOutput.MainData.NewDetail.bitrate / 1000}k");
             arr.Add($@"-pass 2");
-            arr.Add($@"{ffprobeOutput.MainData.OutFile}");
+            arr.Add($@"""{ffprobeOutput.MainData.OutFile}""");
             arr.Add($@"-y");
             arr.Add($@"-threads {threads}");
             if (form.AutoTrimToolStripMenuItem.Checked)
