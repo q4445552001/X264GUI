@@ -4,11 +4,11 @@ namespace X264GUIv2.Enums
 {
     public enum VideoTypeEnum
     {
-        [Display(Name = "一般")]
+        [Display(Name = "{0}")]
         Normal,
-        [Display(Name = "AVS")]
+        [Display(Name = "Aviscript")]
         Aviscript,
-        [Display(Name = "合併")]
+        [Display(Name = "影片合併")]
         Merge,
     }
 }

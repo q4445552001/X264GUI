@@ -48,18 +48,19 @@ namespace X264GUIv2
                     FfprobeOutput merge = new()
                     {
                         MainData = _ffprobe.First(x => x.idx == 0),
-                        MergeData = [.. _ffprobe.Where(x => x.idx > 0)],
+                        MergeData = [.. _ffprobe],
                     };
 
                     for (int i = 0; i < merge.MergeData.Count; i++)
                     {
-                        merge.MergeData[i].Guid = merge.MainData.Guid;
-                        merge.MainData.duration += merge.MergeData[i].duration;
-                        merge.MainData.size += merge.MergeData[i].size;
-                        merge.MainData.OriDetail.bitrate += merge.MergeData[i].OriDetail.bitrate;
+                        merge.MergeData[i].MergeGuid = merge.MainData.Guid;
+                        merge.MergeData[i].idx = -merge.MergeData[i].idx;
                     }
 
-                    merge.MainData.OriDetail.bitrate = merge.MainData.OriDetail.bitrate / (merge.MergeData.Count + 1);
+                    merge.MainData.duration = merge.MergeData.Sum(x => x.duration);
+                    merge.MainData.videoSize = merge.MergeData.Sum(x => x.videoSize);
+                    merge.MainData.audioSize = merge.MergeData.Sum(x => x.audioSize);
+                    merge.MainData.OriDetail.bitrate = merge.MergeData.Sum(x => x.OriDetail.bitrate) / merge.MergeData.Count;
                     data = [new FfprobeOutput { MainData = merge.MainData, MergeData = merge.MergeData }];
                 }
                 else
@@ -107,7 +108,7 @@ namespace X264GUIv2
             TaskHelper task = new()
             {
                 Cts = new(),
-                FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}\bin\ffmpeg\ffprobe.exe",
+                FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\ffmpeg\ffprobe.exe",
                 ArgumentList = {
                     $@"-of json",
                     $@"-show_streams",
@@ -126,12 +127,27 @@ namespace X264GUIv2
             if (!int.TryParse(video.bit_rate ?? stuff.format?.bit_rate, out int bitrateTemp))
                 bitrateTemp = 0;
 
+            StandardOutput.StreamData? audio = stuff.streams.FirstOrDefault(x => x.codec_type?.ToLower() == "audio");
+            int audioSize = 0;
+            if (audio is not null)
+            {
+                int audioBitRate = int.TryParse(audio.bit_rate, out int _audioBitRate) ? _audioBitRate : 0;
+                int audioDuration = double.TryParse(audio.duration, out double _audioDuration) ? (int)_audioDuration : 0;
+                if (audioBitRate == 0)
+                    audioBitRate = 1;
+                if (audioDuration == 0)
+                    audioDuration = 1;
+
+                audioSize = audioBitRate * audioDuration / 8;
+            }
+
             ffprobeOutput = new()
             {
                 duration = double.TryParse(stuff.format?.duration, out double _duration) ? _duration : 0,
-                size = int.TryParse(stuff.format?.size, out int _size) ? _size : 0,
-                isAac = stuff.streams.Any(x => x.codec_type?.ToLower() == "audio" && x.codec_name?.ToLower() == "aac"),
-                audioMap = stuff.streams.FirstOrDefault(x => x.codec_type?.ToLower() == "audio")?.index ?? 0,
+                videoSize = int.TryParse(stuff.format?.size, out int _vsize) ? _vsize : 0,
+                audioSize = audioSize,
+                isAac = audio?.codec_name == "aac",
+                audioMap = audio?.index ?? 0,
                 InFile = input.File,
                 idx = input.index,
                 OriDetail = new()
@@ -439,23 +455,30 @@ namespace X264GUIv2
             string threads = form.coreCBox.SelectedItem?.ToString() ?? "0";
 
             arr.Add($@"-i {ffprobeOutput.MainData.InFile}");
-            arr.Add($@"-c:v libx264");
-            arr.Add($@"-b:v {ffprobeOutput.MainData.NewDetail.bitrate / 1000}k");
-            arr.Add($@"-pass 2");
             if (form.AutoTrimToolStripMenuItem.Checked)
             {
-                arr.Add($@"-c:a aac");
                 arr.Add($@"-ar 48000");
                 arr.Add($@"-ac 2");
-                arr.Add($@"-movflags +faststart");
+                arr.Add($@"-af ""aresample=48000,asetpts=PTS-STARTPTS""");
+                arr.Add($@"-c:a aac");
+                arr.Add($@"-q:a 1");
             }
             else
             {
                 arr.Add($@"-c:a aac");
             }
+            arr.Add($@"-c:v libx264");
+            arr.Add($@"-b:v {ffprobeOutput.MainData.NewDetail.bitrate / 1000}k");
+            arr.Add($@"-pass 2");
             arr.Add($@"{ffprobeOutput.MainData.OutFile}");
             arr.Add($@"-y");
             arr.Add($@"-threads {threads}");
+            if (form.AutoTrimToolStripMenuItem.Checked)
+            {
+                arr.Add($@"-fflags +genpts");
+                arr.Add($@"-avoid_negative_ts make_zero");
+                arr.Add($@"-movflags +faststart");
+            }
             arr.Add($@"-progress pipe:1");
             arr.Add($@"-nostats");
             arr.Add($@"-loglevel error");
@@ -471,23 +494,30 @@ namespace X264GUIv2
             arr.Add($@"-f concat");
             arr.Add($@"-safe 0");
             arr.Add($@"-i {ffprobeOutput.MainData.avsTempFile}.merge");
-            arr.Add($@"-c:v libx264");
-            arr.Add($@"-b:v {ffprobeOutput.MainData.NewDetail.bitrate / 1000}k");
-            arr.Add($@"-pass 2");
             if (form.AutoTrimToolStripMenuItem.Checked)
             {
-                arr.Add($@"-c:a aac");
                 arr.Add($@"-ar 48000");
                 arr.Add($@"-ac 2");
-                arr.Add($@"-movflags +faststart");
+                arr.Add($@"-af ""aresample=48000,asetpts=PTS-STARTPTS""");
+                arr.Add($@"-c:a aac");
+                arr.Add($@"-q:a 1");
             }
             else
             {
                 arr.Add($@"-c:a aac");
             }
+            arr.Add($@"-c:v libx264");
+            arr.Add($@"-b:v {ffprobeOutput.MainData.NewDetail.bitrate / 1000}k");
+            arr.Add($@"-pass 2");
             arr.Add($@"{ffprobeOutput.MainData.OutFile}");
             arr.Add($@"-y");
             arr.Add($@"-threads {threads}");
+            if (form.AutoTrimToolStripMenuItem.Checked)
+            {
+                arr.Add($@"-fflags +genpts");
+                arr.Add($@"-avoid_negative_ts make_zero");
+                arr.Add($@"-movflags +faststart");
+            }
             arr.Add($@"-progress pipe:1");
             arr.Add($@"-nostats");
             arr.Add($@"-loglevel error");

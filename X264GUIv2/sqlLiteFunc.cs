@@ -13,13 +13,12 @@ namespace X264GUIv2
 
         private readonly SqlLiteTableCreate mainSql = GetTableCreateSql<FfprobeOutputMain>();
         private readonly SqlLiteTableCreate detailSql = GetTableCreateSql<FfprobeOutputDetail>();
-        private readonly SqlLiteTableCreate mergeSql = GetTableCreateSql<FfprobeOutputMain>();
 
         public sqlLiteFunc()
         {
             SqlMapper.AddTypeHandler(new GuidTypeHandler());
             string dbName = $"{Assembly.GetExecutingAssembly().EntryPoint?.DeclaringType?.Namespace}.db";
-            connection = new SqliteConnection($@"Data Source={AppDomain.CurrentDomain.BaseDirectory}{dbName}");
+            connection = new SqliteConnection($@"Data Source={AppDomain.CurrentDomain.BaseDirectory}{dbName};Pooling=False;");
             connection.Open();
 
             CreateTable();
@@ -33,18 +32,17 @@ namespace X264GUIv2
 
             command.CommandText = @$"CREATE TABLE IF NOT EXISTS Main ({mainSql.CreateStr})";
             command.ExecuteNonQuery();
-
-            command.CommandText = @$"CREATE TABLE IF NOT EXISTS Merge ({mergeSql.CreateStr})";
-            command.ExecuteNonQuery();
         }
 
         public void Insert(IList<FfprobeOutput> ffprobeOutputs)
         {
             connection.Execute("DELETE FROM Detail");
             connection.Execute("DELETE FROM Main");
-            connection.Execute("DELETE FROM Merge");
 
-            var detail = ffprobeOutputs.Select(x => new
+            #region Detail
+
+            //來源
+            var detail = ffprobeOutputs.Where(x => x.MergeData is null).Select(x => new
             {
                 x.MainData.OriDetail.bitrate,
                 frameMode = (int)x.MainData.OriDetail.frameMode,
@@ -55,7 +53,8 @@ namespace X264GUIv2
                 isNew = 0,
             }).ToList();
 
-            detail.AddRange([.. ffprobeOutputs.Select(x => new
+            //改後
+            detail.AddRange([.. ffprobeOutputs.Where(x => x.MergeData is null).Select(x => new
             {
                 x.MainData.NewDetail.bitrate,
                 frameMode = (int)x.MainData.NewDetail.frameMode,
@@ -66,23 +65,8 @@ namespace X264GUIv2
                 isNew = 1,
             })]);
 
-            connection.Execute(@$"INSERT INTO Detail ({detailSql.Str}) VALUES ({detailSql.InsStr})", detail);
-
-            connection.Execute(@$"INSERT INTO Main ({mainSql.Str}) VALUES ({mainSql.InsStr})",
-                ffprobeOutputs.Select(x => new
-                {
-                    Guid = x.MainData.Guid.ToString(),
-                    isAac = x.MainData.isAac ? 1 : 0,
-                    x.MainData.duration,
-                    x.MainData.size,
-                    x.MainData.InFile,
-                    x.MainData.idx,
-                    run = (int)x.MainData.run,
-                    x.MainData.videoType,
-                    x.MainData.audioMap,
-                }));
-
-            var detailMerge = ffprobeOutputs.Where(x => x.MergeData != null).SelectMany(x => x.MergeData!).Select(x => new
+            //來源
+            detail.AddRange([.. ffprobeOutputs.Where(x => x.MergeData is not null).SelectMany(x => x.MergeData!).Select(x => new
             {
                 x.OriDetail.bitrate,
                 frameMode = (int)x.OriDetail.frameMode,
@@ -91,9 +75,10 @@ namespace X264GUIv2
                 x.OriDetail.resolutionH,
                 Guid = x.Guid.ToString(),
                 isNew = 0,
-            }).ToList();
+            })]);
 
-            detailMerge.AddRange([.. ffprobeOutputs.Where(x => x.MergeData != null).SelectMany(x => x.MergeData!).Select(x => new
+            //改後
+            detail.AddRange([.. ffprobeOutputs.Where(x => x.MergeData is not null).SelectMany(x => x.MergeData!).Select(x => new
             {
                 x.NewDetail.bitrate,
                 frameMode = (int)x.NewDetail.frameMode,
@@ -104,52 +89,116 @@ namespace X264GUIv2
                 isNew = 1,
             })]);
 
-            connection.Execute(@$"INSERT INTO Detail ({detailSql.Str}) VALUES ({detailSql.InsStr})", detailMerge);
+            connection.Execute(@$"INSERT INTO Detail ({detailSql.Str}) VALUES ({detailSql.InsStr})", detail);
+            #endregion
 
-            connection.Execute(@$"INSERT INTO Merge ({mergeSql.Str}) VALUES ({mergeSql.InsStr})",
-                ffprobeOutputs.Where(x => x.MergeData != null).SelectMany(x => x.MergeData!).Select(x => new
-                {
-                    Guid = x.Guid.ToString(),
-                    isAac = x.isAac ? 1 : 0,
-                    x.duration,
-                    x.size,
-                    x.InFile,
-                    x.idx,
-                    run = (int)x.run,
-                    x.videoType,
-                    x.audioMap,
-                }));
+            #region Main
+            var main = ffprobeOutputs.Where(x => x.MergeData is null).Select(x => new
+            {
+                Guid = x.MainData.Guid.ToString(),
+                isAac = x.MainData.isAac ? 1 : 0,
+                x.MainData.duration,
+                x.MainData.videoSize,
+                x.MainData.audioSize,
+                x.MainData.InFile,
+                x.MainData.idx,
+                run = (int)x.MainData.run,
+                x.MainData.videoType,
+                x.MainData.audioMap,
+                x.MainData.MergeGuid,
+            }).ToList();
+
+            main.AddRange([.. ffprobeOutputs.Where(x => x.MergeData is not null).SelectMany(x => x.MergeData!).Select(x => new
+            {
+                Guid = x.Guid.ToString(),
+                isAac = x.isAac ? 1 : 0,
+                x.duration,
+                x.videoSize,
+                x.audioSize,
+                x.InFile,
+                x.idx,
+                run = (int)x.run,
+                x.videoType,
+                x.audioMap,
+                x.MergeGuid,
+            })]);
+
+            connection.Execute(@$"INSERT INTO Main ({mainSql.Str}) VALUES ({mainSql.InsStr})", main);
+            #endregion
         }
 
         public void DropTable()
         {
             connection.Execute(@"DROP TABLE IF EXISTS Main");
             connection.Execute(@"DROP TABLE IF EXISTS Detail");
-            connection.Execute(@"DROP TABLE IF EXISTS Merge");
             CreateTable();
         }
 
         public List<FfprobeOutput> SelectTable()
         {
-            IList<FfprobeOutputMain> ffprobeOutputs = [.. connection.Query<FfprobeOutputMain>("select * from Main")];
-            IList<FfprobeOutputDetail> details = [.. connection.Query<FfprobeOutputDetail>("select * from Detail")];
-            IList<FfprobeOutputMain> merge = [.. connection.Query<FfprobeOutputMain>("select * from Merge")];
+            IEnumerable<FfprobeOutputMain> ffprobeOutputs = connection.Query<FfprobeOutputMain>("select * from Main");
+            IEnumerable<FfprobeOutputDetail> details = connection.Query<FfprobeOutputDetail>("select * from Detail");
 
-            IList<FfprobeOutput> ffprobes = [];
-            for (int i = 0; i < ffprobeOutputs.Count; i++)
-            {
-                IList<FfprobeOutputDetail> _details = [.. details.Where(x => x.Guid == ffprobeOutputs[i].Guid)];
-                ffprobeOutputs[i].OriDetail = _details.FirstOrDefault(x => x.isNew == 0) ?? new();
-                ffprobeOutputs[i].NewDetail = _details.FirstOrDefault(x => x.isNew == 1) ?? new();
-
-                ffprobes.Add(new FfprobeOutput
+            List<FfprobeOutput> ffprobes = [..
+                from ffprobeOutput in ffprobeOutputs.Where(x => x.MergeGuid is null)
+                join detail1 in details.Where(x => x.isNew == 0) on ffprobeOutput.Guid equals detail1.Guid into detail1Empty
+                from detail1 in detail1Empty.DefaultIfEmpty()
+                join detail2 in details.Where(x => x.isNew == 1) on ffprobeOutput.Guid equals detail2.Guid into detail2Empty
+                from detail2 in detail2Empty.DefaultIfEmpty()
+                orderby ffprobeOutput.idx
+                select new FfprobeOutput
                 {
-                    MainData = ffprobeOutputs[i],
-                    MergeData = [.. merge.Where(x => x.Guid == ffprobeOutputs[i].Guid)],
-                });
-            }
+                    MainData = new FfprobeOutputMain
+                    {
+                        Guid = ffprobeOutput.Guid,
+                        MergeGuid = ffprobeOutput.MergeGuid,
+                        InFile = ffprobeOutput.InFile,
+                        isAac = ffprobeOutput.isAac,
+                        audioMap = ffprobeOutput.audioMap,
+                        videoType = ffprobeOutput.videoType,
+                        duration = ffprobeOutput.duration,
+                        videoSize = ffprobeOutput.videoSize,
+                        audioSize = ffprobeOutput.audioSize,
+                        idx = ffprobeOutput.idx,
+                        run = ffprobeOutput.run,
+                        OriDetail = detail1,
+                        NewDetail = detail2,
+                    }
+                }];
 
-            return [.. ffprobes];
+            List<FfprobeOutput> ffprobes2 = [..
+                from ffprobeOutput in ffprobeOutputs.Where(x => x.MergeGuid is not null)
+                join detail1 in details.Where(x => x.isNew == 0) on ffprobeOutput.Guid equals detail1.Guid into detail1Empty
+                from detail1 in detail1Empty.DefaultIfEmpty()
+                join detail2 in details.Where(x => x.isNew == 1) on ffprobeOutput.Guid equals detail2.Guid into detail2Empty
+                from detail2 in detail2Empty.DefaultIfEmpty()
+                select new FfprobeOutput
+                {
+                    MainData = new FfprobeOutputMain
+                    {
+                        Guid = ffprobeOutput.Guid,
+                        MergeGuid = ffprobeOutput.MergeGuid,
+                        InFile = ffprobeOutput.InFile,
+                        isAac = ffprobeOutput.isAac,
+                        audioMap = ffprobeOutput.audioMap,
+                        videoType = ffprobeOutput.videoType,
+                        duration = ffprobeOutput.duration,
+                        videoSize = ffprobeOutput.videoSize,
+                        audioSize = ffprobeOutput.audioSize,
+                        idx = ffprobeOutput.idx,
+                        run = ffprobeOutput.run,
+                        OriDetail = detail1,
+                        NewDetail = detail2,
+                    }
+                }];
+
+            ffprobes.AddRange([..ffprobes2.Where(x => x.MainData.Guid == x.MainData.MergeGuid).Select(x => new FfprobeOutput
+            {
+                MainData = x.MainData,
+                MergeData = [..ffprobes2.Where(p => p.MainData.MergeGuid == x.MainData.Guid).OrderBy(p => p.MainData.idx).Select(x => x.MainData)],
+            })]);
+
+            return ffprobes;
         }
 
         public void Dispose()

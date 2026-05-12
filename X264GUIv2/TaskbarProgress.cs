@@ -10,9 +10,7 @@ namespace X264GUIv2
 
             if (value > max)
                 value = max;
-            float count = (float)value / max * 100f;
 
-            //TaskbarManager.Instance.SetProgressValue((int)Math.Round(count, 0), 100);
             TaskbarManager.Instance.SetProgressValue(value, max);
         }
 

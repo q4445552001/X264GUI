@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Reflection;
 using X264GUIv2.Enums;
 using X264GUIv2.Models;
+using static System.Windows.Forms.ListView;
 
 namespace X264GUIv2
 {
@@ -47,9 +48,9 @@ namespace X264GUIv2
         {
             DetailsItem detailsItem = new();
 
-            string OldCapacity = Math.Round(Convert.ToDouble(ffprobeOutput.MainData.size) / 1024 / 1024, 2).ToString(); //原始大小
-            double Audio_capacity = Convert.ToDouble(ffprobeOutput.MainData.size) - (Convert.ToDouble(ffprobeOutput.MainData.OriDetail.bitrate) * Convert.ToDouble(ffprobeOutput.MainData.duration) / 8); //計算Audio大小
-            string NewCapacity = Math.Round((Audio_capacity + Convert.ToDouble(ffprobeOutput.MainData.NewDetail.bitrate) * ffprobeOutput.MainData.duration / 8) / 1024 / 1024, 2).ToString() + " MB"; //Video預估大小
+            string OldCapacity = Math.Round(Convert.ToDouble(ffprobeOutput.MainData.videoSize) / 1024.0 / 1024.0, 2).ToString(); //原始大小
+            double audioCapacity = Math.Round(Convert.ToDouble(ffprobeOutput.MainData.audioSize) / 1024.0 / 1024.0, 2); //計算Audio大小
+            string NewCapacity = Math.Round((audioCapacity + Convert.ToDouble(ffprobeOutput.MainData.NewDetail.bitrate) * ffprobeOutput.MainData.duration / 8) / 1024 / 1024, 2).ToString() + " MB"; //Video預估大小
 
             detailsItem.FileName = ffprobeOutput.MainData.InFileName;
             detailsItem.BitRate = $"{(ffprobeOutput.MainData.OriDetail.bitrate == 0 ? "NUL" : ffprobeOutput.MainData.OriDetail.bitrate / 1000)} > {ffprobeOutput.MainData.NewDetail.bitrate / 1000} kb/s";
@@ -62,7 +63,7 @@ namespace X264GUIv2
             detailsItem.Status = ffprobeOutput.MainData.run.GetDisplayName();
             detailsItem.Time = "00:00:00";
             detailsItem.Path = ffprobeOutput.MainData.InFile ?? "";
-            detailsItem.VideoType = ffprobeOutput.MainData.videoType.GetDisplayName();
+            detailsItem.VideoType = string.Format(ffprobeOutput.MainData.videoType.GetDisplayName(), Path.GetExtension(ffprobeOutput.MainData.InFileName).Replace(".", "").ToUpper());
 
             detailsItem.Text = Path.GetFileName(ffprobeOutput.MainData.InFile) +
                     $"\nBitRate: {(ffprobeOutput.MainData.OriDetail.bitrate == 0 ? "NUL" : ffprobeOutput.MainData.OriDetail.bitrate / 1000)} kb/s" +
@@ -74,16 +75,36 @@ namespace X264GUIv2
             return detailsItem;
         }
 
+        private static readonly Dictionary<string, Func<DetailsItem, string>> _map = new()
+        {
+            ["FileName"] = x => x.FileName,
+            ["BitRate"] = x => x.BitRate,
+            ["FpsMode"] = x => x.FpsMode,
+            ["Fps"] = x => x.Fps,
+            ["Resolution"] = x => x.Resolution,
+            ["Duration"] = x => x.Duration,
+            ["Size"] = x => x.Size,
+            ["Progress"] = x => x.Progress,
+            ["Status"] = x => x.Status,
+            ["Time"] = x => x.Time,
+            ["Path"] = x => x.Path,
+            ["Text"] = x => x.Text,
+            ["VideoType"] = x => x.VideoType,
+        };
         public static ListViewItem DataViewObject(this ListView listView, FfprobeOutput ffprobeOutput)
         {
             List<string> row = [];
             DetailsItem detailsItem = DataViewText(ffprobeOutput);
 
-            foreach (ColumnHeader item in listView.Columns.Cast<ColumnHeader>())
+            foreach (ColumnHeader item in listView.Columns)
             {
-                if (item.Name == null)
+                if (string.IsNullOrEmpty(item.Name))
                     continue;
-                row.Add(typeof(DetailsItem).GetProperty(item.Name)?.GetValue(detailsItem) as string ?? string.Empty);
+
+                if (_map.TryGetValue(item.Name, out var getter))
+                    row.Add(getter(detailsItem) ?? string.Empty);
+                else
+                    row.Add(string.Empty);
             }
 
             ListViewItem lis = new([.. row])
@@ -141,9 +162,20 @@ namespace X264GUIv2
                 return;
 
             if (File.Exists(path))
-                Process.Start("explorer.exe", $@"/select,""{path}""");
-            else if (Directory.Exists(path))
-                Process.Start("explorer.exe", $@"""{path}""");
+                path = Path.GetDirectoryName(path);
+
+            //explorer select 會常態占用 shell
+            //if (File.Exists(path))
+            //    Process.Start("explorer.exe", $@"/select,""{path}""")?.Dispose();
+            //else
+            if (Directory.Exists(path))
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = path,
+                    UseShellExecute = true,
+                });
+            }
         }
 
         public static int findFfprobItem(List<FfprobeOutput> ffprobeOutputs, Guid? guid)
@@ -157,17 +189,28 @@ namespace X264GUIv2
 
         public static int findListItem(this ListView listView, Guid? guid)
         {
-            if (guid == null)
-                return -1;
+            ListViewItemCollection items = listView.Items;
 
-            int idx = listView.Items.Cast<ListViewItem>().ToList().FindIndex(x => (Guid?)x.Tag == guid);
-            return idx;
+            for (int i = 0; i < items.Count; i++)
+            {
+                if (items[i].Tag is Guid itemGuid && guid is not null && itemGuid == guid.Value)
+                    return i;
+            }
+
+            return -1;
         }
 
         public static int findSubitemIdx(this ListView listView, string name)
         {
-            int idx = listView.Columns.Cast<ColumnHeader>().Select((x, idx) => new { name = x.Name, idx }).FirstOrDefault(x => x.name == name)?.idx ?? -1;
-            return idx;
+            ColumnHeaderCollection columns = listView.Columns;
+
+            for (int i = 0; i < columns.Count; i++)
+            {
+                if (columns[i].Name == name)
+                    return i;
+            }
+
+            return -1;
         }
     }
 }

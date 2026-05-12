@@ -6,6 +6,7 @@ namespace X264GUIv2.Models
     public class FfprobeOutputMain
     {
         public Guid Guid { get; set; } = Guid.NewGuid();
+        public Guid? MergeGuid { get; set; }
 
         public string InFile { get; set; } = "";
 
@@ -43,7 +44,8 @@ namespace X264GUIv2.Models
 
         public double duration { get; set; } = 0;
 
-        public int size { get; set; } = 0;
+        public int videoSize { get; set; } = 0;
+        public int audioSize { get; set; } = 0;
 
         public int idx { get; set; } = 0;
 
@@ -97,9 +99,13 @@ namespace X264GUIv2.Models
         public int? isNew { get; set; }
     }
 
-    public class FfprobeOutput
+    public class FfprobeOutput : IEquatable<FfprobeOutput>
     {
         public FfprobeOutputMain MainData { get; set; } = new();
         public List<FfprobeOutputMain>? MergeData { get; set; }
+
+        public override int GetHashCode() => HashCode.Combine(MainData.Guid);
+        public bool Equals(FfprobeOutput? other) => Equals(other);
+        public override bool Equals(object? obj) => Equals(obj as FfprobeOutput);
     }
 }

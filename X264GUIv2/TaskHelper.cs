@@ -61,7 +61,7 @@ namespace X264GUIv2
 
             string argument = ArgumentList.Count > 0 ? string.Join(" ", ArgumentList).Replace("\r\n", " ") : "";
 #if DEBUG
-            Debug.WriteLine($@"""{FileName}"" {argument}");
+            //Debug.WriteLine($@"""{FileName}"" {argument}");
             WriteFile.WriteLog($@"""{FileName}"" {argument}");
 #endif
 
@@ -99,7 +99,7 @@ namespace X264GUIv2
                     return;
 
 #if DEBUG
-                Debug.WriteLine($"Out: {e.Data}");
+                //Debug.WriteLine($"Out: {e.Data}");
 #endif
 
                 try
@@ -124,7 +124,7 @@ namespace X264GUIv2
                     return;
 
 #if DEBUG
-                Debug.WriteLine($"Err: {e.Data}");
+                //Debug.WriteLine($"Err: {e.Data}");
 #endif
 
                 try

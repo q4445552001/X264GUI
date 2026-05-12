@@ -17,7 +17,7 @@ namespace X264GUIv2
 
         public void ffmpegOutput(FfprobeOutput ffprobeOutput, string sr, Stopwatch sw1, Stopwatch sw2)
         {
-            form.listView1.Items[form.useIdx].SubItems[form.listView1.findSubitemIdx(nameof(DetailsItem.Time))]!.Text = OtherControlFunc.timeConv(sw2);
+            form.listView1.Items[form.useIdx].SubItems[form.subTimeIdx]!.Text = OtherControlFunc.timeConv(sw2);
             form.timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
             int str = sr.IndexOf('=');
 
@@ -31,14 +31,14 @@ namespace X264GUIv2
             {
                 double currentSeconds = outTimeMs / 1_000_000.0;
                 double pro = currentSeconds / ffprobeOutput.MainData.duration * 100.0;
-                form.listView1.Items[form.useIdx].SubItems[form.listView1.findSubitemIdx(nameof(DetailsItem.Progress))]!.Text = $"{pro:F1} %";
+                form.listView1.Items[form.useIdx].SubItems[form.subProgressIdx]!.Text = $"{pro:F1} %";
                 calculateProgres(ffprobeOutput, (float)pro);
             }
         }
 
         public void calculateProgres(FfprobeOutput ffprobeOutput, float pro)
         {
-            WeighAllot weighAllot = new(ffprobeOutput.MainData.audioMap > 0 && form.AutoTrimToolStripMenuItem.Checked);
+            WeighAllot weighAllot = new(ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal && ffprobeOutput.MainData.audioMap > 0 && form.AutoTrimToolStripMenuItem.Checked);
 
             float audioWeight = ffprobeOutput.MainData.videoType switch
             {

@@ -5,7 +5,7 @@ namespace X264GUIv2
 {
     internal static class WriteFile
     {
-        public static string WritePath = $"{AppDomain.CurrentDomain.BaseDirectory}{Assembly.GetExecutingAssembly().EntryPoint?.DeclaringType?.Namespace}_log.txt";
+        public static string WritePath = $"{AppDomain.CurrentDomain.BaseDirectory}{Assembly.GetExecutingAssembly().EntryPoint?.DeclaringType?.Namespace}_{DateTime.Now:yyyyMMdd}_log.txt";
 
         /// <summary>
         /// 寫入log
