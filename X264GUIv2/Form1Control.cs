@@ -38,7 +38,11 @@ namespace X264GUIv2
 
         public void calculateProgres(FfprobeOutput ffprobeOutput, float pro)
         {
-            WeighAllot weighAllot = new(ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal && ffprobeOutput.MainData.audioMap > 0 && form.AutoTrimToolStripMenuItem.Checked);
+            WeighAllot weighAllot = new(
+                ffprobeOutput.MainData.isLocalEncode &&
+                ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal &&
+                ffprobeOutput.MainData.audioMap > 0 && form.AutoTrimToolStripMenuItem.Checked
+            );
 
             float audioWeight = ffprobeOutput.MainData.videoType switch
             {
@@ -47,16 +51,14 @@ namespace X264GUIv2
                 _ => 0f
             };
 
-            float mergeWeight = ffprobeOutput.MainData.videoType switch
-            {
-                VideoTypeEnum.Aviscript or VideoTypeEnum.Merge => weighAllot.weightMerge / 2,
-                _ => 0f
-            };
+            float mergeWeight = 0f;
+            if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Aviscript || ffprobeOutput.MainData.videoType == VideoTypeEnum.Merge || !ffprobeOutput.MainData.isLocalEncode)
+                mergeWeight = weighAllot.weightMerge / 2;
 
             float completedWeight = 0f;
             float currentWeight = 0f;
 
-            if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Aviscript)
+            if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Aviscript || !ffprobeOutput.MainData.isLocalEncode)
             {
                 currentWeight += weighAllot.weightAudio / 2f;
                 currentWeight += weighAllot.weightMerge / 2f;
@@ -70,7 +72,7 @@ namespace X264GUIv2
                     break;
 
                 case RunEnum.OnePass:
-                    if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Aviscript)
+                    if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Aviscript || !ffprobeOutput.MainData.isLocalEncode)
                         completedWeight = 0f;
                     else
                         completedWeight = audioWeight + mergeWeight;

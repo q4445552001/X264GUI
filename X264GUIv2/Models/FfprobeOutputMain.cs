@@ -22,6 +22,9 @@ namespace X264GUIv2.Models
         [NotMapped]
         public string OutFile => $@"{InFilePath}\{Path.GetFileNameWithoutExtension(InFile)}-0.mp4";
 
+        [NotMapped]
+        public bool isLocalEncode => OtherControlFunc.HasNonLocalCodePageChar(InFilePath);
+
         public bool isAac { get; set; } = false;
 
         public int audioMap { get; set; } = 0;

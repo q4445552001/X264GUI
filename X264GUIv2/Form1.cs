@@ -822,6 +822,9 @@ namespace X264GUIv2
             if (string.IsNullOrWhiteSpace(ffprobeOutput.MainData.InFilePath))
                 throw new Exception($"無效路徑 {ffprobeOutput.MainData.InFilePath}");
 
+            if (!ffprobeOutput.MainData.isLocalEncode && ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal)
+                WriteFile.WriteLog($"檢查到 {ffprobeOutput.MainData.InFile} 的路徑非[{Global.CodePage}]語言，使用 ffmpeg 模式");
+
             Environment.CurrentDirectory = ffprobeOutput.MainData.InFilePath;
 
             int listViewCount = listView1.Items.Count;
@@ -838,7 +841,7 @@ namespace X264GUIv2
             TaskbarProgress.Clear();
             TaskbarProgress.Set(videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done), videoFunc.ffprobeData.Count);
 
-            if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal)
+            if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal && ffprobeOutput.MainData.isLocalEncode)
             {
                 string avs;
                 if (string.IsNullOrWhiteSpace(ffprobeOutput.MainData.SubtitlesFile))
@@ -875,7 +878,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"",1)
 
             TaskbarProgress.Set(videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done), videoFunc.ffprobeData.Count);
             string mapMsg = string.Empty;
-            if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal)
+            if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal && ffprobeOutput.MainData.isLocalEncode)
             {
                 ffprobeOutput = audioProcess(ffprobeOutput, sw1, sw2, ref mapMsg);
                 ffprobeOutput = errProcess(ffprobeOutput, 0, out RunEnum isRunAudio);
@@ -888,13 +891,25 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"",1)
 
             TaskbarProgress.Set(videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done), videoFunc.ffprobeData.Count);
             string onePassMsg = string.Empty;
-            ffprobeOutput = ffprobeOutput.MainData.videoType switch
+
+            switch (ffprobeOutput.MainData.videoType)
             {
-                VideoTypeEnum.Aviscript => onePassAvsProcess(ffprobeOutput, sw1, sw2, ref exitCode, ref onePassMsg),
-                VideoTypeEnum.Merge => onePassMergeProcess(ffprobeOutput, sw1, sw2, ref exitCode, ref onePassMsg),
-                VideoTypeEnum.Normal => onePassProcess(ffprobeOutput, sw1, sw2, ref exitCode, ref onePassMsg),
-                _ => onePassProcess(ffprobeOutput, sw1, sw2, ref exitCode, ref onePassMsg),
-            };
+                case VideoTypeEnum.Aviscript:
+                    ffprobeOutput = onePassAvsProcess(ffprobeOutput, sw1, sw2, ref exitCode, ref onePassMsg);
+                    break;
+                case VideoTypeEnum.Merge:
+                    ffprobeOutput = onePassMergeProcess(ffprobeOutput, sw1, sw2, ref exitCode, ref onePassMsg);
+                    break;
+                case VideoTypeEnum.Normal:
+                    if (ffprobeOutput.MainData.isLocalEncode)
+                        ffprobeOutput = onePassProcess(ffprobeOutput, sw1, sw2, ref exitCode, ref onePassMsg);
+                    else
+                        ffprobeOutput = onePassAvsProcess(ffprobeOutput, sw1, sw2, ref exitCode, ref onePassMsg);
+                    break;
+                default:
+                    ffprobeOutput = onePassProcess(ffprobeOutput, sw1, sw2, ref exitCode, ref onePassMsg);
+                    break;
+            }
             ffprobeOutput = errProcess(ffprobeOutput, exitCode, out RunEnum isRunOnePass);
             switch (isRunOnePass)
             {
@@ -904,13 +919,24 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"",1)
 
             TaskbarProgress.Set(videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done), videoFunc.ffprobeData.Count);
             string twoPassMsg = string.Empty;
-            ffprobeOutput = ffprobeOutput.MainData.videoType switch
+            switch (ffprobeOutput.MainData.videoType)
             {
-                VideoTypeEnum.Aviscript => twoPassAvsProcess(ffprobeOutput, sw1, sw2, ref exitCode, ref twoPassMsg),
-                VideoTypeEnum.Merge => twoPassMergeProcess(ffprobeOutput, sw1, sw2, ref exitCode, ref twoPassMsg),
-                VideoTypeEnum.Normal => twoPassProcess(ffprobeOutput, sw1, sw2, ref exitCode, ref twoPassMsg),
-                _ => twoPassProcess(ffprobeOutput, sw1, sw2, ref exitCode, ref twoPassMsg),
-            };
+                case VideoTypeEnum.Aviscript:
+                    ffprobeOutput = twoPassAvsProcess(ffprobeOutput, sw1, sw2, ref exitCode, ref onePassMsg);
+                    break;
+                case VideoTypeEnum.Merge:
+                    ffprobeOutput = twoPassMergeProcess(ffprobeOutput, sw1, sw2, ref exitCode, ref onePassMsg);
+                    break;
+                case VideoTypeEnum.Normal:
+                    if (ffprobeOutput.MainData.isLocalEncode)
+                        ffprobeOutput = twoPassProcess(ffprobeOutput, sw1, sw2, ref exitCode, ref onePassMsg);
+                    else
+                        ffprobeOutput = twoPassAvsProcess(ffprobeOutput, sw1, sw2, ref exitCode, ref onePassMsg);
+                    break;
+                default:
+                    ffprobeOutput = twoPassProcess(ffprobeOutput, sw1, sw2, ref exitCode, ref onePassMsg);
+                    break;
+            }
             ffprobeOutput = errProcess(ffprobeOutput, exitCode, out RunEnum isRunTwoPass);
             switch (isRunTwoPass)
             {
@@ -918,7 +944,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"",1)
                 case RunEnum.Error: throw new Exception($"{RunEnum.TwoPass.GetDisplayName()} {twoPassMsg}");
             }
 
-            if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal)
+            if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal && ffprobeOutput.MainData.isLocalEncode)
             {
                 string mergeMsg = string.Empty;
                 TaskbarProgress.Set(videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done), videoFunc.ffprobeData.Count);

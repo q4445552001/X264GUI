@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Reflection;
+using System.Text;
 using X264GUIv2.Enums;
 using X264GUIv2.Models;
 using static System.Windows.Forms.ListView;
@@ -242,6 +243,21 @@ namespace X264GUIv2
             }
 
             return -1;
+        }
+
+        public static bool HasNonLocalCodePageChar(string text)
+        {
+            Encoding enc = Encoding.GetEncoding(Global.CodePage, EncoderFallback.ExceptionFallback, DecoderFallback.ExceptionFallback);
+
+            try
+            {
+                enc.GetBytes(text);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }
