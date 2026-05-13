@@ -179,7 +179,7 @@ namespace X264GUIv2
 
                         sw2.Reset();
                         sw2.Start();
-                        int itemIdx = OtherControlFunc.findFfprobItem(videoFunc.ffprobeData, (Guid?)listViewItems[idx].Tag);
+                        int itemIdx = videoFunc.ffprobeData.findFfprobItem((Guid?)listViewItems[idx].Tag);
 
                         try
                         {
@@ -215,7 +215,7 @@ namespace X264GUIv2
                 listView1.Items[useIdx].UseItemStyleForSubItems = false;
                 listView1.Items[useIdx].SubItems[subStatusIdx]!.Text = RunEnum.Stop.GetDisplayName();
 
-                var idx = OtherControlFunc.findFfprobItem(videoFunc.ffprobeData, (Guid?)listView1.Items[useIdx].Tag);
+                var idx = videoFunc.ffprobeData.findFfprobItem((Guid?)listView1.Items[useIdx].Tag);
                 videoFunc.ffprobeData[idx].MainData.run = RunEnum.Stop;
                 VideoFunc.Delete(videoFunc.ffprobeData[idx]);
                 form1Control.btnControl(true);
@@ -614,7 +614,7 @@ namespace X264GUIv2
                 if (item == null)
                     return;
 
-                int idx = OtherControlFunc.findFfprobItem(videoFunc.ffprobeData, (Guid?)item.Tag);
+                int idx = videoFunc.ffprobeData.findFfprobItem((Guid?)item.Tag);
                 listMergeEditViewItem.Enabled =
                     (Cts == null || Cts.Token.IsCancellationRequested) && videoFunc.ffprobeData[idx].MainData.videoType == VideoTypeEnum.Merge;
 
@@ -655,7 +655,7 @@ namespace X264GUIv2
             {
                 foreach (ListViewItem item in listView1.SelectedItems)
                 {
-                    var idx1 = OtherControlFunc.findFfprobItem(videoFunc.ffprobeData, (Guid?)item.Tag);
+                    var idx1 = videoFunc.ffprobeData.findFfprobItem((Guid?)item.Tag);
                     var idx2 = listView1.findListItem((Guid?)item.Tag);
 
                     videoFunc.ffprobeData.RemoveAt(idx1);
@@ -706,7 +706,7 @@ namespace X264GUIv2
             {
                 foreach (ListViewItem item in listView1.SelectedItems)
                 {
-                    int idx1 = OtherControlFunc.findFfprobItem(videoFunc.ffprobeData, (Guid?)item.Tag);
+                    int idx1 = videoFunc.ffprobeData.findFfprobItem((Guid?)item.Tag);
                     int idx2 = listView1.findListItem((Guid?)item.Tag);
 
                     videoFunc.ffprobeData[idx1].MainData.run = RunEnum.Idel;
@@ -1282,7 +1282,6 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"",1)
 
         private FfprobeOutput errProcess(FfprobeOutput ffprobeOutput, int exitCode, out RunEnum run)
         {
-            Debug.WriteLine(ffprobeOutput.MainData.run);
             if (exitCode != 0 && ffprobeOutput.MainData.run != RunEnum.Stop)
             {
                 listView1.Items[useIdx].UseItemStyleForSubItems = false;

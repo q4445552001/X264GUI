@@ -14,6 +14,7 @@ namespace X264GUIv2
         public readonly ToolStripMenuItem listDnViewItem;
         #endregion
 
+        #region 初始化
         public Form3(Form1 form)
         {
             InitializeComponent();
@@ -43,15 +44,27 @@ namespace X264GUIv2
             ]);
             #endregion
         }
+        #endregion
 
-        private void Form3_FormClosing(object sender, FormClosingEventArgs e)
+        #region Form
+        private void Form3_FormClosed(object sender, FormClosedEventArgs e)
         {
-            //if (MessageBox.Show("確定儲存?", "提示", MessageBoxButtons.YesNo) == DialogResult.Yes)
+            if (!(MessageBox.Show("確定儲存?", "提示", MessageBoxButtons.YesNo) == DialogResult.Yes))
+                return;
             save();
+        }
 
-            e.Cancel = true;
-
-            //Hide();
+        private void Form3_SizeChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                listView1.Columns[0].Width = listView1.ClientSize.Width;
+            }
+            catch (Exception ex)
+            {
+                WriteFile.WriteLog(ex.Message);
+                OtherControlFunc.ShowError(ex.Message);
+            }
         }
 
         public void ShowDialog(FfprobeOutput ffprobeOutput)
@@ -74,7 +87,9 @@ namespace X264GUIv2
 
             ShowDialog();
         }
+        #endregion
 
+        #region listView1
         private void listView1_MouseUp(object sender, MouseEventArgs e)
         {
             try
@@ -83,7 +98,7 @@ namespace X264GUIv2
                     return;
 
                 ListViewItem? item = listView1.GetItemAt(e.X, e.Y);
-                listDiffViewItem.Enabled = item != null;
+                listDiffViewItem.Enabled = listView1.Items.Count > 1 && item != null;
                 listUpViewItem.Enabled = item != null;
                 listDnViewItem.Enabled = item != null;
 
@@ -97,7 +112,9 @@ namespace X264GUIv2
                 OtherControlFunc.ShowError(ex.Message);
             }
         }
+        #endregion
 
+        #region listViewItem
         private void listUpViewItem_Click(object? sender, EventArgs e)
         {
             try
@@ -157,6 +174,11 @@ namespace X264GUIv2
         {
             try
             {
+                foreach (ListViewItem item in listView1.SelectedItems)
+                {
+                    var idx2 = listView1.findListItem((Guid?)item.Tag);
+                    listView1.Items.RemoveAt(idx2);
+                }
             }
             catch (Exception ex)
             {
@@ -164,14 +186,9 @@ namespace X264GUIv2
                 OtherControlFunc.ShowError(ex.Message);
             }
         }
+        #endregion
 
-        private void save()
-        {
-
-            int idx = OtherControlFunc.findFfprobItem(form.videoFunc.ffprobeData, (Guid?)form.listViewMenu.Tag);
-            var data = form.videoFunc.ffprobeData[idx].MergeData;
-        }
-
+        #region Btn
         private void upBtn_Click(object sender, EventArgs e)
         {
             try
@@ -197,18 +214,54 @@ namespace X264GUIv2
                 OtherControlFunc.ShowError(ex.Message);
             }
         }
+        #endregion
 
-        private void Form3_SizeChanged(object sender, EventArgs e)
+        #region 副程式
+        private void save()
         {
-            try
+            Guid? listGuid = (Guid?)form.listViewMenu.Tag;
+            if (listGuid is null)
+                return;
+
+            Dictionary<Guid, int> editGuids =
+                listView1.Items.Cast<ListViewItem>().Select(x => (Guid?)x.Tag)
+                .Where(x => x is not null)
+                .Select((x, idx) => new { guid = x, idx })
+                .OrderBy(x => x.idx)
+                .ToDictionary(x => (Guid)x.guid!, x => x.idx);
+
+            int itemIdx = form.videoFunc.ffprobeData.findFfprobItem(listGuid);
+            FfprobeOutput item = form.videoFunc.ffprobeData[itemIdx];
+
+            if (item.MergeData is null)
+                return;
+
+            FfprobeOutputMain? newFfprobeOutputMain = item.MergeData.FirstOrDefault(x => x.Guid == editGuids.FirstOrDefault().Key);
+            if (newFfprobeOutputMain is null)
+                return;
+
+            newFfprobeOutputMain.OriDetail = item.MainData.OriDetail;
+            newFfprobeOutputMain.NewDetail = item.MainData.NewDetail;
+
+            List<FfprobeOutputMain> newFfprobeOutputMerges = [];
+            for (int i = 0; i < item.MergeData.Count; i++)
             {
-                listView1.Columns[0].Width = listView1.ClientSize.Width;
+                item.MergeData[i].idx = -editGuids[item.MergeData[i].Guid];
+                item.MergeData[i].MergeGuid = newFfprobeOutputMain.Guid;
+                newFfprobeOutputMerges.Add(item.MergeData[i]);
             }
-            catch (Exception ex)
+
+            form.videoFunc.ffprobeData[itemIdx] = new()
             {
-                WriteFile.WriteLog(ex.Message);
-                OtherControlFunc.ShowError(ex.Message);
-            }
+                MainData = newFfprobeOutputMain,
+                MergeData = newFfprobeOutputMerges,
+            };
+
+            int listIdx = form.listView1.findListItem(listGuid);
+            form.listView1.Items[listIdx].Tag = newFfprobeOutputMain.Guid;
+
+            var temp = form.videoFunc.ffprobeData[itemIdx];
         }
+        #endregion
     }
 }

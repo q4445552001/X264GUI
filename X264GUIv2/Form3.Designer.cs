@@ -82,7 +82,7 @@
             Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "Form3";
             Text = "編輯合併項目";
-            FormClosing += Form3_FormClosing;
+            FormClosed += Form3_FormClosed;
             SizeChanged += Form3_SizeChanged;
             ResumeLayout(false);
         }

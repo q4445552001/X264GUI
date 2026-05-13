@@ -33,7 +33,7 @@ namespace X264GUIv2
             IList<ListViewItem> listViews = [.. listView.CheckedItems.Cast<ListViewItem>()];
             foreach (ListViewItem item in listViews)
             {
-                var idx = findFfprobItem(ffprobeOutputs, (Guid?)item.Tag);
+                var idx = ffprobeOutputs.findFfprobItem((Guid?)item.Tag);
                 idxs.Add(idx);
                 action.Invoke(idx);
 
@@ -209,7 +209,7 @@ namespace X264GUIv2
             }
         }
 
-        public static int findFfprobItem(List<FfprobeOutput> ffprobeOutputs, Guid? guid)
+        public static int findFfprobItem(this List<FfprobeOutput> ffprobeOutputs, Guid? guid)
         {
             if (guid == null)
                 return -1;
