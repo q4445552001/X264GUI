@@ -4,8 +4,6 @@ namespace X264GUIv2
 {
     internal static class Program
     {
-        //TODO: 影片合併GUI編輯功能
-
         [STAThread]
         static void Main()
         {
