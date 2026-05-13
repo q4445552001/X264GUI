@@ -46,8 +46,8 @@ namespace X264GUIv2.Models
 
         public double duration { get; set; } = 0;
 
-        public int videoSize { get; set; } = 0;
-        public int audioSize { get; set; } = 0;
+        public double videoSize { get; set; } = 0;
+        public double audioSize { get; set; } = 0;
 
         public int idx { get; set; } = 0;
 

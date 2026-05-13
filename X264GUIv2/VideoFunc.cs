@@ -45,23 +45,8 @@ namespace X264GUIv2
                 List<FfprobeOutput> data = [];
                 if (_ffprobe.FirstOrDefault()?.videoType == VideoTypeEnum.Merge)
                 {
-                    FfprobeOutput merge = new()
-                    {
-                        MainData = _ffprobe.First(x => x.idx == 0),
-                        MergeData = [.. _ffprobe],
-                    };
-
-                    for (int i = 0; i < merge.MergeData.Count; i++)
-                    {
-                        merge.MergeData[i].MergeGuid = merge.MainData.Guid;
-                        merge.MergeData[i].idx = -merge.MergeData[i].idx;
-                    }
-
-                    merge.MainData.duration = merge.MergeData.Sum(x => x.duration);
-                    merge.MainData.videoSize = merge.MergeData.Sum(x => x.videoSize);
-                    merge.MainData.audioSize = merge.MergeData.Sum(x => x.audioSize);
-                    merge.MainData.OriDetail.bitrate = merge.MergeData.Sum(x => x.OriDetail.bitrate) / merge.MergeData.Count;
-                    data = [new FfprobeOutput { MainData = merge.MainData, MergeData = merge.MergeData }];
+                    FfprobeOutput merge = mergeFunc([.. _ffprobe]);
+                    data = [merge];
                 }
                 else
                 {
@@ -339,6 +324,28 @@ namespace X264GUIv2
             }
 
             return ffprobeOutput;
+        }
+
+        public static FfprobeOutput mergeFunc(List<FfprobeOutputMain> ffprobeOutputMains)
+        {
+            FfprobeOutput merge = new()
+            {
+                MainData = ffprobeOutputMains.First(x => x.idx == 0),
+                MergeData = [.. ffprobeOutputMains],
+            };
+
+            for (int i = 0; i < merge.MergeData.Count; i++)
+            {
+                merge.MergeData[i].MergeGuid = merge.MainData.Guid;
+                merge.MergeData[i].idx = -merge.MergeData[i].idx;
+            }
+
+            merge.MainData.duration = merge.MergeData.Sum(x => x.duration);
+            merge.MainData.videoSize = merge.MergeData.Sum(x => x.videoSize);
+            merge.MainData.audioSize = merge.MergeData.Sum(x => x.audioSize);
+            merge.MainData.NewDetail.bitrate = merge.MergeData.Sum(x => x.OriDetail.bitrate) / merge.MergeData.Count;
+
+            return new FfprobeOutput { MainData = merge.MainData, MergeData = merge.MergeData };
         }
 
         /// <summary>

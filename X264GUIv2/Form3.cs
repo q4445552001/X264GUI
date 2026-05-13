@@ -1,10 +1,13 @@
-﻿using X264GUIv2.Models;
+﻿using System.Collections.Concurrent;
+using X264GUIv2.Enums;
+using X264GUIv2.Models;
 
 namespace X264GUIv2
 {
     public partial class Form3 : Form
     {
         public readonly Form1 form;
+        private FfprobeOutput formFfprobeOutput { get; set; } = new();
 
         #region 內建元件
         public readonly ContextMenuStrip listViewMenu;
@@ -19,6 +22,7 @@ namespace X264GUIv2
         {
             InitializeComponent();
             this.form = form;
+            listView1.Columns.Add("檔案名稱", listView1.ClientSize.Width);
 
             #region ContextMenuStrip
             listViewMenu = new();
@@ -72,19 +76,10 @@ namespace X264GUIv2
             if (ffprobeOutput.MergeData == null)
                 return;
 
+            formFfprobeOutput = ffprobeOutput;
+
             listView1.Items.Clear();
-            listView1.Columns.Add("檔案名稱", listView1.ClientSize.Width);
-
-            foreach (FfprobeOutputMain ffprobe in ffprobeOutput.MergeData.OrderByDescending(x => x.idx))
-            {
-                ListViewItem lis = new([ffprobe.InFileName])
-                {
-                    Tag = ffprobe.Guid,
-                };
-
-                listView1.Items.Add(lis);
-            }
-
+            addItem(formFfprobeOutput.MergeData);
             ShowDialog();
         }
         #endregion
@@ -159,9 +154,14 @@ namespace X264GUIv2
                 openfile.Filter = $"{fileStr}|{fileStr}";
 
                 if (openfile.ShowDialog() == DialogResult.OK)
-                    form.videoFunc.Encode(openfile.FileNames);
+                {
+                    List<FfprobeOutputMain> ffprobeOutputMains = add(openfile.FileNames);
+                    addItem(ffprobeOutputMains);
 
-                //videoFunc.ffprobeData = OtherControlFunc.SortIdx(listView1, videoFunc.ffprobeData);
+                    if (formFfprobeOutput.MergeData is null)
+                        formFfprobeOutput.MergeData = [];
+                    formFfprobeOutput.MergeData.AddRange(ffprobeOutputMains);
+                }
             }
             catch (Exception ex)
             {
@@ -217,6 +217,7 @@ namespace X264GUIv2
         #endregion
 
         #region 副程式
+
         private void save()
         {
             Guid? listGuid = (Guid?)form.listViewMenu.Tag;
@@ -230,37 +231,74 @@ namespace X264GUIv2
                 .OrderBy(x => x.idx)
                 .ToDictionary(x => (Guid)x.guid!, x => x.idx);
 
-            int itemIdx = form.videoFunc.ffprobeData.findFfprobItem(listGuid);
-            FfprobeOutput item = form.videoFunc.ffprobeData[itemIdx];
-
-            if (item.MergeData is null)
+            if (formFfprobeOutput.MergeData is null)
                 return;
 
-            FfprobeOutputMain? newFfprobeOutputMain = item.MergeData.FirstOrDefault(x => x.Guid == editGuids.FirstOrDefault().Key);
+            FfprobeOutputMain? newFfprobeOutputMain = formFfprobeOutput.MergeData.FirstOrDefault(x => x.Guid == editGuids.FirstOrDefault().Key);
             if (newFfprobeOutputMain is null)
                 return;
 
-            newFfprobeOutputMain.OriDetail = item.MainData.OriDetail;
-            newFfprobeOutputMain.NewDetail = item.MainData.NewDetail;
+            newFfprobeOutputMain.videoType = VideoTypeEnum.Merge;
+            newFfprobeOutputMain.OriDetail = formFfprobeOutput.MainData.OriDetail;
+            newFfprobeOutputMain.NewDetail = formFfprobeOutput.MainData.NewDetail;
 
             List<FfprobeOutputMain> newFfprobeOutputMerges = [];
-            for (int i = 0; i < item.MergeData.Count; i++)
+            for (int i = 0; i < formFfprobeOutput.MergeData.Count; i++)
             {
-                item.MergeData[i].idx = -editGuids[item.MergeData[i].Guid];
-                item.MergeData[i].MergeGuid = newFfprobeOutputMain.Guid;
-                newFfprobeOutputMerges.Add(item.MergeData[i]);
+                if (!editGuids.ContainsKey(formFfprobeOutput.MergeData[i].Guid))
+                    continue;
+                formFfprobeOutput.MergeData[i].idx = editGuids[formFfprobeOutput.MergeData[i].Guid];
+                newFfprobeOutputMerges.Add(formFfprobeOutput.MergeData[i]);
             }
 
+            FfprobeOutput merge = VideoFunc.mergeFunc(newFfprobeOutputMerges);
+
+            int itemIdx = form.videoFunc.ffprobeData.findFfprobItem(listGuid);
             form.videoFunc.ffprobeData[itemIdx] = new()
             {
-                MainData = newFfprobeOutputMain,
-                MergeData = newFfprobeOutputMerges,
+                MainData = merge.MainData,
+                MergeData = merge.MergeData,
             };
 
             int listIdx = form.listView1.findListItem(listGuid);
-            form.listView1.Items[listIdx].Tag = newFfprobeOutputMain.Guid;
+            form.listView1.Items[listIdx] = form.listView1.DataViewObject(form.videoFunc.ffprobeData[itemIdx]);
+        }
 
-            var temp = form.videoFunc.ffprobeData[itemIdx];
+        private static List<FfprobeOutputMain> add(string[] files)
+        {
+            List<LoadFile> loadFiles = [.. files.Select((x, idx) => new LoadFile
+            {
+                File = x,
+                index = idx,
+            })];
+
+            ConcurrentBag<FfprobeOutputMain> _ffprobe = [];
+            Parallel.ForEach(loadFiles,
+                () => new HashSet<object>(), // 每個 thread 一份
+                (file, state, localVisited) =>
+                {
+                    FfprobeOutputMain main = VideoFunc.ffprobe(file);
+                    main.idx = -main.idx;
+                    _ffprobe.Add(main);
+                    return localVisited;
+                },
+                _ => { }
+            );
+
+            return [.. _ffprobe];
+        }
+
+        private void addItem(List<FfprobeOutputMain> ffprobeOutputMains)
+        {
+            foreach (FfprobeOutputMain ffprobe in ffprobeOutputMains.OrderByDescending(x => x.idx))
+            {
+                ListViewItem lis = new([ffprobe.InFileName])
+                {
+                    Tag = ffprobe.Guid,
+                };
+
+                listView1.Items.Add(lis);
+            }
         }
         #endregion
     }
