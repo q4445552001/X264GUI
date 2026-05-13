@@ -5,8 +5,6 @@ namespace X264GUIv2
     internal static class Program
     {
         //TODO: 影片合併GUI編輯功能
-        //TODO: 影片合併GUI編輯功能的上下移Btn
-        //TODO: 新增/移除Btn改上下移
 
         [STAThread]
         static void Main()

@@ -51,8 +51,8 @@
             addToolStripMenuItem = new ToolStripMenuItem();
             loadAvsToolStripMenuItem = new ToolStripMenuItem();
             createMergeToolStripMenuItem = new ToolStripMenuItem();
-            diffToolStripMenuItem = new ToolStripMenuItem();
             toolStripSeparator1 = new ToolStripSeparator();
+            diffToolStripMenuItem = new ToolStripMenuItem();
             clearToolStripMenuItem = new ToolStripMenuItem();
             dbToolStripMenuItem = new ToolStripMenuItem();
             dbLoadToolStripMenuItem = new ToolStripMenuItem();
@@ -66,8 +66,8 @@
             logViewClearToolStripMenuItem = new ToolStripMenuItem();
             settingToolStripMenuItem = new ToolStripMenuItem();
             AutoTrimToolStripMenuItem = new ToolStripMenuItem();
-            addBtn = new Button();
-            diffBtn = new Button();
+            upBtn = new Button();
+            dnBtn = new Button();
             ((System.ComponentModel.ISupportInitialize)bitrateNumeric).BeginInit();
             statusStrip1.SuspendLayout();
             menuStrip1.SuspendLayout();
@@ -278,17 +278,17 @@
             createMergeToolStripMenuItem.Text = "建立影片合併";
             createMergeToolStripMenuItem.Click += createMergeToolStripMenuItem_Click;
             // 
+            // toolStripSeparator1
+            // 
+            toolStripSeparator1.Name = "toolStripSeparator1";
+            toolStripSeparator1.Size = new Size(143, 6);
+            // 
             // diffToolStripMenuItem
             // 
             diffToolStripMenuItem.Name = "diffToolStripMenuItem";
             diffToolStripMenuItem.Size = new Size(146, 22);
             diffToolStripMenuItem.Text = "移除視訊檔案";
             diffToolStripMenuItem.Click += diffToolStripMenuItem_Click;
-            // 
-            // toolStripSeparator1
-            // 
-            toolStripSeparator1.Name = "toolStripSeparator1";
-            toolStripSeparator1.Size = new Size(143, 6);
             // 
             // clearToolStripMenuItem
             // 
@@ -377,25 +377,25 @@
             AutoTrimToolStripMenuItem.Size = new Size(146, 22);
             AutoTrimToolStripMenuItem.Text = "啟用音軌修剪";
             // 
-            // addBtn
+            // upBtn
             // 
-            addBtn.Location = new Point(409, 27);
-            addBtn.Name = "addBtn";
-            addBtn.Size = new Size(28, 28);
-            addBtn.TabIndex = 21;
-            addBtn.Text = "+";
-            addBtn.UseVisualStyleBackColor = true;
-            addBtn.Click += addBtn_Click;
+            upBtn.Location = new Point(409, 27);
+            upBtn.Name = "upBtn";
+            upBtn.Size = new Size(52, 28);
+            upBtn.TabIndex = 21;
+            upBtn.Text = "上移";
+            upBtn.UseVisualStyleBackColor = true;
+            upBtn.Click += upBtn_Click;
             // 
-            // diffBtn
+            // dnBtn
             // 
-            diffBtn.Location = new Point(443, 27);
-            diffBtn.Name = "diffBtn";
-            diffBtn.Size = new Size(28, 28);
-            diffBtn.TabIndex = 22;
-            diffBtn.Text = "-";
-            diffBtn.UseVisualStyleBackColor = true;
-            diffBtn.Click += diffBtn_Click;
+            dnBtn.Location = new Point(467, 27);
+            dnBtn.Name = "dnBtn";
+            dnBtn.Size = new Size(52, 28);
+            dnBtn.TabIndex = 22;
+            dnBtn.Text = "下移";
+            dnBtn.UseVisualStyleBackColor = true;
+            dnBtn.Click += dnBtn_Click;
             // 
             // Form1
             // 
@@ -403,8 +403,8 @@
             AutoScaleMode = AutoScaleMode.Font;
             AutoValidate = AutoValidate.EnableAllowFocusChange;
             ClientSize = new Size(759, 430);
-            Controls.Add(diffBtn);
-            Controls.Add(addBtn);
+            Controls.Add(dnBtn);
+            Controls.Add(upBtn);
             Controls.Add(statusStrip1);
             Controls.Add(menuStrip1);
             Controls.Add(stopBtn);
@@ -463,8 +463,8 @@
         public ToolStripMenuItem clearToolStripMenuItem;
         public ToolStripMenuItem diffToolStripMenuItem;
         public ToolStripSeparator toolStripSeparator1;
-        public Button addBtn;
-        public Button diffBtn;
+        public Button upBtn;
+        public Button dnBtn;
         public ToolStripStatusLabel timeStripStatus;
         public ToolStripMenuItem dbToolStripMenuItem;
         public ToolStripMenuItem dbSaveToolStripMenuItem;

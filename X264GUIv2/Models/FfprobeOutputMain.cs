@@ -42,6 +42,8 @@ namespace X264GUIv2.Models
             set => _videoType = value;
         }
 
+        public string videoCodeName { get; set; } = string.Empty;
+
         public double duration { get; set; } = 0;
 
         public int videoSize { get; set; } = 0;

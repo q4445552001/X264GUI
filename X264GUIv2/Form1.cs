@@ -9,7 +9,7 @@ namespace X264GUIv2
     public partial class Form1 : Form
     {
         #region 變數
-        private readonly VideoFunc videoFunc;
+        public readonly VideoFunc videoFunc;
         private CancellationTokenSource? Cts { get; set; }
         private readonly Form1Control form1Control;
 
@@ -30,12 +30,14 @@ namespace X264GUIv2
 
         #region 內建元件
         public readonly Form2 f2;
+        public readonly Form3 f3;
         public readonly ContextMenuStrip listViewMenu;
         public readonly ToolStripMenuItem listDiffViewItem;
         public readonly ToolStripMenuItem listFolderViewItem;
         public readonly ToolStripMenuItem listUpViewItem;
         public readonly ToolStripMenuItem listDnViewItem;
         public readonly ToolStripMenuItem listRestViewItem;
+        public readonly ToolStripMenuItem listMergeEditViewItem;
         #endregion
 
         #region 初始化
@@ -44,6 +46,7 @@ namespace X264GUIv2
         {
             InitializeComponent();
             f2 = new();
+            f3 = new(this);
             videoFunc = new(this);
             form1Control = new(this);
 
@@ -87,7 +90,7 @@ namespace X264GUIv2
                 new() { Name = nameof(DetailsItem.Resolution), Text = "解析度", Width = 170, TextAlign = HorizontalAlignment.Center },
                 new() { Name = nameof(DetailsItem.Duration), Text = "時間長度", Width = 80, TextAlign = HorizontalAlignment.Center },
                 new() { Name = nameof(DetailsItem.Size), Text = "檔案大小", Width = 140, TextAlign = HorizontalAlignment.Center },
-                new() { Name = nameof(DetailsItem.VideoType), Text = "處理方式", Width = 70, TextAlign = HorizontalAlignment.Center },
+                new() { Name = nameof(DetailsItem.VideoType), Text = "處理方式", Width = 100, TextAlign = HorizontalAlignment.Center },
                 new() { Name = nameof(DetailsItem.Progress), Text = "進度", Width = 70, TextAlign = HorizontalAlignment.Center },
                 new() { Name = nameof(DetailsItem.Status), Text = "狀態", Width = 80, TextAlign = HorizontalAlignment.Center },
                 new() { Name = nameof(DetailsItem.Time), Text = "消耗時間", Width = 80, TextAlign = HorizontalAlignment.Center },
@@ -118,6 +121,9 @@ namespace X264GUIv2
             listDiffViewItem = new() { Text = "移除" };
             listDiffViewItem.Click += listDiffViewItem_Click;
 
+            listMergeEditViewItem = new() { Text = "編輯影片合併" };
+            listMergeEditViewItem.Click += listMergeEditViewItem_Click;
+
             listViewMenu.Items.AddRange([
                 listFolderViewItem,
                 new ToolStripSeparator(),
@@ -127,6 +133,8 @@ namespace X264GUIv2
                 new ToolStripSeparator(),
                 listUpViewItem,
                 listDnViewItem,
+                new ToolStripSeparator(),
+                listMergeEditViewItem,
             ]);
             #endregion
         }
@@ -216,7 +224,36 @@ namespace X264GUIv2
             }
         }
 
-        private void addBtn_Click(object sender, EventArgs e)
+        private void upBtn_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                listUpViewItem_Click(sender, e);
+            }
+            catch (Exception ex)
+            {
+                WriteFile.WriteLog(ex.Message);
+                OtherControlFunc.ShowError(ex.Message);
+            }
+        }
+
+        private void dnBtn_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                listDnViewItem_Click(sender, e);
+            }
+            catch (Exception ex)
+            {
+                WriteFile.WriteLog(ex.Message);
+                OtherControlFunc.ShowError(ex.Message);
+            }
+        }
+        #endregion
+
+        #region ToolStrip
+
+        private void addToolStripMenuItem_Click(object sender, EventArgs e)
         {
             try
             {
@@ -245,7 +282,7 @@ namespace X264GUIv2
             }
         }
 
-        private void diffBtn_Click(object sender, EventArgs e)
+        private void diffToolStripMenuItem_Click(object sender, EventArgs e)
         {
             try
             {
@@ -257,22 +294,6 @@ namespace X264GUIv2
                 }
 
                 progressText.Text = $"{videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done)}/{videoFunc.ffprobeData.Count}";
-            }
-            catch (Exception ex)
-            {
-                WriteFile.WriteLog(ex.Message);
-                OtherControlFunc.ShowError(ex.Message);
-            }
-        }
-        #endregion
-
-        #region ToolStrip
-
-        private void addToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                addBtn_Click(sender, e);
             }
             catch (Exception ex)
             {
@@ -328,19 +349,6 @@ namespace X264GUIv2
                     videoFunc.Encode(openfile.FileNames, true);
 
                 videoFunc.ffprobeData = OtherControlFunc.SortIdx(listView1, videoFunc.ffprobeData);
-            }
-            catch (Exception ex)
-            {
-                WriteFile.WriteLog(ex.Message);
-                OtherControlFunc.ShowError(ex.Message);
-            }
-        }
-
-        private void diffToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                diffBtn_Click(sender, e);
             }
             catch (Exception ex)
             {
@@ -606,6 +614,10 @@ namespace X264GUIv2
                 if (item == null)
                     return;
 
+                int idx = OtherControlFunc.findFfprobItem(videoFunc.ffprobeData, (Guid?)item.Tag);
+                listMergeEditViewItem.Enabled =
+                    (Cts == null || Cts.Token.IsCancellationRequested) && videoFunc.ffprobeData[idx].MainData.videoType == VideoTypeEnum.Merge;
+
                 listView1.FocusedItem = item;
                 listViewMenu.Tag = item.Tag;
                 listViewMenu.Show(listView1, e.Location);
@@ -636,6 +648,9 @@ namespace X264GUIv2
 
         private void listDiffViewItem_Click(object? sender, EventArgs e)
         {
+            if (!(MessageBox.Show("確定移除?", "提示", MessageBoxButtons.YesNo) == DialogResult.Yes))
+                return;
+
             try
             {
                 foreach (ListViewItem item in listView1.SelectedItems)
@@ -661,16 +676,7 @@ namespace X264GUIv2
         {
             try
             {
-                foreach (ListViewItem item in listView1.SelectedItems)
-                {
-                    if (item.Index > 0)
-                    {
-                        int index = item.Index - 1;
-                        listView1.Items.RemoveAt(item.Index);
-                        listView1.Items.Insert(index, item);
-                    }
-                }
-
+                listView1.UpItem();
                 videoFunc.ffprobeData = OtherControlFunc.SortIdx(listView1, videoFunc.ffprobeData);
             }
             catch (Exception ex)
@@ -684,19 +690,7 @@ namespace X264GUIv2
         {
             try
             {
-                for (int i = listView1.SelectedItems.Count - 1; i >= 0; i--)
-                {
-                    ListViewItem item = listView1.SelectedItems[i];
-
-                    if (item.Index < listView1.Items.Count - 1)
-                    {
-                        int index = item.Index + 1;
-
-                        listView1.Items.RemoveAt(item.Index);
-                        listView1.Items.Insert(index, item);
-                    }
-                }
-
+                listView1.DnItem();
                 videoFunc.ffprobeData = OtherControlFunc.SortIdx(listView1, videoFunc.ffprobeData);
             }
             catch (Exception ex)
@@ -719,6 +713,24 @@ namespace X264GUIv2
                     listView1.Items[idx2].SubItems[subStatusIdx]!.ForeColor = Color.Black;
                     listView1.Items[idx2].SubItems[subStatusIdx]!.Text = RunEnum.Idel.GetDisplayName();
                 }
+            }
+            catch (Exception ex)
+            {
+                WriteFile.WriteLog(ex.Message);
+                OtherControlFunc.ShowError(ex.Message);
+            }
+        }
+
+        private void listMergeEditViewItem_Click(object? sender, EventArgs e)
+        {
+            try
+            {
+                FfprobeOutput? ffprobeOutput = videoFunc.ffprobeData.FirstOrDefault(x => x.MainData.Guid == (Guid?)listViewMenu.Tag);
+                if (ffprobeOutput == null)
+                    return;
+
+                f3.ShowDialog(ffprobeOutput);
+                //OtherControlFunc.openFolder(ffprobeOutput.MainData.InFile);
             }
             catch (Exception ex)
             {

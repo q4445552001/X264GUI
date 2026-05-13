@@ -106,6 +106,7 @@ namespace X264GUIv2
                 x.MainData.videoType,
                 x.MainData.audioMap,
                 x.MainData.MergeGuid,
+                x.MainData.videoCodeName,
             }).ToList();
 
             main.AddRange([.. ffprobeOutputs.Where(x => x.MergeData is not null).SelectMany(x => x.MergeData!).Select(x => new
@@ -121,6 +122,7 @@ namespace X264GUIv2
                 x.videoType,
                 x.audioMap,
                 x.MergeGuid,
+                x.videoCodeName,
             })]);
 
             connection.Execute(@$"INSERT INTO Main ({mainSql.Str}) VALUES ({mainSql.InsStr})", main);
@@ -140,7 +142,7 @@ namespace X264GUIv2
             IEnumerable<FfprobeOutputDetail> details = connection.Query<FfprobeOutputDetail>("select * from Detail");
 
             List<FfprobeOutput> ffprobes = [..
-                from ffprobeOutput in ffprobeOutputs.Where(x => x.MergeGuid is null)
+                from ffprobeOutput in ffprobeOutputs
                 join detail1 in details.Where(x => x.isNew == 0) on ffprobeOutput.Guid equals detail1.Guid into detail1Empty
                 from detail1 in detail1Empty.DefaultIfEmpty()
                 join detail2 in details.Where(x => x.isNew == 1) on ffprobeOutput.Guid equals detail2.Guid into detail2Empty
@@ -159,6 +161,7 @@ namespace X264GUIv2
                         duration = ffprobeOutput.duration,
                         videoSize = ffprobeOutput.videoSize,
                         audioSize = ffprobeOutput.audioSize,
+                        videoCodeName = ffprobeOutput.videoCodeName,
                         idx = ffprobeOutput.idx,
                         run = ffprobeOutput.run,
                         OriDetail = detail1,
@@ -166,39 +169,16 @@ namespace X264GUIv2
                     }
                 }];
 
-            List<FfprobeOutput> ffprobes2 = [..
-                from ffprobeOutput in ffprobeOutputs.Where(x => x.MergeGuid is not null)
-                join detail1 in details.Where(x => x.isNew == 0) on ffprobeOutput.Guid equals detail1.Guid into detail1Empty
-                from detail1 in detail1Empty.DefaultIfEmpty()
-                join detail2 in details.Where(x => x.isNew == 1) on ffprobeOutput.Guid equals detail2.Guid into detail2Empty
-                from detail2 in detail2Empty.DefaultIfEmpty()
-                select new FfprobeOutput
-                {
-                    MainData = new FfprobeOutputMain
-                    {
-                        Guid = ffprobeOutput.Guid,
-                        MergeGuid = ffprobeOutput.MergeGuid,
-                        InFile = ffprobeOutput.InFile,
-                        isAac = ffprobeOutput.isAac,
-                        audioMap = ffprobeOutput.audioMap,
-                        videoType = ffprobeOutput.videoType,
-                        duration = ffprobeOutput.duration,
-                        videoSize = ffprobeOutput.videoSize,
-                        audioSize = ffprobeOutput.audioSize,
-                        idx = ffprobeOutput.idx,
-                        run = ffprobeOutput.run,
-                        OriDetail = detail1,
-                        NewDetail = detail2,
-                    }
-                }];
+            List<FfprobeOutput> ffprobes1 = [.. ffprobes.Where(x => x.MainData.MergeGuid is null).OrderBy(x => x.MainData.idx)];
+            List<FfprobeOutput> ffprobes2 = [.. ffprobes.Where(x => x.MainData.MergeGuid is not null).OrderBy(x => x.MainData.idx)];
 
-            ffprobes.AddRange([..ffprobes2.Where(x => x.MainData.Guid == x.MainData.MergeGuid).Select(x => new FfprobeOutput
+            ffprobes1.AddRange([..ffprobes2.Where(x => x.MainData.Guid == x.MainData.MergeGuid).Select(x => new FfprobeOutput
             {
                 MainData = x.MainData,
                 MergeData = [..ffprobes2.Where(p => p.MainData.MergeGuid == x.MainData.Guid).OrderBy(p => p.MainData.idx).Select(x => x.MainData)],
             })]);
 
-            return ffprobes;
+            return ffprobes1;
         }
 
         public void Dispose()

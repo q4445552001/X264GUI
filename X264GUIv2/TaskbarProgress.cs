@@ -14,14 +14,10 @@ namespace X264GUIv2
             TaskbarManager.Instance.SetProgressValue(value, max);
         }
 
-        public static void Error()
-        {
+        public static void Error() =>
             TaskbarManager.Instance.SetProgressState(TaskbarProgressBarState.Error);
-        }
 
-        public static void Clear()
-        {
+        public static void Clear() =>
             TaskbarManager.Instance.SetProgressState(TaskbarProgressBarState.NoProgress);
-        }
     }
 }

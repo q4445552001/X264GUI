@@ -63,7 +63,9 @@ namespace X264GUIv2
             detailsItem.Status = ffprobeOutput.MainData.run.GetDisplayName();
             detailsItem.Time = "00:00:00";
             detailsItem.Path = ffprobeOutput.MainData.InFile ?? "";
-            detailsItem.VideoType = string.Format(ffprobeOutput.MainData.videoType.GetDisplayName(), Path.GetExtension(ffprobeOutput.MainData.InFileName).Replace(".", "").ToUpper());
+
+            string videoType = $"{ffprobeOutput.MainData.videoCodeName}/{Path.GetExtension(ffprobeOutput.MainData.InFileName).Replace(".", "")}";
+            detailsItem.VideoType = string.Format(ffprobeOutput.MainData.videoType.GetDisplayName(), videoType.ToUpper());
 
             detailsItem.Text = Path.GetFileName(ffprobeOutput.MainData.InFile) +
                     $"\nBitRate: {(ffprobeOutput.MainData.OriDetail.bitrate == 0 ? "NUL" : ffprobeOutput.MainData.OriDetail.bitrate / 1000)} kb/s" +
@@ -115,6 +117,35 @@ namespace X264GUIv2
             };
 
             return lis;
+        }
+
+        public static void UpItem(this ListView listView)
+        {
+            foreach (ListViewItem item in listView.SelectedItems)
+            {
+                if (item.Index > 0)
+                {
+                    int index = item.Index - 1;
+                    listView.Items.RemoveAt(item.Index);
+                    listView.Items.Insert(index, item);
+                }
+            }
+        }
+
+        public static void DnItem(this ListView listView)
+        {
+            for (int i = listView.SelectedItems.Count - 1; i >= 0; i--)
+            {
+                ListViewItem item = listView.SelectedItems[i];
+
+                if (item.Index < listView.Items.Count - 1)
+                {
+                    int index = item.Index + 1;
+
+                    listView.Items.RemoveAt(item.Index);
+                    listView.Items.Insert(index, item);
+                }
+            }
         }
 
         /// <summary>

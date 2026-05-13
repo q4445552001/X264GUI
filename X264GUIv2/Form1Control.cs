@@ -97,8 +97,8 @@ namespace X264GUIv2
         {
             form.stopBtn.Enabled = !isClose;
             form.runBtn.Enabled = isClose;
-            form.addBtn.Enabled = isClose;
-            form.diffBtn.Enabled = isClose;
+            form.upBtn.Enabled = isClose;
+            form.dnBtn.Enabled = isClose;
             form.bitrateCBox.Enabled = isClose;
             bitrateCBoxControl();
             form.fpsCBox.Enabled = isClose;

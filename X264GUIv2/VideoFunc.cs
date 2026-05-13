@@ -6,7 +6,7 @@ using X264GUIv2.Models;
 
 namespace X264GUIv2
 {
-    internal class VideoFunc(Form1 form)
+    public class VideoFunc(Form1 form)
     {
         public List<FfprobeOutput> ffprobeData = []; //原始影片資料
 
@@ -123,10 +123,13 @@ namespace X264GUIv2
             if (stuff == null || stuff.streams == null)
                 throw new Exception("解析失敗");
 
+            #region Video
             StandardOutput.StreamData? video = stuff.streams.FirstOrDefault(x => x.codec_type?.ToLower() == "video") ?? throw new Exception("空視訊");
             if (!int.TryParse(video.bit_rate ?? stuff.format?.bit_rate, out int bitrateTemp))
                 bitrateTemp = 0;
+            #endregion
 
+            #region Audio
             StandardOutput.StreamData? audio = stuff.streams.FirstOrDefault(x => x.codec_type?.ToLower() == "audio");
             int audioSize = 0;
             if (audio is not null)
@@ -140,6 +143,7 @@ namespace X264GUIv2
 
                 audioSize = audioBitRate * audioDuration / 8;
             }
+            #endregion
 
             ffprobeOutput = new()
             {
@@ -148,6 +152,7 @@ namespace X264GUIv2
                 audioSize = audioSize,
                 isAac = audio?.codec_name == "aac",
                 audioMap = audio?.index ?? 0,
+                videoCodeName = video.codec_name ?? "",
                 InFile = input.File,
                 idx = input.index,
                 OriDetail = new()
