@@ -15,7 +15,7 @@ namespace X264GUIv2
         /// <param name="MessageText"></param>
         public static void ShowError(string MessageText) => MessageBox.Show(MessageText, "錯誤", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
-        public static List<FfprobeOutput> SortIdx(ListView listView, List<FfprobeOutput> ffprobeOutputs)
+        public static List<FfprobeOutput> SortIdx(this ListView listView, List<FfprobeOutput> ffprobeOutputs)
         {
             for (int i = 0; i < ffprobeOutputs.Count; i++)
             {
@@ -26,7 +26,7 @@ namespace X264GUIv2
             return ffprobeOutputs;
         }
 
-        public static void listViewCheck(ListView listView, List<FfprobeOutput> ffprobeOutputs, Action<int> action)
+        public static void listViewCheck(this ListView listView, List<FfprobeOutput> ffprobeOutputs, Action<int> action)
         {
             IList<int> idxs = [];
 
@@ -37,41 +37,41 @@ namespace X264GUIv2
                 idxs.Add(idx);
                 action.Invoke(idx);
 
-                listView.Items[ffprobeOutputs[idx].MainData.idx] = listView.DataViewObject(ffprobeOutputs[idx]);
+                listView.Items[ffprobeOutputs[idx].MainData.idx] = listView.DataViewObject(ffprobeOutputs[idx].MainData);
             }
 
             foreach (int idx in idxs)
                 listView.Items[ffprobeOutputs[idx].MainData.idx].Checked = true;
         }
 
-        public static DetailsItem DataViewText(FfprobeOutput ffprobeOutput)
+        public static DetailsItem DataViewText(FfprobeOutputMain FfprobeOutputMain)
         {
             DetailsItem detailsItem = new();
 
-            string OldCapacity = Math.Round(Convert.ToDouble(ffprobeOutput.MainData.videoSize) / 1024.0 / 1024.0, 2).ToString(); //原始大小
-            double audioCapacity = Math.Round(Convert.ToDouble(ffprobeOutput.MainData.audioSize) / 1024.0 / 1024.0, 2); //計算Audio大小
-            string NewCapacity = Math.Round((audioCapacity + Convert.ToDouble(ffprobeOutput.MainData.NewDetail.bitrate) * ffprobeOutput.MainData.duration / 8) / 1024 / 1024, 2).ToString() + " MB"; //Video預估大小
+            string OldCapacity = Math.Round(Convert.ToDouble(FfprobeOutputMain.videoSize) / 1024.0 / 1024.0, 2).ToString(); //原始大小
+            double audioCapacity = Math.Round(Convert.ToDouble(FfprobeOutputMain.audioSize) / 1024.0 / 1024.0, 2); //計算Audio大小
+            string NewCapacity = Math.Round((audioCapacity + Convert.ToDouble(FfprobeOutputMain.NewDetail.bitrate) * FfprobeOutputMain.duration / 8) / 1024 / 1024, 2).ToString() + " MB"; //Video預估大小
 
-            detailsItem.FileName = ffprobeOutput.MainData.InFileName;
-            detailsItem.BitRate = $"{(ffprobeOutput.MainData.OriDetail.bitrate == 0 ? "NUL" : ffprobeOutput.MainData.OriDetail.bitrate / 1000)} > {ffprobeOutput.MainData.NewDetail.bitrate / 1000} kb/s";
-            detailsItem.FpsMode = $"{(ffprobeOutput.MainData.videoType == VideoTypeEnum.Aviscript ? "NUL" : ffprobeOutput.MainData.OriDetail.frameMode)} > {FrameModeEnum.CBR}";
-            detailsItem.Fps = $"{Math.Round(ffprobeOutput.MainData.OriDetail.frameRate, 3)} > {Math.Round(ffprobeOutput.MainData.NewDetail.frameRate, 3)}";
-            detailsItem.Resolution = $"{ffprobeOutput.MainData.OriDetail.resolution} > {ffprobeOutput.MainData.NewDetail.resolution}";
-            detailsItem.Duration = TimeSpan.FromSeconds(ffprobeOutput.MainData.duration).ToString(@"hh\:mm\:ss");
+            detailsItem.FileName = FfprobeOutputMain.InFileName;
+            detailsItem.BitRate = $"{(FfprobeOutputMain.OriDetail.bitrate == 0 ? "NUL" : FfprobeOutputMain.OriDetail.bitrate / 1000)} > {FfprobeOutputMain.NewDetail.bitrate / 1000} kb/s";
+            detailsItem.FpsMode = $"{(FfprobeOutputMain.videoType == VideoTypeEnum.Aviscript ? "NUL" : FfprobeOutputMain.OriDetail.frameMode)} > {FrameModeEnum.CBR}";
+            detailsItem.Fps = $"{Math.Round(FfprobeOutputMain.OriDetail.frameRate, 3)} > {Math.Round(FfprobeOutputMain.NewDetail.frameRate, 3)}";
+            detailsItem.Resolution = $"{FfprobeOutputMain.OriDetail.resolution} > {FfprobeOutputMain.NewDetail.resolution}";
+            detailsItem.Duration = TimeSpan.FromSeconds(FfprobeOutputMain.duration).ToString(@"hh\:mm\:ss");
             detailsItem.Size = $"{(OldCapacity == "0" ? "NUL" : OldCapacity)} > {NewCapacity}";
             detailsItem.Progress = "00.00 %";
-            detailsItem.Status = ffprobeOutput.MainData.run.GetDisplayName();
+            detailsItem.Status = FfprobeOutputMain.run.GetDisplayName();
             detailsItem.Time = "00:00:00";
-            detailsItem.Path = ffprobeOutput.MainData.InFile ?? "";
+            detailsItem.Path = FfprobeOutputMain.InFile ?? "";
 
-            string videoType = $"{ffprobeOutput.MainData.videoCodeName}/{Path.GetExtension(ffprobeOutput.MainData.InFileName).Replace(".", "")}";
-            detailsItem.VideoType = string.Format(ffprobeOutput.MainData.videoType.GetDisplayName(), videoType.ToUpper());
+            string videoType = $"{FfprobeOutputMain.videoCodeName}/{Path.GetExtension(FfprobeOutputMain.InFileName).Replace(".", "")}";
+            detailsItem.VideoType = string.Format(FfprobeOutputMain.videoType.GetDisplayName(), videoType.ToUpper());
 
-            detailsItem.Text = Path.GetFileName(ffprobeOutput.MainData.InFile) +
-                    $"\nBitRate: {(ffprobeOutput.MainData.OriDetail.bitrate == 0 ? "NUL" : ffprobeOutput.MainData.OriDetail.bitrate / 1000)} kb/s" +
-                    $"\nFPS模式: {Enum.GetName(ffprobeOutput.MainData.OriDetail.frameMode)}" +
-                    $"\nFPS: {Math.Round(ffprobeOutput.MainData.OriDetail.frameRate, 3)}" +
-                    $"\n解析度: {ffprobeOutput.MainData.OriDetail.resolution}" +
+            detailsItem.Text = Path.GetFileName(FfprobeOutputMain.InFile) +
+                    $"\nBitRate: {(FfprobeOutputMain.OriDetail.bitrate == 0 ? "NUL" : FfprobeOutputMain.OriDetail.bitrate / 1000)} kb/s" +
+                    $"\nFPS模式: {Enum.GetName(FfprobeOutputMain.OriDetail.frameMode)}" +
+                    $"\nFPS: {Math.Round(FfprobeOutputMain.OriDetail.frameRate, 3)}" +
+                    $"\n解析度: {FfprobeOutputMain.OriDetail.resolution}" +
                     $"\n檔案大小: {(OldCapacity == "0" ? "NUL" : OldCapacity)} MB";
 
             return detailsItem;
@@ -93,10 +93,10 @@ namespace X264GUIv2
             ["Text"] = x => x.Text,
             ["VideoType"] = x => x.VideoType,
         };
-        public static ListViewItem DataViewObject(this ListView listView, FfprobeOutput ffprobeOutput)
+        public static ListViewItem DataViewObject(this ListView listView, FfprobeOutputMain ffprobeOutputMain)
         {
             List<string> row = [];
-            DetailsItem detailsItem = DataViewText(ffprobeOutput);
+            DetailsItem detailsItem = DataViewText(ffprobeOutputMain);
 
             foreach (ColumnHeader item in listView.Columns)
             {
@@ -111,7 +111,7 @@ namespace X264GUIv2
 
             ListViewItem lis = new([.. row])
             {
-                Tag = ffprobeOutput.MainData.Guid,
+                Tag = ffprobeOutputMain.Guid,
                 ToolTipText = detailsItem.Text,
                 UseItemStyleForSubItems = false,
             };

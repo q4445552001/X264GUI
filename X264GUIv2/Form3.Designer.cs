@@ -40,6 +40,7 @@
             listView1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             listView1.Font = new Font("Microsoft JhengHei UI", 10F);
             listView1.FullRowSelect = true;
+            listView1.ShowItemToolTips = true;
             listView1.GridLines = true;
             listView1.Location = new Point(12, 46);
             listView1.Name = "listView1";

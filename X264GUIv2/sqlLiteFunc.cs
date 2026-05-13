@@ -49,7 +49,7 @@ namespace X264GUIv2
                 x.MainData.OriDetail.frameStr,
                 x.MainData.OriDetail.resolutionW,
                 x.MainData.OriDetail.resolutionH,
-                Guid = x.MainData.Guid.ToString(),
+                Guid = x.MainData.OriDetail.Guid.ToString(),
                 isNew = 0,
             }).ToList();
 
@@ -61,7 +61,7 @@ namespace X264GUIv2
                 x.MainData.NewDetail.frameStr,
                 x.MainData.NewDetail.resolutionW,
                 x.MainData.NewDetail.resolutionH,
-                Guid = x.MainData.Guid.ToString(),
+                Guid = x.MainData.NewDetail.Guid.ToString(),
                 isNew = 1,
             })]);
 
@@ -73,7 +73,7 @@ namespace X264GUIv2
                 x.OriDetail.frameStr,
                 x.OriDetail.resolutionW,
                 x.OriDetail.resolutionH,
-                Guid = x.Guid.ToString(),
+                Guid = x.OriDetail.Guid.ToString(),
                 isNew = 0,
             })]);
 
@@ -85,7 +85,7 @@ namespace X264GUIv2
                 x.NewDetail.frameStr,
                 x.NewDetail.resolutionW,
                 x.NewDetail.resolutionH,
-                Guid = x.Guid.ToString(),
+                Guid = x.OriDetail.Guid.ToString(),
                 isNew = 1,
             })]);
 
@@ -109,21 +109,21 @@ namespace X264GUIv2
                 x.MainData.videoCodeName,
             }).ToList();
 
-            main.AddRange([.. ffprobeOutputs.Where(x => x.MergeData is not null).SelectMany(x => x.MergeData!).Select(x => new
+            main.AddRange([..ffprobeOutputs.Where(x => x.MergeData is not null).Select(x => x.MergeData!.Select(p => new
             {
-                Guid = x.Guid.ToString(),
-                isAac = x.isAac ? 1 : 0,
-                x.duration,
-                x.videoSize,
-                x.audioSize,
-                x.InFile,
-                x.idx,
-                run = (int)x.run,
-                x.videoType,
-                x.audioMap,
-                x.MergeGuid,
-                x.videoCodeName,
-            })]);
+                Guid = p.Guid.ToString(),
+                isAac = p.isAac ? 1 : 0,
+                p.duration,
+                p.videoSize,
+                p.audioSize,
+                p.InFile,
+                x.MainData.idx,
+                run = (int)p.run,
+                p.videoType,
+                p.audioMap,
+                p.MergeGuid,
+                p.videoCodeName,
+            })).SelectMany(x => x)]);
 
             connection.Execute(@$"INSERT INTO Main ({mainSql.Str}) VALUES ({mainSql.InsStr})", main);
             #endregion

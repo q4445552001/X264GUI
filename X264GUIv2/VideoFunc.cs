@@ -46,21 +46,23 @@ namespace X264GUIv2
                 if (_ffprobe.FirstOrDefault()?.videoType == VideoTypeEnum.Merge)
                 {
                     FfprobeOutput merge = mergeFunc([.. _ffprobe]);
+                    merge.MainData = changeFunc(merge.MainData);
+                    if (merge.MergeData is not null)
+                        for (var i = 0; i < merge.MergeData.Count; i++)
+                            merge.MergeData[i] = changeFunc(merge.MergeData[i]);
                     data = [merge];
                 }
                 else
                 {
                     data = [.. _ffprobe.OrderBy(x => x.idx).Select(x => new FfprobeOutput { MainData = x }).ToList()];
+                    for (int i = 0; i < data.Count; i++)
+                        data[i].MainData = changeFunc(data[i].MainData);
                 }
 
-                for (int i = 0; i < data.Count; i++)
+                foreach (FfprobeOutput ffprobeOutput in data)
                 {
-                    data[i] = bitRateFunc(data[i]);
-                    data[i] = fpsFunc(data[i]);
-                    data[i] = resolutionFunc(data[i]);
-                    data[i] = bitRateNumericFunc(data[i]);
-                    form.listView1.Items.Add(form.listView1.DataViewObject(data[i]));
-                    ffprobeData.Add(data[i]);
+                    form.listView1.Items.Add(form.listView1.DataViewObject(ffprobeOutput.MainData));
+                    ffprobeData.Add(ffprobeOutput);
                 }
             }
             catch (IndexOutOfRangeException print)
@@ -140,18 +142,21 @@ namespace X264GUIv2
                 videoCodeName = video.codec_name ?? "",
                 InFile = input.File,
                 idx = input.index,
-                OriDetail = new()
-                {
-                    bitrate = bitrateTemp,
-                    frameMode = video.r_frame_rate == video.avg_frame_rate ? FrameModeEnum.CBR : FrameModeEnum.VBR,
-                    frameStr = video.r_frame_rate ?? video.avg_frame_rate ?? "24000/1001",
-                    resolutionW = video.width,
-                    resolutionH = video.height,
-                }
+            };
+
+            ffprobeOutput.OriDetail = new()
+            {
+                Guid = ffprobeOutput.Guid,
+                bitrate = bitrateTemp,
+                frameMode = video.r_frame_rate == video.avg_frame_rate ? FrameModeEnum.CBR : FrameModeEnum.VBR,
+                frameStr = video.r_frame_rate ?? video.avg_frame_rate ?? "24000/1001",
+                resolutionW = video.width,
+                resolutionH = video.height,
             };
 
             ffprobeOutput.NewDetail = new()
             {
+                Guid = ffprobeOutput.OriDetail.Guid,
                 bitrate = ffprobeOutput.OriDetail.bitrate,
                 frameMode = ffprobeOutput.OriDetail.frameMode,
                 frameStr = ffprobeOutput.OriDetail.frameStr,
@@ -234,7 +239,7 @@ namespace X264GUIv2
             return ffprobeOutput;
         }
 
-        public FfprobeOutput bitRateFunc(FfprobeOutput ffprobeOutput)
+        public FfprobeOutputMain bitRateFunc(FfprobeOutputMain ffprobeOutputMain)
         {
             if (form.bitrateCBox.Items[form.bitrateCBox.SelectedIndex] is ComboboxItem item)
             {
@@ -245,34 +250,34 @@ namespace X264GUIv2
 
                 if (bitrateEnum == BitrateEnum.Auto)
                 {
-                    if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Aviscript)
-                        ffprobeOutput.MainData.NewDetail.bitrate = form.bitRateDefault;
+                    if (ffprobeOutputMain.videoType == VideoTypeEnum.Aviscript)
+                        ffprobeOutputMain.NewDetail.bitrate = form.bitRateDefault;
                     else
                     {
-                        if (ffprobeOutput.MainData.OriDetail.bitrate < form.bitRateDefault)
-                            ffprobeOutput.MainData.NewDetail.bitrate = ffprobeOutput.MainData.OriDetail.bitrate - 100000;
-                        else if ((ffprobeOutput.MainData.OriDetail.bitrate - 100000) > form.bitRateDefault)
-                            ffprobeOutput.MainData.NewDetail.bitrate = form.bitRateDefault;
+                        if (ffprobeOutputMain.OriDetail.bitrate < form.bitRateDefault)
+                            ffprobeOutputMain.NewDetail.bitrate = ffprobeOutputMain.OriDetail.bitrate - 100000;
+                        else if ((ffprobeOutputMain.OriDetail.bitrate - 100000) > form.bitRateDefault)
+                            ffprobeOutputMain.NewDetail.bitrate = form.bitRateDefault;
                         else
-                            ffprobeOutput.MainData.NewDetail.bitrate = ffprobeOutput.MainData.OriDetail.bitrate - 100000;
+                            ffprobeOutputMain.NewDetail.bitrate = ffprobeOutputMain.OriDetail.bitrate - 100000;
                     }
                 }
                 else if (bitrateEnum == BitrateEnum.Manual)
-                    ffprobeOutput.MainData.NewDetail.bitrate = (int)form.bitrateNumeric.Value * 1000;
+                    ffprobeOutputMain.NewDetail.bitrate = (int)form.bitrateNumeric.Value * 1000;
             }
 
-            return ffprobeOutput;
+            return ffprobeOutputMain;
         }
 
-        public FfprobeOutput fpsFunc(FfprobeOutput ffprobeOutput)
+        public FfprobeOutputMain fpsFunc(FfprobeOutputMain ffprobeOutputMain)
         {
             if (form.fpsCBox.Items[form.fpsCBox.SelectedIndex] is ComboboxItem item)
-                ffprobeOutput.MainData.NewDetail.frameStr = item.Value == "Auto" ? ffprobeOutput.MainData.OriDetail.frameStr : item.Value;
+                ffprobeOutputMain.NewDetail.frameStr = item.Value == "Auto" ? ffprobeOutputMain.OriDetail.frameStr : item.Value;
 
-            return ffprobeOutput;
+            return ffprobeOutputMain;
         }
 
-        public FfprobeOutput resolutionFunc(FfprobeOutput ffprobeOutput)
+        public FfprobeOutputMain resolutionFunc(FfprobeOutputMain ffprobeOutputMain)
         {
             string text = "0";
             if (form.resolutionCBox.SelectedIndex == -1)
@@ -291,26 +296,26 @@ namespace X264GUIv2
 
             if (resolutionEnum == ResolutionEnum.Auto)
             {
-                ffprobeOutput.MainData.NewDetail.resolutionW = ffprobeOutput.MainData.OriDetail.resolutionW;
-                ffprobeOutput.MainData.NewDetail.resolutionH = ffprobeOutput.MainData.OriDetail.resolutionH;
+                ffprobeOutputMain.NewDetail.resolutionW = ffprobeOutputMain.OriDetail.resolutionW;
+                ffprobeOutputMain.NewDetail.resolutionH = ffprobeOutputMain.OriDetail.resolutionH;
             }
             else
             {
-                (int, int) GCD = OtherControlFunc.GetGCD(ffprobeOutput.MainData.OriDetail.resolutionW ?? 0, ffprobeOutput.MainData.OriDetail.resolutionH ?? 0);
-                ffprobeOutput.MainData.NewDetail.resolutionW = OtherControlFunc.FixEven(resolution / GCD.Item2 * GCD.Item1);
-                ffprobeOutput.MainData.NewDetail.resolutionH = resolution;
+                (int, int) GCD = OtherControlFunc.GetGCD(ffprobeOutputMain.OriDetail.resolutionW ?? 0, ffprobeOutputMain.OriDetail.resolutionH ?? 0);
+                ffprobeOutputMain.NewDetail.resolutionW = OtherControlFunc.FixEven(resolution / GCD.Item2 * GCD.Item1);
+                ffprobeOutputMain.NewDetail.resolutionH = resolution;
 
-                if (ffprobeOutput.MainData.NewDetail.resolutionW == 0)
+                if (ffprobeOutputMain.NewDetail.resolutionW == 0)
                 {
-                    ffprobeOutput.MainData.NewDetail.resolutionW = ffprobeOutput.MainData.OriDetail.resolutionW;
-                    ffprobeOutput.MainData.NewDetail.resolutionH = ffprobeOutput.MainData.OriDetail.resolutionH;
+                    ffprobeOutputMain.NewDetail.resolutionW = ffprobeOutputMain.OriDetail.resolutionW;
+                    ffprobeOutputMain.NewDetail.resolutionH = ffprobeOutputMain.OriDetail.resolutionH;
                 }
             }
 
-            return ffprobeOutput;
+            return ffprobeOutputMain;
         }
 
-        public FfprobeOutput bitRateNumericFunc(FfprobeOutput ffprobeOutput)
+        public FfprobeOutputMain bitRateNumericFunc(FfprobeOutputMain ffprobeOutputMain)
         {
             if (form.bitrateCBox.Items[form.bitrateCBox.SelectedIndex] is ComboboxItem item)
             {
@@ -320,32 +325,42 @@ namespace X264GUIv2
                 BitrateEnum bitrateEnum = (BitrateEnum)v;
 
                 if (bitrateEnum == BitrateEnum.Manual)
-                    ffprobeOutput.MainData.NewDetail.bitrate = (int)form.bitrateNumeric.Value * 1000;
+                    ffprobeOutputMain.NewDetail.bitrate = (int)form.bitrateNumeric.Value * 1000;
             }
 
-            return ffprobeOutput;
+            return ffprobeOutputMain;
         }
 
         public static FfprobeOutput mergeFunc(List<FfprobeOutputMain> ffprobeOutputMains)
         {
             FfprobeOutput merge = new()
             {
-                MainData = ffprobeOutputMains.First(x => x.idx == 0),
-                MergeData = [.. ffprobeOutputMains],
+                MainData = ffprobeOutputMains.First(x => x.idx == 0).Clone(),
+                MergeData = [.. ffprobeOutputMains.Select(x => x.Clone())],
             };
 
             for (int i = 0; i < merge.MergeData.Count; i++)
             {
                 merge.MergeData[i].MergeGuid = merge.MainData.Guid;
                 merge.MergeData[i].idx = -merge.MergeData[i].idx;
+                merge.MergeData[i].videoType = VideoTypeEnum.Merge;
             }
 
             merge.MainData.duration = merge.MergeData.Sum(x => x.duration);
             merge.MainData.videoSize = merge.MergeData.Sum(x => x.videoSize);
             merge.MainData.audioSize = merge.MergeData.Sum(x => x.audioSize);
-            merge.MainData.NewDetail.bitrate = merge.MergeData.Sum(x => x.OriDetail.bitrate) / merge.MergeData.Count;
+            merge.MainData.OriDetail.bitrate = merge.MergeData.Sum(x => x.OriDetail.bitrate) / merge.MergeData.Count;
 
             return new FfprobeOutput { MainData = merge.MainData, MergeData = merge.MergeData };
+        }
+
+        public FfprobeOutputMain changeFunc(FfprobeOutputMain ffprobeOutputMain)
+        {
+            ffprobeOutputMain = bitRateFunc(ffprobeOutputMain);
+            ffprobeOutputMain = fpsFunc(ffprobeOutputMain);
+            ffprobeOutputMain = resolutionFunc(ffprobeOutputMain);
+            ffprobeOutputMain = bitRateNumericFunc(ffprobeOutputMain);
+            return ffprobeOutputMain;
         }
 
         /// <summary>

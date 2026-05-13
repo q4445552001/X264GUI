@@ -270,10 +270,11 @@ namespace X264GUIv2
 
                 openfile.Filter = $"{fileStr}|{fileStr}";
 
-                if (openfile.ShowDialog() == DialogResult.OK)
-                    videoFunc.Encode(openfile.FileNames);
+                if (openfile.ShowDialog() != DialogResult.OK || openfile.FileNames.Length == 0)
+                    return;
 
-                videoFunc.ffprobeData = OtherControlFunc.SortIdx(listView1, videoFunc.ffprobeData);
+                videoFunc.Encode(openfile.FileNames);
+                videoFunc.ffprobeData = listView1.SortIdx(videoFunc.ffprobeData);
             }
             catch (Exception ex)
             {
@@ -316,10 +317,11 @@ namespace X264GUIv2
 
                 openfile.Filter = $"{fileStr}|{fileStr}";
 
-                if (openfile.ShowDialog() == DialogResult.OK)
-                    videoFunc.Encode(openfile.FileNames);
+                if (openfile.ShowDialog() != DialogResult.OK || openfile.FileNames.Length == 0)
+                    return;
 
-                videoFunc.ffprobeData = OtherControlFunc.SortIdx(listView1, videoFunc.ffprobeData);
+                videoFunc.Encode(openfile.FileNames);
+                videoFunc.ffprobeData = listView1.SortIdx(videoFunc.ffprobeData);
             }
             catch (Exception ex)
             {
@@ -345,10 +347,11 @@ namespace X264GUIv2
 
                 openfile.Filter = $"{fileStr}|{fileStr}";
 
-                if (openfile.ShowDialog() == DialogResult.OK)
-                    videoFunc.Encode(openfile.FileNames, true);
+                if (openfile.ShowDialog() != DialogResult.OK || openfile.FileNames.Length == 0)
+                    return;
 
-                videoFunc.ffprobeData = OtherControlFunc.SortIdx(listView1, videoFunc.ffprobeData);
+                videoFunc.Encode(openfile.FileNames, true);
+                videoFunc.ffprobeData = listView1.SortIdx(videoFunc.ffprobeData);
             }
             catch (Exception ex)
             {
@@ -424,9 +427,9 @@ namespace X264GUIv2
                 videoFunc.ffprobeData.AddRange(cacheData);
 
                 foreach (FfprobeOutput ffprobeOutput in cacheData)
-                    listView1.Items.Add(listView1.DataViewObject(ffprobeOutput));
+                    listView1.Items.Add(listView1.DataViewObject(ffprobeOutput.MainData));
 
-                videoFunc.ffprobeData = OtherControlFunc.SortIdx(listView1, videoFunc.ffprobeData);
+                videoFunc.ffprobeData = listView1.SortIdx(videoFunc.ffprobeData);
                 progressText.Text = $"{videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done)}/{videoFunc.ffprobeData.Count}";
                 runBtn.Enabled = listView1.Items.Count != 0;
             }
@@ -453,7 +456,7 @@ namespace X264GUIv2
                 if (!(MessageBox.Show("確定儲存進度?", "提示", MessageBoxButtons.YesNo) == DialogResult.Yes))
                     return;
 
-                videoFunc.ffprobeData = OtherControlFunc.SortIdx(listView1, videoFunc.ffprobeData);
+                videoFunc.ffprobeData = listView1.SortIdx(videoFunc.ffprobeData);
 
                 using var sql = new sqlLiteFunc();
                 sql.Insert(videoFunc.ffprobeData);
@@ -662,7 +665,7 @@ namespace X264GUIv2
                     listView1.Items.RemoveAt(idx2);
                 }
 
-                videoFunc.ffprobeData = OtherControlFunc.SortIdx(listView1, videoFunc.ffprobeData);
+                videoFunc.ffprobeData = listView1.SortIdx(videoFunc.ffprobeData);
                 progressText.Text = $"{videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done)}/{videoFunc.ffprobeData.Count}";
             }
             catch (Exception ex)
@@ -677,7 +680,7 @@ namespace X264GUIv2
             try
             {
                 listView1.UpItem();
-                videoFunc.ffprobeData = OtherControlFunc.SortIdx(listView1, videoFunc.ffprobeData);
+                videoFunc.ffprobeData = listView1.SortIdx(videoFunc.ffprobeData);
             }
             catch (Exception ex)
             {
@@ -691,7 +694,7 @@ namespace X264GUIv2
             try
             {
                 listView1.DnItem();
-                videoFunc.ffprobeData = OtherControlFunc.SortIdx(listView1, videoFunc.ffprobeData);
+                videoFunc.ffprobeData = listView1.SortIdx(videoFunc.ffprobeData);
             }
             catch (Exception ex)
             {
@@ -747,7 +750,7 @@ namespace X264GUIv2
             {
                 form1Control.bitrateCBoxControl();
 
-                OtherControlFunc.listViewCheck(listView1, videoFunc.ffprobeData, idx => videoFunc.ffprobeData[idx] = videoFunc.bitRateFunc(videoFunc.ffprobeData[idx]));
+                listView1.listViewCheck(videoFunc.ffprobeData, idx => videoFunc.ffprobeData[idx].MainData = videoFunc.bitRateFunc(videoFunc.ffprobeData[idx].MainData));
             }
             catch (Exception ex)
             {
@@ -759,7 +762,7 @@ namespace X264GUIv2
         {
             try
             {
-                OtherControlFunc.listViewCheck(listView1, videoFunc.ffprobeData, idx => videoFunc.ffprobeData[idx] = videoFunc.fpsFunc(videoFunc.ffprobeData[idx]));
+                listView1.listViewCheck(videoFunc.ffprobeData, idx => videoFunc.ffprobeData[idx].MainData = videoFunc.fpsFunc(videoFunc.ffprobeData[idx].MainData));
             }
             catch (Exception ex)
             {
@@ -771,7 +774,7 @@ namespace X264GUIv2
         {
             try
             {
-                OtherControlFunc.listViewCheck(listView1, videoFunc.ffprobeData, idx => videoFunc.ffprobeData[idx] = videoFunc.resolutionFunc(videoFunc.ffprobeData[idx]));
+                listView1.listViewCheck(videoFunc.ffprobeData, idx => videoFunc.ffprobeData[idx].MainData = videoFunc.resolutionFunc(videoFunc.ffprobeData[idx].MainData));
             }
             catch (Exception ex)
             {
@@ -797,7 +800,7 @@ namespace X264GUIv2
                 if (bitrateNumeric.Value == 0)
                     return;
 
-                OtherControlFunc.listViewCheck(listView1, videoFunc.ffprobeData, idx => videoFunc.ffprobeData[idx] = videoFunc.bitRateNumericFunc(videoFunc.ffprobeData[idx]));
+                listView1.listViewCheck(videoFunc.ffprobeData, idx => videoFunc.ffprobeData[idx].MainData = videoFunc.bitRateNumericFunc(videoFunc.ffprobeData[idx].MainData));
             }
             catch (Exception ex)
             {

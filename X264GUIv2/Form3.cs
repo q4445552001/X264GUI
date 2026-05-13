@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using X264GUIv2.Enums;
 using X264GUIv2.Models;
 
 namespace X264GUIv2
@@ -11,6 +10,7 @@ namespace X264GUIv2
 
         #region 內建元件
         public readonly ContextMenuStrip listViewMenu;
+        public readonly ToolStripMenuItem listFolderViewItem;
         public readonly ToolStripMenuItem listAddViewItem;
         public readonly ToolStripMenuItem listDiffViewItem;
         public readonly ToolStripMenuItem listUpViewItem;
@@ -27,6 +27,9 @@ namespace X264GUIv2
             #region ContextMenuStrip
             listViewMenu = new();
 
+            listFolderViewItem = new() { Text = "檢視資料夾" };
+            listFolderViewItem.Click += listFolderViewItem_Click;
+
             listUpViewItem = new() { Text = "上移" };
             listUpViewItem.Click += listUpViewItem_Click;
 
@@ -40,6 +43,8 @@ namespace X264GUIv2
             listAddViewItem.Click += listAddViewItem_Click;
 
             listViewMenu.Items.AddRange([
+                listFolderViewItem,
+                new ToolStripSeparator(),
                 listAddViewItem,
                 listDiffViewItem,
                 new ToolStripSeparator(),
@@ -96,9 +101,13 @@ namespace X264GUIv2
                 listDiffViewItem.Enabled = listView1.Items.Count > 1 && item != null;
                 listUpViewItem.Enabled = item != null;
                 listDnViewItem.Enabled = item != null;
+                listFolderViewItem.Enabled = item != null;
 
                 if (item != null)
+                {
                     listView1.FocusedItem = item;
+                    listViewMenu.Tag = item.Tag;
+                }
                 listViewMenu.Show(listView1, e.Location);
             }
             catch (Exception ex)
@@ -110,6 +119,21 @@ namespace X264GUIv2
         #endregion
 
         #region listViewItem
+        private void listFolderViewItem_Click(object? sender, EventArgs e)
+        {
+            try
+            {
+                Guid? guid = (Guid?)listViewMenu.Tag;
+                int idx = listView1.findListItem(guid);
+                OtherControlFunc.openFolder(listView1.Items[idx].ToolTipText);
+            }
+            catch (Exception ex)
+            {
+                WriteFile.WriteLog(ex.Message);
+                OtherControlFunc.ShowError(ex.Message);
+            }
+        }
+
         private void listUpViewItem_Click(object? sender, EventArgs e)
         {
             try
@@ -153,15 +177,22 @@ namespace X264GUIv2
 
                 openfile.Filter = $"{fileStr}|{fileStr}";
 
-                if (openfile.ShowDialog() == DialogResult.OK)
-                {
-                    List<FfprobeOutputMain> ffprobeOutputMains = add(openfile.FileNames);
-                    addItem(ffprobeOutputMains);
+                if (openfile.ShowDialog() != DialogResult.OK || openfile.FileNames.Length == 0)
+                    return;
 
-                    if (formFfprobeOutput.MergeData is null)
-                        formFfprobeOutput.MergeData = [];
-                    formFfprobeOutput.MergeData.AddRange(ffprobeOutputMains);
-                }
+                List<FfprobeOutputMain> ffprobeOutputMains = add(openfile.FileNames);
+
+                if (formFfprobeOutput.MergeData is null)
+                    formFfprobeOutput.MergeData = [];
+
+                formFfprobeOutput.MergeData.AddRange(ffprobeOutputMains);
+
+                FfprobeOutput merge = VideoFunc.mergeFunc(formFfprobeOutput.MergeData);
+
+                formFfprobeOutput.MainData = merge.MainData;
+                formFfprobeOutput.MergeData = merge.MergeData;
+
+                addItem(ffprobeOutputMains);
             }
             catch (Exception ex)
             {
@@ -224,6 +255,9 @@ namespace X264GUIv2
             if (listGuid is null)
                 return;
 
+            int itemIdx = form.videoFunc.ffprobeData.findFfprobItem(listGuid);
+            int oriItemIdx = form.videoFunc.ffprobeData[itemIdx].MainData.Clone().idx;
+
             Dictionary<Guid, int> editGuids =
                 listView1.Items.Cast<ListViewItem>().Select(x => (Guid?)x.Tag)
                 .Where(x => x is not null)
@@ -234,13 +268,9 @@ namespace X264GUIv2
             if (formFfprobeOutput.MergeData is null)
                 return;
 
-            FfprobeOutputMain? newFfprobeOutputMain = formFfprobeOutput.MergeData.FirstOrDefault(x => x.Guid == editGuids.FirstOrDefault().Key);
+            FfprobeOutputMain? newFfprobeOutputMain = formFfprobeOutput.MergeData.FirstOrDefault(x => x.Guid == editGuids.First().Key);
             if (newFfprobeOutputMain is null)
                 return;
-
-            newFfprobeOutputMain.videoType = VideoTypeEnum.Merge;
-            newFfprobeOutputMain.OriDetail = formFfprobeOutput.MainData.OriDetail;
-            newFfprobeOutputMain.NewDetail = formFfprobeOutput.MainData.NewDetail;
 
             List<FfprobeOutputMain> newFfprobeOutputMerges = [];
             for (int i = 0; i < formFfprobeOutput.MergeData.Count; i++)
@@ -253,7 +283,8 @@ namespace X264GUIv2
 
             FfprobeOutput merge = VideoFunc.mergeFunc(newFfprobeOutputMerges);
 
-            int itemIdx = form.videoFunc.ffprobeData.findFfprobItem(listGuid);
+            merge.MainData.idx = oriItemIdx;
+
             form.videoFunc.ffprobeData[itemIdx] = new()
             {
                 MainData = merge.MainData,
@@ -261,10 +292,10 @@ namespace X264GUIv2
             };
 
             int listIdx = form.listView1.findListItem(listGuid);
-            form.listView1.Items[listIdx] = form.listView1.DataViewObject(form.videoFunc.ffprobeData[itemIdx]);
+            form.listView1.Items[listIdx] = form.listView1.DataViewObject(form.videoFunc.ffprobeData[itemIdx].MainData);
         }
 
-        private static List<FfprobeOutputMain> add(string[] files)
+        private List<FfprobeOutputMain> add(string[] files)
         {
             List<LoadFile> loadFiles = [.. files.Select((x, idx) => new LoadFile
             {
@@ -285,7 +316,11 @@ namespace X264GUIv2
                 _ => { }
             );
 
-            return [.. _ffprobe];
+            List<FfprobeOutputMain> ffprobeOutputMains = [.. _ffprobe];
+            for (int i = 0; i < ffprobeOutputMains.Count; i++)
+                ffprobeOutputMains[i] = form.videoFunc.changeFunc(ffprobeOutputMains[i]);
+
+            return ffprobeOutputMains;
         }
 
         private void addItem(List<FfprobeOutputMain> ffprobeOutputMains)
@@ -295,6 +330,7 @@ namespace X264GUIv2
                 ListViewItem lis = new([ffprobe.InFileName])
                 {
                     Tag = ffprobe.Guid,
+                    ToolTipText = ffprobe.InFile,
                 };
 
                 listView1.Items.Add(lis);

@@ -70,6 +70,25 @@ namespace X264GUIv2.Models
                     return string.Empty;
             }
         }
+
+        public FfprobeOutputMain Clone() => new()
+        {
+            Guid = Guid,
+            MergeGuid = MergeGuid,
+            InFile = InFile,
+            isAac = isAac,
+            audioMap = audioMap,
+            videoType = videoType,
+            videoCodeName = videoCodeName,
+            duration = duration,
+            videoSize = videoSize,
+            audioSize = audioSize,
+            idx = idx,
+            run = run,
+
+            NewDetail = NewDetail,
+            OriDetail = OriDetail,
+        };
     }
 
     public class FfprobeOutputDetail
@@ -99,6 +118,17 @@ namespace X264GUIv2.Models
         //DB
         public Guid Guid { get; set; }
         public int? isNew { get; set; }
+
+        public FfprobeOutputDetail Clone() => new()
+        {
+            bitrate = bitrate,
+            frameMode = frameMode,
+            frameStr = frameStr,
+            resolutionW = resolutionW,
+            resolutionH = resolutionH,
+            Guid = Guid,
+            isNew = isNew,
+        };
     }
 
     public class FfprobeOutput : IEquatable<FfprobeOutput>

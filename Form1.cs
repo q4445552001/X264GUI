@@ -25,7 +25,7 @@ namespace X264GUI
 
         Thread Nico_Init, Nico;
         Form2 f2 = new Form2();
-        
+
         //***********************************************************************************************************
         //錯誤訊息
         public static void ShowError(string MessageText)
@@ -72,7 +72,7 @@ namespace X264GUI
             };
             run.Start();
             dynamic stuff = JObject.Parse(run.StandardOutput.ReadToEnd().Replace("\'", "").Replace("\"", "\'"));
-            
+
             if (stuff.streams != null || stuff.format != null)
             {
                 string isAAC = "";
@@ -105,8 +105,8 @@ namespace X264GUI
         //X264 1 pass code
         static string Xonepass(string threads, double BitValue)
         {
-            return "--x26x-binary \"" + AppDomain.CurrentDomain.SetupInformation.ApplicationBase 
-                + "bin\\x264\\x264.exe\" --bframes 0 --bitrate " + Math.Round(BitValue / 1000,0) 
+            return "--x26x-binary \"" + AppDomain.CurrentDomain.SetupInformation.ApplicationBase
+                + "bin\\x264\\x264.exe\" --bframes 0 --bitrate " + Math.Round(BitValue / 1000, 0)
                 + " --pass 1 --threads " + threads + " --stats \"x2642pass.stats\" -o NUL " + "\"avsTemp.avs\"";
         }
 
@@ -114,11 +114,11 @@ namespace X264GUI
         //X264 2 pass code
         static string Xtwopass(string threads, double BitValue, string outres)
         {
-            return outres != "" ? 
+            return outres != "" ?
                 "--x26x-binary \"" + AppDomain.CurrentDomain.SetupInformation.ApplicationBase
                     + "bin\\x264\\x264.exe\" --bframes 0 --bitrate " + Math.Round(BitValue / 1000, 0) + " --pass 2 --threads " + threads
-                    + " --stats \"x2642pass.stats\" --vf resize:width=" 
-                    + (outres.IndexOf(' ') == -1 ? outres.Split('x')[0] : outres.Split('x')[0].Split(' ')[1]) 
+                    + " --stats \"x2642pass.stats\" --vf resize:width="
+                    + (outres.IndexOf(' ') == -1 ? outres.Split('x')[0] : outres.Split('x')[0].Split(' ')[1])
                     + ",height=" + outres.Split('x')[1] + ",sar=1:1 -o \"avsTemp.264\" \"avsTemp.avs\""
             :
                  "--x26x-binary \"" + AppDomain.CurrentDomain.SetupInformation.ApplicationBase
@@ -153,7 +153,7 @@ namespace X264GUI
                 ShowError("缺少主要檔案，強制關閉。");
                 System.Environment.Exit(System.Environment.ExitCode);
             }
-            
+
             //Combox5
             comboBox5.Items.Add(new ComboboxItem("Auto", "Auto"));
             comboBox5.Items.Add(new ComboboxItem("23.976", "24000/1001"));
@@ -165,12 +165,12 @@ namespace X264GUI
             for (int i = 0; i <= cpunumber; i++)
                 ItemObject[i] = i;
             comboBox4.Items.AddRange(ItemObject);
-            
+
             comboBox2.SelectedIndex = 0;
             comboBox3.SelectedIndex = 0;
             comboBox4.SelectedIndex = 0;
             comboBox5.SelectedIndex = 0;
-            
+
             numericUpDown1.Value = BitValueDef / 1000;
         }
 
@@ -183,9 +183,11 @@ namespace X264GUI
             openfile.Multiselect = true;
             openfile.Filter = "*.mov;*.mp4;*mkv|*.mov;*.mp4;*mkv;*.avi";
 
-            if (openfile.ShowDialog() == DialogResult.OK)
-                foreach (string file in openfile.FileNames)
-                    Encode(file);
+            if (openfile.ShowDialog() != DialogResult.OK || openfile.FileNames.Length == 0)
+                return;
+
+            foreach (string file in openfile.FileNames)
+                Encode(file);
         }
 
         //***********************************************************************************************************
@@ -197,16 +199,16 @@ namespace X264GUI
                 try //檔案錯誤例外處理
                 {
                     int count = listView1.Items.Count;
-                    
+
                     string FilePath = Path.GetDirectoryName(file) + "\\" + Path.GetFileNameWithoutExtension(file).Replace("\\", "//") + "-0.mp4";
                     Directory.SetCurrentDirectory(Path.GetDirectoryName(file)); //指定程式路徑
-                    //textBox1.Text = System.Environment.CurrentDirectory; // 程式目前路徑
-                    
+                                                                                //textBox1.Text = System.Environment.CurrentDirectory; // 程式目前路徑
+
                     string[] OldList = ffprobe(file);
                     DataOriginal.Add(new List<string>(OldList));
 
                     double BitValue = (Convert.ToDouble(OldList[0]) >= BitValueDef) ? BitValueDef : Convert.ToDouble(OldList[0]) - 50000;
-                    string[] NewList = (string[]) OldList.Clone();
+                    string[] NewList = (string[])OldList.Clone();
                     NewList[0] = BitValue.ToString();
                     NewData.Add(new List<string>(NewList));
 
@@ -217,7 +219,7 @@ namespace X264GUI
                     if (NewList[3] == "640x480") outres = "-s 640x480 ";
                     else if (NewList[3] == "1280x720") outres = "-s 1280x720 ";
                     else if (NewList[3] == "1920x1080") outres = "-s 1920x1080 ";
-                    
+
                     if (File.Exists(Path.GetDirectoryName(file) + @"\" + Path.GetFileNameWithoutExtension(file) + ".ass"))
                         Subtitles.Add(Path.GetDirectoryName(file) + @"\" + Path.GetFileNameWithoutExtension(file) + ".ass");
                     else
@@ -276,7 +278,7 @@ namespace X264GUI
                         button5.Enabled = true;
                         Directory.SetCurrentDirectory(Path.GetDirectoryName(@InFileName[i]));
                         progressBar1.Value = 0;
-                        
+
                         double prodatabar = 0;
                         string avs = "";
                         string[] fpsmode = NewData[i][2].Split('/');
@@ -488,7 +490,7 @@ namespace X264GUI
 
         //***********************************************************************************************************
         //檢視詳細資料
-        private void DataView(int count,string file, string[] NewData, string[] OldData)
+        private void DataView(int count, string file, string[] NewData, string[] OldData)
         {
             listView1.Items.Add(Path.GetFileName(file));
             string OldCapacity = Math.Round(Convert.ToDouble(OldData[5]) / 1024 / 1024, 2).ToString(); //原始大小
@@ -498,7 +500,7 @@ namespace X264GUI
             //listView1.Items[count].SubItems.AddRange(NewData.ToArray());
             //bitrate
             listView1.Items[count].SubItems.Add(Math.Round(Convert.ToDouble(OldData[0]) / 1000, 0) + ">" + Math.Round((Convert.ToDouble(NewData[0]) / 1000), 0) + " kb/s");
-            
+
             listView1.Items[count].SubItems.Add(OldData[1] + ">CBR");
 
             //fps
@@ -514,13 +516,13 @@ namespace X264GUI
             listView1.Items[count].SubItems.Add("IDEL");
             listView1.Items[count].SubItems.Add("00:00:00");
             listView1.Items[count].SubItems.Add(file.Replace("//", @"\"));
-            listView1.Items[count].ToolTipText = Path.GetFileName(file) + 
-                "\nBitRate: " + Math.Round(Convert.ToDouble(OldData[0]) / 1000, 0) + " kb/s" + 
-                "\nFPS模式: " + OldData[1] + 
+            listView1.Items[count].ToolTipText = Path.GetFileName(file) +
+                "\nBitRate: " + Math.Round(Convert.ToDouble(OldData[0]) / 1000, 0) + " kb/s" +
+                "\nFPS模式: " + OldData[1] +
                 "\nFPS: " + Math.Round(Convert.ToDouble(OldData[2].Split('/')[0]) / Convert.ToDouble(OldData[2].Split('/')[1]), 3) +
                 "\n解析度: " + OldData[3] +
                 "\n檔案大小: " + OldCapacity + " MB";
-            
+
         }
 
         //***********************************************************************************************************
@@ -574,7 +576,7 @@ namespace X264GUI
 
                     double Video_estimate_capacity = Convert.ToDouble(listdata[0]) * Convert.ToDouble(listdata[4]) / 8; //Video預估大小
                     listView1.Items[i].SubItems[6].Text = Math.Round(Convert.ToDouble(OldData[5]) / 1024 / 1024, 2).ToString() + ">" + Math.Round((Video_estimate_capacity + Audio_capacity) / 1024 / 1024, 2).ToString() + " MB";
-                    
+
                     XOCode[i] = Xonepass(comboBox4.SelectedItem.ToString(), Convert.ToDouble(NewData[i][0]));
                     XTCode[i] = Xtwopass(comboBox4.SelectedItem.ToString(), Convert.ToDouble(NewData[i][0]), NewData[i][3]);
                     ShowToForm2(i, InFileName[i]);
@@ -593,15 +595,15 @@ namespace X264GUI
                     if (numericUpDown1.Value > 0)
                     {
                         NewData[i][0] = (numericUpDown1.Value * 1000).ToString();
-                        
+
                         List<String> OldData = new List<string>(DataOriginal[i]);
                         listView1.Items[i].SubItems[1].Text = Math.Round(Convert.ToDouble(OldData[0]) / 1000, 0) + ">" + NewData[i][0].Substring(0, NewData[i][0].ToString().Length - 3) + " kb/s";
-                        
+
                         double Audio_capacity = Convert.ToDouble(OldData[5]) - (Convert.ToDouble(OldData[0]) * Convert.ToDouble(OldData[4]) / 8); //計算Audio大小
 
                         double Video_estimate_capacity = Convert.ToDouble(numericUpDown1.Value * 1000) * Convert.ToDouble(NewData[i][4]) / 8; //Video預估大小
                         listView1.Items[i].SubItems[6].Text = Math.Round(Convert.ToDouble(OldData[5]) / 1024 / 1024, 2).ToString() + ">" + Math.Round((Video_estimate_capacity + Audio_capacity) / 1024 / 1024, 2).ToString() + " MB";
-                        
+
                         XOCode[i] = Xonepass(comboBox4.SelectedItem.ToString(), Convert.ToDouble(NewData[i][0]));
                         XTCode[i] = Xtwopass(comboBox4.SelectedItem.ToString(), Convert.ToDouble(NewData[i][0]), NewData[i][3]);
                         ShowToForm2(i, InFileName[i]);
@@ -626,7 +628,7 @@ namespace X264GUI
                 }
                 try
                 {
-                    listView1.Items[i].SubItems[3].Text = Math.Round(Convert.ToDouble(DataOriginal[i][2].Split('/')[0]) / Convert.ToDouble(DataOriginal[i][2].Split('/')[1]), 3) + ">" 
+                    listView1.Items[i].SubItems[3].Text = Math.Round(Convert.ToDouble(DataOriginal[i][2].Split('/')[0]) / Convert.ToDouble(DataOriginal[i][2].Split('/')[1]), 3) + ">"
                         + Math.Round(Convert.ToDouble(NewData[i][2].Split('/')[0]) / Convert.ToDouble(NewData[i][2].Split('/')[1]), 3).ToString();
                 }
                 catch
@@ -671,7 +673,7 @@ namespace X264GUI
                         int newHiegh = Convert.ToInt16(Math.Floor(hiegh / (width / width1920)));
                         NewData[i][3] = (width1920 + "") + "x" + (newHiegh + "");
                     }
-                    
+
                     XOCode[i] = Xonepass(comboBox4.SelectedItem.ToString(), Convert.ToDouble(NewData[i][0]));
                     XTCode[i] = Xtwopass(comboBox4.SelectedItem.ToString(), Convert.ToDouble(NewData[i][0]), NewData[i][3]);
                     ShowToForm2(i, InFileName[i]);
@@ -679,7 +681,7 @@ namespace X264GUI
                 listView1.Items[i].SubItems[4].Text = DataOriginal[i][3] + ">" + NewData[i][3];
             }
         }
-        
+
         //***********************************************************************************************************
         //CPU
         private void comboBox4_SelectedIndexChanged(object sender, EventArgs e)
@@ -711,7 +713,8 @@ namespace X264GUI
                             Process[] localAll = Process.GetProcesses();
                             foreach (Process p in localAll)
                             {
-                                switch (p.ProcessName) {
+                                switch (p.ProcessName)
+                                {
                                     case "x264":
                                     case "avs4x26x":
                                     case "mp4box":
@@ -863,7 +866,7 @@ namespace X264GUI
             else
                 e.Cancel = false;
         }
-       
+
 
         //***********************************************************************************************************
         //Set combox5
