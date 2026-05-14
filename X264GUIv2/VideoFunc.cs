@@ -414,7 +414,7 @@ namespace X264GUIv2
             List<string> vf = [];
             if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal)
             {
-                if (ffprobeOutput.MainData.NewDetail.frameStr != ffprobeOutput.MainData.OriDetail.frameStr)
+                if (ffprobeOutput.MainData.OriDetail.frameMode == FrameModeEnum.VBR || ffprobeOutput.MainData.NewDetail.frameStr != ffprobeOutput.MainData.OriDetail.frameStr)
                     vf.Add($@"fps={ffprobeOutput.MainData.NewDetail.frameStr}");
                 vf.Add($@"scale={ffprobeOutput.MainData.NewDetail.resolutionW}:{ffprobeOutput.MainData.NewDetail.resolutionH}");
                 if (!string.IsNullOrWhiteSpace(ffprobeOutput.MainData.SubtitlesFile))
@@ -443,7 +443,7 @@ namespace X264GUIv2
 
             string threads = form.coreCBox.SelectedItem?.ToString() ?? "0";
             List<string> vf = [];
-            if (ffprobeOutput.MainData.NewDetail.frameStr != ffprobeOutput.MainData.OriDetail.frameStr)
+            if (ffprobeOutput.MainData.OriDetail.frameMode == FrameModeEnum.VBR || ffprobeOutput.MainData.NewDetail.frameStr != ffprobeOutput.MainData.OriDetail.frameStr)
                 vf.Add($@"fps={ffprobeOutput.MainData.NewDetail.frameStr}");
             vf.Add($@"scale={ffprobeOutput.MainData.NewDetail.resolutionW}:{ffprobeOutput.MainData.NewDetail.resolutionH}");
 
@@ -503,7 +503,7 @@ namespace X264GUIv2
             List<string> vf = [];
             if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal)
             {
-                if (ffprobeOutput.MainData.NewDetail.frameStr != ffprobeOutput.MainData.OriDetail.frameStr)
+                if (ffprobeOutput.MainData.OriDetail.frameMode == FrameModeEnum.VBR || ffprobeOutput.MainData.NewDetail.frameStr != ffprobeOutput.MainData.OriDetail.frameStr)
                     vf.Add($@"fps={ffprobeOutput.MainData.NewDetail.frameStr}");
                 vf.Add($@"scale={ffprobeOutput.MainData.NewDetail.resolutionW}:{ffprobeOutput.MainData.NewDetail.resolutionH}");
                 if (!string.IsNullOrWhiteSpace(ffprobeOutput.MainData.SubtitlesFile))
@@ -549,7 +549,7 @@ namespace X264GUIv2
 
             string threads = form.coreCBox.SelectedItem?.ToString() ?? "0";
             List<string> vf = [];
-            if (ffprobeOutput.MainData.NewDetail.frameStr != ffprobeOutput.MainData.OriDetail.frameStr)
+            if (ffprobeOutput.MainData.OriDetail.frameMode == FrameModeEnum.VBR || ffprobeOutput.MainData.NewDetail.frameStr != ffprobeOutput.MainData.OriDetail.frameStr)
                 vf.Add($@"fps={ffprobeOutput.MainData.NewDetail.frameStr}");
             vf.Add($@"scale={ffprobeOutput.MainData.NewDetail.resolutionW}:{ffprobeOutput.MainData.NewDetail.resolutionH}");
 

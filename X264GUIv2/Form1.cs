@@ -844,7 +844,7 @@ namespace X264GUIv2
             if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal)
             {
                 string frameStr = "";
-                if (ffprobeOutput.MainData.OriDetail.frameStr != ffprobeOutput.MainData.NewDetail.frameStr)
+                if (ffprobeOutput.MainData.OriDetail.frameMode == FrameModeEnum.VBR || ffprobeOutput.MainData.OriDetail.frameStr != ffprobeOutput.MainData.NewDetail.frameStr)
                     frameStr = $@", fpsnum={ffprobeOutput.MainData.NewDetail.fpsnum}, fpsden={ffprobeOutput.MainData.NewDetail.fpsden}";
 
                 string avs = $@"
