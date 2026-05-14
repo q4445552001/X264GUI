@@ -1,4 +1,4 @@
-using System.Diagnostics;
+Ôªøusing System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Windows.Forms.VisualStyles;
 using X264GUIv2.Enums;
@@ -8,18 +8,18 @@ namespace X264GUIv2
 {
     public partial class Form1 : Form
     {
-        #region ≈‹º∆
+        #region ËÆäÊï∏
         public readonly VideoFunc videoFunc;
         private CancellationTokenSource? Cts { get; set; }
         private readonly Form1Control form1Control;
 
         /// <summary>
-        /// ™Ï©l§∆©ºØS≤v
+        /// ÂàùÂßãÂåñÂΩºÁâπÁéá
         /// </summary>
         public int bitRateDefault = 1000000;
 
         /// <summary>
-        /// •ÿ´e®œ•Œ™∫ListItem
+        /// ÁõÆÂâç‰ΩøÁî®ÁöÑListItem
         /// </summary>
         public int useIdx { get; set; } = -1;
 
@@ -28,7 +28,7 @@ namespace X264GUIv2
         public readonly int subTimeIdx;
         #endregion
 
-        #region §∫´ÿ§∏•Û
+        #region ÂÖßÂª∫ÂÖÉ‰ª∂
         public readonly Form2 f2;
         public readonly Form3 f3;
         public readonly ContextMenuStrip listViewMenu;
@@ -40,7 +40,7 @@ namespace X264GUIv2
         public readonly ToolStripMenuItem listMergeEditViewItem;
         #endregion
 
-        #region ™Ï©l§∆
+        #region ÂàùÂßãÂåñ
 
         public Form1()
         {
@@ -83,18 +83,18 @@ namespace X264GUIv2
             listView1.View = View.Details;
             listView1.Columns.AddRange([.. new List<ColumnHeader>
             {
-                new() { Name = nameof(DetailsItem.FileName), Text = "¿…Æ◊", Width = 150 },
+                new() { Name = nameof(DetailsItem.FileName), Text = "Ê™îÊ°à", Width = 150 },
                 new() { Name = nameof(DetailsItem.BitRate), Text = "BitRate", Width = 140, TextAlign = HorizontalAlignment.Center },
-                new() { Name = nameof(DetailsItem.FpsMode), Text = "FPS º“¶°", Width = 90, TextAlign = HorizontalAlignment.Center },
+                new() { Name = nameof(DetailsItem.FpsMode), Text = "FPS Ê®°Âºè", Width = 90, TextAlign = HorizontalAlignment.Center },
                 new() { Name = nameof(DetailsItem.Fps), Text = "FPS", Width = 120, TextAlign = HorizontalAlignment.Center },
-                new() { Name = nameof(DetailsItem.Resolution), Text = "∏—™R´◊", Width = 170, TextAlign = HorizontalAlignment.Center },
-                new() { Name = nameof(DetailsItem.Duration), Text = "Æ…∂°™¯´◊", Width = 80, TextAlign = HorizontalAlignment.Center },
-                new() { Name = nameof(DetailsItem.Size), Text = "¿…Æ◊§j§p", Width = 140, TextAlign = HorizontalAlignment.Center },
-                new() { Name = nameof(DetailsItem.VideoType), Text = "≥B≤z§Ë¶°", Width = 100, TextAlign = HorizontalAlignment.Center },
-                new() { Name = nameof(DetailsItem.Progress), Text = "∂i´◊", Width = 70, TextAlign = HorizontalAlignment.Center },
-                new() { Name = nameof(DetailsItem.Status), Text = "™¨∫A", Width = 80, TextAlign = HorizontalAlignment.Center },
-                new() { Name = nameof(DetailsItem.Time), Text = "Æ¯Ø”Æ…∂°", Width = 80, TextAlign = HorizontalAlignment.Center },
-                new() { Name = nameof(DetailsItem.Path), Text = "∏ÙÆ|", Width = 500 },
+                new() { Name = nameof(DetailsItem.Resolution), Text = "Ëß£ÊûêÂ∫¶", Width = 170, TextAlign = HorizontalAlignment.Center },
+                new() { Name = nameof(DetailsItem.Duration), Text = "ÊôÇÈñìÈï∑Â∫¶", Width = 80, TextAlign = HorizontalAlignment.Center },
+                new() { Name = nameof(DetailsItem.Size), Text = "Ê™îÊ°àÂ§ßÂ∞è", Width = 140, TextAlign = HorizontalAlignment.Center },
+                new() { Name = nameof(DetailsItem.VideoType), Text = "ËôïÁêÜÊñπÂºè", Width = 100, TextAlign = HorizontalAlignment.Center },
+                new() { Name = nameof(DetailsItem.Progress), Text = "ÈÄ≤Â∫¶", Width = 70, TextAlign = HorizontalAlignment.Center },
+                new() { Name = nameof(DetailsItem.Status), Text = "ÁãÄÊÖã", Width = 80, TextAlign = HorizontalAlignment.Center },
+                new() { Name = nameof(DetailsItem.Time), Text = "Ê∂àËÄóÊôÇÈñì", Width = 80, TextAlign = HorizontalAlignment.Center },
+                new() { Name = nameof(DetailsItem.Path), Text = "Ë∑ØÂæë", Width = 500 },
             }]);
 
             subStatusIdx = listView1.findSubitemIdx(nameof(DetailsItem.Status));
@@ -106,22 +106,22 @@ namespace X264GUIv2
             #region ContextMenuStrip
             listViewMenu = new();
 
-            listFolderViewItem = new() { Text = "¿Àµ¯∏ÍÆ∆ß®" };
+            listFolderViewItem = new() { Text = "Ê™¢Ë¶ñË≥áÊñôÂ§æ" };
             listFolderViewItem.Click += listFolderViewItem_Click;
 
-            listRestViewItem = new() { Text = "≠´∏m™¨∫A" };
+            listRestViewItem = new() { Text = "ÈáçÁΩÆÁãÄÊÖã" };
             listRestViewItem.Click += listRestViewItem_Click;
 
-            listUpViewItem = new() { Text = "§W≤æ" };
+            listUpViewItem = new() { Text = "‰∏äÁßª" };
             listUpViewItem.Click += listUpViewItem_Click;
 
-            listDnViewItem = new() { Text = "§U≤æ" };
+            listDnViewItem = new() { Text = "‰∏ãÁßª" };
             listDnViewItem.Click += listDnViewItem_Click;
 
-            listDiffViewItem = new() { Text = "≤æ∞£" };
+            listDiffViewItem = new() { Text = "ÁßªÈô§" };
             listDiffViewItem.Click += listDiffViewItem_Click;
 
-            listMergeEditViewItem = new() { Text = "ΩsøËºv§˘¶X®÷" };
+            listMergeEditViewItem = new() { Text = "Á∑®ËºØÂΩ±ÁâáÂêà‰Ωµ" };
             listMergeEditViewItem.Click += listMergeEditViewItem_Click;
 
             listViewMenu.Items.AddRange([
@@ -145,7 +145,7 @@ namespace X264GUIv2
         {
             if (Cts != null && !Cts.Token.IsCancellationRequested)
             {
-                OtherControlFunc.ShowError("¬‡¿…§§°AΩ–•˝∞±§Ó´·¶A√ˆ≥¨µ{¶°");
+                OtherControlFunc.ShowError("ËΩâÊ™î‰∏≠ÔºåË´ãÂÖàÂÅúÊ≠¢ÂæåÂÜçÈóúÈñâÁ®ãÂºè");
                 e.Cancel = true;
             }
             else
@@ -220,7 +220,7 @@ namespace X264GUIv2
                 VideoFunc.Delete(videoFunc.ffprobeData[idx]);
                 form1Control.btnControl(true);
                 TaskbarProgress.Error();
-                OtherControlFunc.ShowError("§w±j®Ó∞±§Ó");
+                OtherControlFunc.ShowError("Â∑≤Âº∑Âà∂ÂÅúÊ≠¢");
             }
         }
 
@@ -449,18 +449,18 @@ namespace X264GUIv2
                     if (e is FormClosingEventArgs)
                         return;
 
-                    OtherControlFunc.ShowError("µL•i¿x¶s∏ÍÆ∆");
+                    OtherControlFunc.ShowError("ÁÑ°ÂèØÂÑ≤Â≠òË≥áÊñô");
                     return;
                 }
 
-                if (!(MessageBox.Show("ΩT©w¿x¶s∂i´◊?", "¥£•‹", MessageBoxButtons.YesNo) == DialogResult.Yes))
+                if (!(MessageBox.Show("Á¢∫ÂÆöÂÑ≤Â≠òÈÄ≤Â∫¶?", "ÊèêÁ§∫", MessageBoxButtons.YesNo) == DialogResult.Yes))
                     return;
 
                 videoFunc.ffprobeData = listView1.SortIdx(videoFunc.ffprobeData);
 
                 using var sql = new sqlLiteFunc();
                 sql.Insert(videoFunc.ffprobeData);
-                MessageBox.Show("¿x¶s¶®•\");
+                MessageBox.Show("ÂÑ≤Â≠òÊàêÂäü");
             }
             catch (Exception ex)
             {
@@ -472,7 +472,7 @@ namespace X264GUIv2
         {
             try
             {
-                if (!(MessageBox.Show("ΩT©w≤M∞£∂i´◊?", "¥£•‹", MessageBoxButtons.YesNo) == DialogResult.Yes))
+                if (!(MessageBox.Show("Á¢∫ÂÆöÊ∏ÖÈô§ÈÄ≤Â∫¶?", "ÊèêÁ§∫", MessageBoxButtons.YesNo) == DialogResult.Yes))
                     return;
 
                 using var sql = new sqlLiteFunc();
@@ -522,8 +522,8 @@ namespace X264GUIv2
                     CheckBoxRenderer.DrawCheckBox(e.Graphics,
                         new Point(e.Bounds.Left + 4, e.Bounds.Top + 4),
                         new Rectangle(e.Bounds.X + 18, e.Bounds.Y + 4, e.Bounds.Width - 24, e.Bounds.Height - 4),
-                        "¿…Æ◊¶W∫Ÿ",
-                        new Font("∑L≥n•ø∂¬≈È", 9.0f, FontStyle.Regular),
+                        "Ê™îÊ°àÂêçÁ®±",
+                        new Font("ÂæÆËªüÊ≠£ÈªëÈ´î", 9.0f, FontStyle.Regular),
                         TextFormatFlags.Left,
                         false,
                         Convert.ToBoolean(e.Header?.Tag) ? CheckBoxState.CheckedNormal : CheckBoxState.UncheckedNormal);
@@ -651,7 +651,7 @@ namespace X264GUIv2
 
         private void listDiffViewItem_Click(object? sender, EventArgs e)
         {
-            if (!(MessageBox.Show("ΩT©w≤æ∞£?", "¥£•‹", MessageBoxButtons.YesNo) == DialogResult.Yes))
+            if (!(MessageBox.Show("Á¢∫ÂÆöÁßªÈô§?", "ÊèêÁ§∫", MessageBoxButtons.YesNo) == DialogResult.Yes))
                 return;
 
             try
@@ -809,7 +809,7 @@ namespace X264GUIv2
         }
         #endregion
 
-        #region ¬‡¥´
+        #region ËΩâÊèõ
 
         private void mainProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2)
         {
@@ -817,20 +817,20 @@ namespace X264GUIv2
                 return;
 
             if (!File.Exists(ffprobeOutput.MainData.InFile))
-                throw new Exception($"µLÆƒ∏ÙÆ| {ffprobeOutput.MainData.InFile}");
+                throw new Exception(@$"ÁÑ°ÊïàË∑ØÂæë ""{ffprobeOutput.MainData.InFile}""");
 
             if (string.IsNullOrWhiteSpace(ffprobeOutput.MainData.InFilePath))
-                throw new Exception($"µLÆƒ∏ÙÆ| {ffprobeOutput.MainData.InFilePath}");
+                throw new Exception(@$"ÁÑ°ÊïàË∑ØÂæë ""{ffprobeOutput.MainData.InFilePath}""");
 
             if (!ffprobeOutput.MainData.isLocalEncode && ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal)
-                WriteFile.WriteLog($"¿À¨d®Ï {ffprobeOutput.MainData.InFile} ™∫∏ÙÆ|´D[{Global.CodePage}]ªy®•°A®œ•Œ ffmpeg º“¶°");
+                WriteFile.WriteLog(@$"""{ffprobeOutput.MainData.InFile}"" Ë∑ØÂæëÈùû[{Global.CodePage}]Ë™ûË®ÄÔºå‰ΩøÁî® ffmpeg Ê®°Âºè");
 
             Environment.CurrentDirectory = ffprobeOutput.MainData.InFilePath;
 
             int listViewCount = listView1.Items.Count;
             int exitCode = 0;
 
-            #region ™Ï©l§∆
+            #region ÂàùÂßãÂåñ
             listView1.Items[useIdx].SubItems[subStatusIdx]!.ForeColor = Color.Black;
             listView1.Items[useIdx].SubItems[subStatusIdx]!.Text = RunEnum.Init.GetDisplayName();
             ffprobeOutput.MainData.run = RunEnum.Init;
@@ -841,7 +841,7 @@ namespace X264GUIv2
             TaskbarProgress.Clear();
             TaskbarProgress.Set(videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done), videoFunc.ffprobeData.Count);
 
-            if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal && ffprobeOutput.MainData.isLocalEncode)
+            if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal)
             {
                 string avs;
                 if (string.IsNullOrWhiteSpace(ffprobeOutput.MainData.SubtitlesFile))
@@ -876,11 +876,17 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"",1)
             }
             #endregion
 
+            WeighAllot weighAllot = new(
+                ffprobeOutput.MainData.isLocalEncode &&
+                ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal &&
+                ffprobeOutput.MainData.audioMap > 0 && AutoTrimToolStripMenuItem.Checked
+            );
+
             TaskbarProgress.Set(videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done), videoFunc.ffprobeData.Count);
             string mapMsg = string.Empty;
             if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal && ffprobeOutput.MainData.isLocalEncode)
             {
-                ffprobeOutput = audioProcess(ffprobeOutput, sw1, sw2, ref mapMsg);
+                ffprobeOutput = audioProcess(ffprobeOutput, sw1, sw2, weighAllot, ref mapMsg);
                 ffprobeOutput = errProcess(ffprobeOutput, 0, out RunEnum isRunAudio);
                 switch (isRunAudio)
                 {
@@ -895,19 +901,19 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"",1)
             switch (ffprobeOutput.MainData.videoType)
             {
                 case VideoTypeEnum.Aviscript:
-                    ffprobeOutput = onePassAvsProcess(ffprobeOutput, sw1, sw2, ref exitCode, ref onePassMsg);
+                    ffprobeOutput = onePassAvsProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref onePassMsg);
                     break;
                 case VideoTypeEnum.Merge:
-                    ffprobeOutput = onePassMergeProcess(ffprobeOutput, sw1, sw2, ref exitCode, ref onePassMsg);
+                    ffprobeOutput = onePassMergeProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref onePassMsg);
                     break;
                 case VideoTypeEnum.Normal:
                     if (ffprobeOutput.MainData.isLocalEncode)
-                        ffprobeOutput = onePassProcess(ffprobeOutput, sw1, sw2, ref exitCode, ref onePassMsg);
+                        ffprobeOutput = onePassProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref onePassMsg);
                     else
-                        ffprobeOutput = onePassAvsProcess(ffprobeOutput, sw1, sw2, ref exitCode, ref onePassMsg);
+                        ffprobeOutput = onePassAvsProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref onePassMsg);
                     break;
                 default:
-                    ffprobeOutput = onePassProcess(ffprobeOutput, sw1, sw2, ref exitCode, ref onePassMsg);
+                    ffprobeOutput = onePassProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref onePassMsg);
                     break;
             }
             ffprobeOutput = errProcess(ffprobeOutput, exitCode, out RunEnum isRunOnePass);
@@ -922,19 +928,19 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"",1)
             switch (ffprobeOutput.MainData.videoType)
             {
                 case VideoTypeEnum.Aviscript:
-                    ffprobeOutput = twoPassAvsProcess(ffprobeOutput, sw1, sw2, ref exitCode, ref onePassMsg);
+                    ffprobeOutput = twoPassAvsProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref onePassMsg);
                     break;
                 case VideoTypeEnum.Merge:
-                    ffprobeOutput = twoPassMergeProcess(ffprobeOutput, sw1, sw2, ref exitCode, ref onePassMsg);
+                    ffprobeOutput = twoPassMergeProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref onePassMsg);
                     break;
                 case VideoTypeEnum.Normal:
                     if (ffprobeOutput.MainData.isLocalEncode)
-                        ffprobeOutput = twoPassProcess(ffprobeOutput, sw1, sw2, ref exitCode, ref onePassMsg);
+                        ffprobeOutput = twoPassProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref onePassMsg);
                     else
-                        ffprobeOutput = twoPassAvsProcess(ffprobeOutput, sw1, sw2, ref exitCode, ref onePassMsg);
+                        ffprobeOutput = twoPassAvsProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref onePassMsg);
                     break;
                 default:
-                    ffprobeOutput = twoPassProcess(ffprobeOutput, sw1, sw2, ref exitCode, ref onePassMsg);
+                    ffprobeOutput = twoPassProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref onePassMsg);
                     break;
             }
             ffprobeOutput = errProcess(ffprobeOutput, exitCode, out RunEnum isRunTwoPass);
@@ -948,7 +954,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"",1)
             {
                 string mergeMsg = string.Empty;
                 TaskbarProgress.Set(videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done), videoFunc.ffprobeData.Count);
-                ffprobeOutput = mergeProcess(ffprobeOutput, sw1, sw2, ref exitCode, ref mergeMsg);
+                ffprobeOutput = mergeProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref mergeMsg);
                 ffprobeOutput = errProcess(ffprobeOutput, exitCode, out RunEnum isRunMerge);
                 switch (isRunMerge)
                 {
@@ -973,9 +979,9 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"",1)
         }
 
         /// <summary>
-        /// ≠µÆƒ≥B≤z
+        /// Èü≥ÊïàËôïÁêÜ
         /// </summary>
-        private FfprobeOutput audioProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, ref string msg)
+        private FfprobeOutput audioProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, WeighAllot weighAllot, ref string msg)
         {
             if (Cts == null || Cts.Token.IsCancellationRequested || ffprobeOutput.MainData.audioMap == 0)
                 return ffprobeOutput;
@@ -1006,7 +1012,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"",1)
                     ActionOut = sr =>
                     {
                         f2.appendText = sr;
-                        form1Control.ffmpegOutput(ff, sr, sw1, sw2);
+                        form1Control.ffmpegOutput(ff, sr, sw1, sw2, weighAllot);
                     },
                     ActionErr = sr => WriteFile.WriteLog(sr),
                 }, ffprobeOutput, RunEnum.AudioTrim, ref exitCode, ref msg);
@@ -1063,7 +1069,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"",1)
         /// <summary>
         /// OnePass
         /// </summary>
-        private FfprobeOutput onePassProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, ref int exitCode, ref string msg)
+        private FfprobeOutput onePassProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, WeighAllot weighAllot, ref int exitCode, ref string msg)
         {
             if (Cts == null)
                 return ffprobeOutput;
@@ -1084,7 +1090,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"",1)
                     {
                         double prodata = Math.Round(Convert.ToDouble(sr.Substring(sr.IndexOf('[') + 1, sr.LastIndexOf('%') - 1)), 2);
                         listView1.Items[useIdx].SubItems[subProgressIdx]!.Text = $"{prodata:F1} %";
-                        form1Control.calculateProgres(ff, (float)prodata);
+                        form1Control.calculateProgres(ff, (float)prodata, weighAllot);
                     }
 
                     if (sr.IndexOf("[error]") != -1)
@@ -1101,7 +1107,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"",1)
         /// <summary>
         /// TwoPass
         /// </summary>
-        private FfprobeOutput twoPassProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, ref int exitCode, ref string msg)
+        private FfprobeOutput twoPassProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, WeighAllot weighAllot, ref int exitCode, ref string msg)
         {
             if (Cts == null)
                 return ffprobeOutput;
@@ -1122,7 +1128,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"",1)
                     {
                         double prodata = Math.Round(Convert.ToDouble(sr.Substring(sr.IndexOf('[') + 1, sr.LastIndexOf('%') - 1)), 2);
                         listView1.Items[useIdx].SubItems[subProgressIdx]!.Text = $"{prodata:F1} %";
-                        form1Control.calculateProgres(ff, (float)prodata);
+                        form1Control.calculateProgres(ff, (float)prodata, weighAllot);
                     }
 
                     if (sr.IndexOf("[error]") != -1)
@@ -1139,7 +1145,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"",1)
         /// <summary>
         /// Merge
         /// </summary>
-        private FfprobeOutput mergeProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, ref int exitCode, ref string msg)
+        private FfprobeOutput mergeProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, WeighAllot weighAllot, ref int exitCode, ref string msg)
         {
             if (Cts == null)
                 return ffprobeOutput;
@@ -1179,7 +1185,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"",1)
                         float current = float.TryParse(match.Groups[1].Value, out float _current) ? _current : 0;
                         listView1.Items[useIdx].SubItems[subProgressIdx]!.Text = $"{current:F1} %";
                         float pro = (step * (100 / part)) + (current / part);
-                        form1Control.calculateProgres(ff, pro);
+                        form1Control.calculateProgres(ff, pro, weighAllot);
 
                         if ((int)current == 100)
                             step++;
@@ -1193,7 +1199,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"",1)
         /// <summary>
         /// OnePass
         /// </summary>
-        private FfprobeOutput onePassAvsProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, ref int exitCode, ref string msg)
+        private FfprobeOutput onePassAvsProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, WeighAllot weighAllot, ref int exitCode, ref string msg)
         {
             if (Cts == null)
                 return ffprobeOutput;
@@ -1208,7 +1214,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"",1)
                 ActionOut = sr =>
                 {
                     f2.appendText = sr;
-                    form1Control.ffmpegOutput(ff, sr, sw1, sw2);
+                    form1Control.ffmpegOutput(ff, sr, sw1, sw2, weighAllot);
                 },
                 ActionErr = sr =>
                 {
@@ -1223,7 +1229,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"",1)
         /// <summary>
         /// TwoPass
         /// </summary>
-        private FfprobeOutput twoPassAvsProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, ref int exitCode, ref string msg)
+        private FfprobeOutput twoPassAvsProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, WeighAllot weighAllot, ref int exitCode, ref string msg)
         {
             if (Cts == null)
                 return ffprobeOutput;
@@ -1238,7 +1244,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"",1)
                 ActionOut = sr =>
                 {
                     f2.appendText = sr;
-                    form1Control.ffmpegOutput(ff, sr, sw1, sw2);
+                    form1Control.ffmpegOutput(ff, sr, sw1, sw2, weighAllot);
                 },
                 ActionErr = sr =>
                 {
@@ -1253,7 +1259,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"",1)
         /// <summary>
         /// OnePass
         /// </summary>
-        private FfprobeOutput onePassMergeProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, ref int exitCode, ref string msg)
+        private FfprobeOutput onePassMergeProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, WeighAllot weighAllot, ref int exitCode, ref string msg)
         {
             if (Cts == null)
                 return ffprobeOutput;
@@ -1267,7 +1273,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"",1)
                 ActionOut = sr =>
                 {
                     f2.appendText = sr;
-                    form1Control.ffmpegOutput(ff, sr, sw1, sw2);
+                    form1Control.ffmpegOutput(ff, sr, sw1, sw2, weighAllot);
                 },
                 ActionErr = sr =>
                 {
@@ -1282,7 +1288,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"",1)
         /// <summary>
         /// TwoPass
         /// </summary>
-        private FfprobeOutput twoPassMergeProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, ref int exitCode, ref string msg)
+        private FfprobeOutput twoPassMergeProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, WeighAllot weighAllot, ref int exitCode, ref string msg)
         {
             if (Cts == null)
                 return ffprobeOutput;
@@ -1297,7 +1303,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"",1)
                 ActionOut = sr =>
                 {
                     f2.appendText = sr;
-                    form1Control.ffmpegOutput(ff, sr, sw1, sw2);
+                    form1Control.ffmpegOutput(ff, sr, sw1, sw2, weighAllot);
                 },
                 ActionErr = sr =>
                 {
@@ -1343,7 +1349,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"",1)
 
             if (Cts == null || Cts.Token.IsCancellationRequested)
             {
-                msg = "§w∞±§Ó";
+                msg = "Â∑≤ÂÅúÊ≠¢";
                 return ffprobeOutput;
             }
 

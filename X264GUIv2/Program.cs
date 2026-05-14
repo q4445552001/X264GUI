@@ -5,10 +5,6 @@ namespace X264GUIv2
 {
     internal static class Program
     {
-        //TODO: ffmpeg 少 ass
-        //TODO: ffmpeg 少 解析度
-        //TODO: ffmpeg 少 fps
-
         [STAThread]
         static void Main(string[] args)
         {

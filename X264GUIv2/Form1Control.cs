@@ -15,7 +15,7 @@ namespace X264GUIv2
             form.bitrateNumeric.Enabled = bitrateEnum == BitrateEnum.Manual;
         }
 
-        public void ffmpegOutput(FfprobeOutput ffprobeOutput, string sr, Stopwatch sw1, Stopwatch sw2)
+        public void ffmpegOutput(FfprobeOutput ffprobeOutput, string sr, Stopwatch sw1, Stopwatch sw2, WeighAllot weighAllot)
         {
             form.listView1.Items[form.useIdx].SubItems[form.subTimeIdx]!.Text = OtherControlFunc.timeConv(sw2);
             form.timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
@@ -32,17 +32,17 @@ namespace X264GUIv2
                 double currentSeconds = outTimeMs / 1_000_000.0;
                 double pro = currentSeconds / ffprobeOutput.MainData.duration * 100.0;
                 form.listView1.Items[form.useIdx].SubItems[form.subProgressIdx]!.Text = $"{pro:F1} %";
-                calculateProgres(ffprobeOutput, (float)pro);
+                calculateProgres(ffprobeOutput, (float)pro, weighAllot);
             }
         }
 
-        public void calculateProgres(FfprobeOutput ffprobeOutput, float pro)
+        public void calculateProgres(FfprobeOutput ffprobeOutput, float pro, WeighAllot weighAllot)
         {
-            WeighAllot weighAllot = new(
-                ffprobeOutput.MainData.isLocalEncode &&
-                ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal &&
-                ffprobeOutput.MainData.audioMap > 0 && form.AutoTrimToolStripMenuItem.Checked
-            );
+            //WeighAllot weighAllot = new(
+            //    ffprobeOutput.MainData.isLocalEncode &&
+            //    ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal &&
+            //    ffprobeOutput.MainData.audioMap > 0 && form.AutoTrimToolStripMenuItem.Checked
+            //);
 
             float audioWeight = ffprobeOutput.MainData.videoType switch
             {

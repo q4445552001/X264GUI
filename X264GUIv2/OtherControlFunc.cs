@@ -50,8 +50,7 @@ namespace X264GUIv2
             DetailsItem detailsItem = new();
 
             string OldCapacity = Math.Round(Convert.ToDouble(FfprobeOutputMain.videoSize) / 1024.0 / 1024.0, 2).ToString(); //原始大小
-            double audioCapacity = Math.Round(Convert.ToDouble(FfprobeOutputMain.audioSize) / 1024.0 / 1024.0, 2); //計算Audio大小
-            string NewCapacity = Math.Round((audioCapacity + Convert.ToDouble(FfprobeOutputMain.NewDetail.bitrate) * FfprobeOutputMain.duration / 8) / 1024 / 1024, 2).ToString() + " MB"; //Video預估大小
+            string NewCapacity = Math.Round((FfprobeOutputMain.audioSize + (Convert.ToDouble(FfprobeOutputMain.NewDetail.bitrate) * FfprobeOutputMain.duration / 8)) / 1024 / 1024, 2).ToString() + " MB"; //Video預估大小
 
             detailsItem.FileName = FfprobeOutputMain.InFileName;
             detailsItem.BitRate = $"{(FfprobeOutputMain.OriDetail.bitrate == 0 ? "NUL" : FfprobeOutputMain.OriDetail.bitrate / 1000)} > {FfprobeOutputMain.NewDetail.bitrate / 1000} kb/s";

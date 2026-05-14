@@ -51,13 +51,13 @@ namespace X264GUIv2
             if (!string.IsNullOrWhiteSpace(RunPath))
             {
                 if (!Directory.Exists(RunPath))
-                    throw new Exception($"{RunPath} 無效路徑");
+                    throw new Exception(@$"""{RunPath}"" 無效路徑");
 
                 Environment.CurrentDirectory = RunPath;
             }
 
             if (!File.Exists(FileName ?? ""))
-                throw new Exception($"{FileName} 無效路徑");
+                throw new Exception(@$"""{FileName}"" 無效路徑");
 
             string argument = ArgumentList.Count > 0 ? string.Join(" ", ArgumentList).Replace("\r\n", " ") : "";
 #if DEBUG

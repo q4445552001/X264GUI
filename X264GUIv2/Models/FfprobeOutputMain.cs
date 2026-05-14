@@ -10,28 +10,31 @@ namespace X264GUIv2.Models
 
         public string InFile { get; set; } = "";
 
+        private string? _InFileName { get; set; }
         [NotMapped]
-        public string InFileName => Path.GetFileName(InFile);
+        public string InFileName => _InFileName ??= Path.GetFileName(InFile) ?? "";
 
+        private string? _InFilePath { get; set; }
         [NotMapped]
-        public string InFilePath => $@"{Path.GetDirectoryName(InFile) ?? "."}";
+        public string InFilePath => _InFilePath ??= Path.GetDirectoryName(InFile) ?? ".";
 
+        private string? _avsTempFile { get; set; }
         [NotMapped]
-        public string avsTempFile = $"_avsTemp_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
+        public string avsTempFile => _avsTempFile ??= $"_avsTemp_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
 
+        private string? _OutFile { get; set; }
         [NotMapped]
-        public string OutFile => $@"{InFilePath}\{Path.GetFileNameWithoutExtension(InFile)}-0.mp4";
+        public string OutFile => _OutFile ??= $@"{InFilePath}\{Path.GetFileNameWithoutExtension(InFile)}-0.mp4";
 
+        private bool? _isLocalEncode { get; set; }
         [NotMapped]
-        public bool isLocalEncode => OtherControlFunc.HasNonLocalCodePageChar(InFilePath);
+        public bool isLocalEncode => _isLocalEncode ??= OtherControlFunc.HasNonLocalCodePageChar(InFilePath);
 
         public bool isAac { get; set; } = false;
 
         public int audioMap { get; set; } = 0;
 
-        [NotMapped]
         private VideoTypeEnum? _videoType { get; set; }
-
         public VideoTypeEnum videoType
         {
             get
@@ -62,15 +65,16 @@ namespace X264GUIv2.Models
         [NotMapped]
         public FfprobeOutputDetail OriDetail { get; set; } = new();
 
+        private string? _SubtitlesFile { get; set; }
         [NotMapped]
         public string SubtitlesFile
         {
             get
             {
-                if (File.Exists(InFilePath + "\\" + Path.GetFileNameWithoutExtension(InFile) + ".ass"))
-                    return $@"{InFilePath}\{Path.GetFileNameWithoutExtension(InFile)}.ass";
-                else
-                    return string.Empty;
+                if (_SubtitlesFile == null && File.Exists(InFilePath + "\\" + Path.GetFileNameWithoutExtension(InFile) + ".ass"))
+                    _SubtitlesFile = $@"{InFilePath}\{Path.GetFileNameWithoutExtension(InFile)}.ass";
+
+                return _SubtitlesFile ??= string.Empty;
             }
         }
 

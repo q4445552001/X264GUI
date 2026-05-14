@@ -381,6 +381,7 @@ namespace X264GUIv2
                 File.Delete(@$"{ffprobeOutput.MainData.InFilePath}\{ffprobeOutput.MainData.avsTempFile}.264");
                 File.Delete(@$"{ffprobeOutput.MainData.InFilePath}\{ffprobeOutput.MainData.avsTempFile}.aac");
                 File.Delete(@$"{ffprobeOutput.MainData.InFilePath}\{ffprobeOutput.MainData.avsTempFile}.mp4");
+                File.Delete(@$"{ffprobeOutput.MainData.InFilePath}\{ffprobeOutput.MainData.avsTempFile}.merge");
             }
             catch
             {
@@ -408,8 +409,18 @@ namespace X264GUIv2
             List<string> arr = [];
 
             string threads = form.coreCBox.SelectedItem?.ToString() ?? "0";
+            List<string> vf = [];
+            if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal)
+            {
+                vf.Add($@"fps={ffprobeOutput.MainData.NewDetail.frameStr}");
+                vf.Add($@"scale={ffprobeOutput.MainData.NewDetail.resolutionW}:{ffprobeOutput.MainData.NewDetail.resolutionH}");
+                if (!string.IsNullOrWhiteSpace(ffprobeOutput.MainData.SubtitlesFile))
+                    vf.Add($@"ass='{ffprobeOutput.MainData.avsTempFile}.ass'");
+            }
 
             arr.Add($@"-i {ffprobeOutput.MainData.InFile}");
+            if (vf.Count > 0)
+                arr.Add($@"-vf ""{string.Join(",", vf)}""");
             arr.Add($@"-c:v libx264");
             arr.Add($@"-b:v {ffprobeOutput.MainData.NewDetail.bitrate / 1000}k");
             arr.Add($@"-pass 1");
@@ -428,10 +439,15 @@ namespace X264GUIv2
             List<string> arr = [];
 
             string threads = form.coreCBox.SelectedItem?.ToString() ?? "0";
+            List<string> vf = [];
+            vf.Add($@"fps={ffprobeOutput.MainData.NewDetail.frameStr}");
+            vf.Add($@"scale={ffprobeOutput.MainData.NewDetail.resolutionW}:{ffprobeOutput.MainData.NewDetail.resolutionH}");
 
             arr.Add($@"-f concat");
             arr.Add($@"-safe 0");
             arr.Add($@"-i {ffprobeOutput.MainData.avsTempFile}.merge");
+            if (vf.Count > 0)
+                arr.Add($@"-vf ""{string.Join(",", vf)}""");
             arr.Add($@"-c:v libx264");
             arr.Add($@"-b:v {ffprobeOutput.MainData.NewDetail.bitrate / 1000}k");
             arr.Add($@"-pass 1");
@@ -480,6 +496,14 @@ namespace X264GUIv2
             List<string> arr = [];
 
             string threads = form.coreCBox.SelectedItem?.ToString() ?? "0";
+            List<string> vf = [];
+            if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal)
+            {
+                vf.Add($@"fps={ffprobeOutput.MainData.NewDetail.frameStr}");
+                vf.Add($@"scale={ffprobeOutput.MainData.NewDetail.resolutionW}:{ffprobeOutput.MainData.NewDetail.resolutionH}");
+                if (!string.IsNullOrWhiteSpace(ffprobeOutput.MainData.SubtitlesFile))
+                    vf.Add($@"ass='{ffprobeOutput.MainData.avsTempFile}.ass'");
+            }
 
             arr.Add($@"-i {ffprobeOutput.MainData.InFile}");
             if (form.AutoTrimToolStripMenuItem.Checked)
@@ -494,6 +518,8 @@ namespace X264GUIv2
             {
                 arr.Add($@"-c:a aac");
             }
+            if (vf.Count > 0)
+                arr.Add($@"-vf ""{string.Join(",", vf)}""");
             arr.Add($@"-c:v libx264");
             arr.Add($@"-b:v {ffprobeOutput.MainData.NewDetail.bitrate / 1000}k");
             arr.Add($@"-pass 2");
@@ -517,10 +543,16 @@ namespace X264GUIv2
             List<string> arr = [];
 
             string threads = form.coreCBox.SelectedItem?.ToString() ?? "0";
+            List<string> vf = [];
+            vf.Add($@"fps={ffprobeOutput.MainData.NewDetail.frameStr}");
+            vf.Add($@"scale={ffprobeOutput.MainData.NewDetail.resolutionW}:{ffprobeOutput.MainData.NewDetail.resolutionH}");
 
             arr.Add($@"-f concat");
             arr.Add($@"-safe 0");
             arr.Add($@"-i {ffprobeOutput.MainData.avsTempFile}.merge");
+            if (vf.Count > 0)
+                arr.Add($@"-vf ""{string.Join(",", vf)}""");
+
             if (form.AutoTrimToolStripMenuItem.Checked)
             {
                 arr.Add($@"-ar 48000");
