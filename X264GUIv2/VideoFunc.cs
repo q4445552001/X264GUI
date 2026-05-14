@@ -376,6 +376,8 @@ namespace X264GUIv2
                 File.Delete(@$"{ffprobeOutput.MainData.InFilePath}\x2642pass.stats.mbtree.temp");
                 File.Delete(@$"{ffprobeOutput.MainData.InFilePath}\x2642pass.stats");
                 File.Delete(@$"{ffprobeOutput.MainData.InFilePath}\x2642pass.stats.mbtree");
+                File.Delete(@$"{ffprobeOutput.MainData.InFilePath}\ffmpeg2pass-0.log");
+                File.Delete(@$"{ffprobeOutput.MainData.InFilePath}\ffmpeg2pass-0.log.mbtree");
                 File.Delete(@$"{ffprobeOutput.MainData.InFilePath}\{ffprobeOutput.MainData.avsTempFile}.avs");
                 File.Delete(@$"{ffprobeOutput.MainData.InFilePath}\{ffprobeOutput.MainData.avsTempFile}.ass");
                 File.Delete(@$"{ffprobeOutput.MainData.InFilePath}\{ffprobeOutput.MainData.avsTempFile}.264");
@@ -412,7 +414,8 @@ namespace X264GUIv2
             List<string> vf = [];
             if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal)
             {
-                vf.Add($@"fps={ffprobeOutput.MainData.NewDetail.frameStr}");
+                if (ffprobeOutput.MainData.NewDetail.frameStr != ffprobeOutput.MainData.OriDetail.frameStr)
+                    vf.Add($@"fps={ffprobeOutput.MainData.NewDetail.frameStr}");
                 vf.Add($@"scale={ffprobeOutput.MainData.NewDetail.resolutionW}:{ffprobeOutput.MainData.NewDetail.resolutionH}");
                 if (!string.IsNullOrWhiteSpace(ffprobeOutput.MainData.SubtitlesFile))
                     vf.Add($@"ass='{ffprobeOutput.MainData.avsTempFile}.ass'");
@@ -440,7 +443,8 @@ namespace X264GUIv2
 
             string threads = form.coreCBox.SelectedItem?.ToString() ?? "0";
             List<string> vf = [];
-            vf.Add($@"fps={ffprobeOutput.MainData.NewDetail.frameStr}");
+            if (ffprobeOutput.MainData.NewDetail.frameStr != ffprobeOutput.MainData.OriDetail.frameStr)
+                vf.Add($@"fps={ffprobeOutput.MainData.NewDetail.frameStr}");
             vf.Add($@"scale={ffprobeOutput.MainData.NewDetail.resolutionW}:{ffprobeOutput.MainData.NewDetail.resolutionH}");
 
             arr.Add($@"-f concat");
@@ -499,7 +503,8 @@ namespace X264GUIv2
             List<string> vf = [];
             if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal)
             {
-                vf.Add($@"fps={ffprobeOutput.MainData.NewDetail.frameStr}");
+                if (ffprobeOutput.MainData.NewDetail.frameStr != ffprobeOutput.MainData.OriDetail.frameStr)
+                    vf.Add($@"fps={ffprobeOutput.MainData.NewDetail.frameStr}");
                 vf.Add($@"scale={ffprobeOutput.MainData.NewDetail.resolutionW}:{ffprobeOutput.MainData.NewDetail.resolutionH}");
                 if (!string.IsNullOrWhiteSpace(ffprobeOutput.MainData.SubtitlesFile))
                     vf.Add($@"ass='{ffprobeOutput.MainData.avsTempFile}.ass'");
@@ -544,7 +549,8 @@ namespace X264GUIv2
 
             string threads = form.coreCBox.SelectedItem?.ToString() ?? "0";
             List<string> vf = [];
-            vf.Add($@"fps={ffprobeOutput.MainData.NewDetail.frameStr}");
+            if (ffprobeOutput.MainData.NewDetail.frameStr != ffprobeOutput.MainData.OriDetail.frameStr)
+                vf.Add($@"fps={ffprobeOutput.MainData.NewDetail.frameStr}");
             vf.Add($@"scale={ffprobeOutput.MainData.NewDetail.resolutionW}:{ffprobeOutput.MainData.NewDetail.resolutionH}");
 
             arr.Add($@"-f concat");

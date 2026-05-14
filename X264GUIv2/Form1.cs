@@ -843,25 +843,24 @@ namespace X264GUIv2
 
             if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal)
             {
-                string avs;
-                if (string.IsNullOrWhiteSpace(ffprobeOutput.MainData.SubtitlesFile))
+                string frameStr = "";
+                if (ffprobeOutput.MainData.OriDetail.frameStr != ffprobeOutput.MainData.NewDetail.frameStr)
+                    frameStr = $@", fpsnum={ffprobeOutput.MainData.NewDetail.fpsnum}, fpsden={ffprobeOutput.MainData.NewDetail.fpsden}";
+
+                string avs = $@"
+LoadPlugin(""{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\ffms2.dll"")
+FFVideoSource(""{Path.GetFileName(ffprobeOutput.MainData.InFileName)}""{frameStr})
+";
+                if (!string.IsNullOrWhiteSpace(ffprobeOutput.MainData.SubtitlesFile))
                 {
-                    avs = $@"
-LoadPlugin(""{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\ffms2.dll"") 
-FFVideoSource(""{Path.GetFileName(ffprobeOutput.MainData.InFileName)}"", fpsnum={ffprobeOutput.MainData.NewDetail.fpsnum}, fpsden={ffprobeOutput.MainData.NewDetail.fpsden})
-#deinterlace #crop #resize #denoise";
-                }
-                else
-                {
-                    avs = $@"
-LoadPlugin(""{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\ffms2.dll"") 
-FFVideoSource(""{Path.GetFileName(ffprobeOutput.MainData.InFileName)}"", fpsnum={ffprobeOutput.MainData.NewDetail.fpsnum}, fpsden={ffprobeOutput.MainData.NewDetail.fpsden})
+                    avs += $@"
 LoadPlugin(""{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\VSFilter.dll"")
-TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"",1)
-#deinterlace #crop #resize #denoise";
+TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
+";
                     File.Copy(ffprobeOutput.MainData.SubtitlesFile, $"{ffprobeOutput.MainData.avsTempFile}.ass", true);
                 }
 
+                avs += $@"#deinterlace #crop #resize #denoise";
                 File.WriteAllText(@$".\{ffprobeOutput.MainData.avsTempFile}.avs", avs);
             }
             else if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Merge)
