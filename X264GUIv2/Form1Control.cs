@@ -36,6 +36,32 @@ namespace X264GUIv2
             }
         }
 
+        public int AudioCalculate(FfprobeOutput ffprobeOutput)
+        {
+            AudioHz audioHz = AudioHz.Default;
+            if (form.OrigToolStripMenuItem.Checked)
+            {
+                audioHz = form.OrigToolStripMenuItem.getAudio_khz();
+            }
+            else if (form.kHz441ToolStripMenuItem.Checked)
+            {
+                audioHz = form.kHz441ToolStripMenuItem.getAudio_khz();
+            }
+            else if (form.kHz480ToolStripMenuItem.Checked)
+            {
+                audioHz = form.kHz480ToolStripMenuItem.getAudio_khz();
+            }
+
+            if (audioHz == AudioHz.Default && ffprobeOutput.MainData.audioMap > 0)
+            {
+                string[] audioSamplineRate = ffprobeOutput.MainData.AudioSamplineRate.Split("/");
+                if (audioSamplineRate.Length == 2 && int.TryParse(audioSamplineRate[1], out int rate))
+                    return rate;
+            }
+
+            return (int)audioHz;
+        }
+
         public void calculateProgres(FfprobeOutput ffprobeOutput, float pro, WeighAllot weighAllot)
         {
             //WeighAllot weighAllot = new(

@@ -11,7 +11,7 @@ namespace X264GUIv2
         #region 變數
         public readonly VideoFunc videoFunc;
         private CancellationTokenSource? Cts { get; set; }
-        private readonly Form1Control form1Control;
+        public readonly Form1Control form1Control;
 
         /// <summary>
         /// 初始化彼特率
@@ -1012,7 +1012,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
 
             if (AutoTrimToolStripMenuItem.Checked)
             {
-                int hz = videoFunc.AudioCalculate(ffprobeOutput);
+                int hz = form1Control.AudioCalculate(ffprobeOutput);
                 ffprobeOutput = ProcessAction(ff => new()
                 {
                     Cts = Cts,
