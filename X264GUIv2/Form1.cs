@@ -303,7 +303,7 @@ namespace X264GUIv2
                     listView1.Items.RemoveAt(item);
                 }
 
-                progressText.Text = $"{videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done)}/{videoFunc.ffprobeData.Count}";
+                progressText.Text = $"{videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done || x.MainData.run == RunEnum.Warning)}/{videoFunc.ffprobeData.Count}";
             }
             catch (Exception ex)
             {
@@ -377,7 +377,7 @@ namespace X264GUIv2
                 videoFunc.ffprobeData.Clear();
                 runBtn.Enabled = false;
                 stopBtn.Enabled = false;
-                progressText.Text = $"{videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done)}/{videoFunc.ffprobeData.Count}";
+                progressText.Text = $"{videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done || x.MainData.run == RunEnum.Warning)}/{videoFunc.ffprobeData.Count}";
                 listView1.Columns[0].Tag = false;
                 listView1.Refresh();
             }
@@ -439,7 +439,20 @@ namespace X264GUIv2
                     listView1.Items.Add(listView1.DataViewObject(ffprobeOutput.MainData));
 
                 videoFunc.ffprobeData = listView1.SortIdx(videoFunc.ffprobeData);
-                progressText.Text = $"{videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done)}/{videoFunc.ffprobeData.Count}";
+
+                foreach (var item in videoFunc.ffprobeData)
+                {
+                    int idx = listView1.findListItem(item.MainData.Guid);
+                    listView1.Items[idx].SubItems[subStatusIdx].ForeColor = item.MainData.run switch
+                    {
+                        RunEnum.Warning => Color.DarkGoldenrod,
+                        RunEnum.Error => Color.Red,
+                        RunEnum.Stop => Color.Red,
+                        _ => Color.Black,
+                    };
+                }
+
+                progressText.Text = $"{videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done || x.MainData.run == RunEnum.Warning)}/{videoFunc.ffprobeData.Count}";
                 runBtn.Enabled = listView1.Items.Count != 0;
             }
             catch (Exception ex)
@@ -649,7 +662,8 @@ namespace X264GUIv2
                 listMergeEditViewItem.Enabled =
                     (Cts == null || Cts.Token.IsCancellationRequested) && videoFunc.ffprobeData[idx].MainData.videoType == VideoTypeEnum.Merge;
                 listHashViewItem.Enabled =
-                    (Cts == null || Cts.Token.IsCancellationRequested) && videoFunc.ffprobeData[idx].MainData.run == RunEnum.Done;
+                    (Cts == null || Cts.Token.IsCancellationRequested)
+                    && (videoFunc.ffprobeData[idx].MainData.run == RunEnum.Done || videoFunc.ffprobeData[idx].MainData.run == RunEnum.Warning);
 
                 listView1.FocusedItem = item;
                 listViewMenu.Tag = item.Tag;
@@ -696,7 +710,7 @@ namespace X264GUIv2
                 }
 
                 videoFunc.ffprobeData = listView1.SortIdx(videoFunc.ffprobeData);
-                progressText.Text = $"{videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done)}/{videoFunc.ffprobeData.Count}";
+                progressText.Text = $"{videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done || x.MainData.run == RunEnum.Warning)}/{videoFunc.ffprobeData.Count}";
             }
             catch (Exception ex)
             {
@@ -806,9 +820,9 @@ namespace X264GUIv2
                             throw new Exception(hashMsg);
 
                         VideoFunc.Delete(videoFunc.ffprobeData[idx1]);
-                        videoFunc.ffprobeData[idx1].MainData.run = RunEnum.Done;
-                        listView1.Items[idx2].SubItems[subStatusIdx]!.ForeColor = Color.Black;
-                        listView1.Items[idx2].SubItems[subStatusIdx]!.Text = RunEnum.Done.GetDisplayName();
+                        videoFunc.ffprobeData[idx1].MainData.run = videoFunc.ffprobeData[idx1].MainData.run == RunEnum.Warning ? RunEnum.Warning : RunEnum.Done;
+                        listView1.Items[idx2].SubItems[subStatusIdx]!.ForeColor = videoFunc.ffprobeData[idx1].MainData.run == RunEnum.Warning ? Color.DarkGoldenrod : Color.Black;
+                        listView1.Items[idx2].SubItems[subStatusIdx]!.Text = (videoFunc.ffprobeData[idx1].MainData.run == RunEnum.Warning ? RunEnum.Warning : RunEnum.Done).GetDisplayName();
                     }
 
                     Cts.Cancel();
@@ -896,7 +910,7 @@ namespace X264GUIv2
 
         private void mainProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2)
         {
-            if (ffprobeOutput.MainData.run == RunEnum.Done)
+            if (ffprobeOutput.MainData.run == RunEnum.Done || ffprobeOutput.MainData.run == RunEnum.Warning)
                 return;
 
             if (!File.Exists(ffprobeOutput.MainData.InFile))
@@ -917,12 +931,12 @@ namespace X264GUIv2
             listView1.Items[useIdx].SubItems[subStatusIdx]!.ForeColor = Color.Black;
             listView1.Items[useIdx].SubItems[subStatusIdx]!.Text = RunEnum.Init.GetDisplayName();
             ffprobeOutput.MainData.run = RunEnum.Init;
-            progressText.Text = $"{videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done)}/{videoFunc.ffprobeData.Count}";
+            progressText.Text = $"{videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done || x.MainData.run == RunEnum.Warning)}/{videoFunc.ffprobeData.Count}";
 
             stopBtn.Enabled = true;
             form1Control.UpdateProgres(0, videoFunc.ffprobeData.Count);
             TaskbarProgress.Clear();
-            TaskbarProgress.Set(videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done), videoFunc.ffprobeData.Count);
+            TaskbarProgress.Set(videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done || x.MainData.run == RunEnum.Warning), videoFunc.ffprobeData.Count);
 
             if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal)
             {
@@ -964,7 +978,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                 ffprobeOutput.MainData.audioMap > 0 && AutoTrimToolStripMenuItem.Checked
             );
 
-            TaskbarProgress.Set(videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done), videoFunc.ffprobeData.Count);
+            TaskbarProgress.Set(videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done || x.MainData.run == RunEnum.Warning), videoFunc.ffprobeData.Count);
             string mapMsg = string.Empty;
             if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal && ffprobeOutput.MainData.isLocalEncode)
             {
@@ -977,7 +991,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                 }
             }
 
-            TaskbarProgress.Set(videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done), videoFunc.ffprobeData.Count);
+            TaskbarProgress.Set(videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done || x.MainData.run == RunEnum.Warning), videoFunc.ffprobeData.Count);
             string onePassMsg = string.Empty;
 
             switch (ffprobeOutput.MainData.videoType)
@@ -1005,7 +1019,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                 case RunEnum.Error: throw new Exception($"{RunEnum.OnePass.GetDisplayName()} {onePassMsg}");
             }
 
-            TaskbarProgress.Set(videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done), videoFunc.ffprobeData.Count);
+            TaskbarProgress.Set(videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done || x.MainData.run == RunEnum.Warning), videoFunc.ffprobeData.Count);
             string twoPassMsg = string.Empty;
             switch (ffprobeOutput.MainData.videoType)
             {
@@ -1035,7 +1049,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
             if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal && ffprobeOutput.MainData.isLocalEncode)
             {
                 string mergeMsg = string.Empty;
-                TaskbarProgress.Set(videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done), videoFunc.ffprobeData.Count);
+                TaskbarProgress.Set(videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done || x.MainData.run == RunEnum.Warning), videoFunc.ffprobeData.Count);
                 ffprobeOutput = mergeProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref mergeMsg);
                 ffprobeOutput = errProcess(ffprobeOutput, exitCode, out RunEnum isRunMerge);
                 switch (isRunMerge)
@@ -1055,11 +1069,11 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
 
             VideoFunc.Delete(ffprobeOutput);
             listView1.Items[useIdx].SubItems[subProgressIdx]!.Text = "100 %";
-            listView1.Items[useIdx].SubItems[subStatusIdx]!.Text = RunEnum.Done.GetDisplayName();
-            ffprobeOutput.MainData.run = RunEnum.Done;
+            listView1.Items[useIdx].SubItems[subStatusIdx]!.Text = ffprobeOutput.MainData.run == RunEnum.Warning ? RunEnum.Warning.GetDisplayName() : RunEnum.Done.GetDisplayName();
+            ffprobeOutput.MainData.run = ffprobeOutput.MainData.run == RunEnum.Warning ? RunEnum.Warning : RunEnum.Done;
 
             form1Control.UpdateProgres(100, 100);
-            if (videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done) == videoFunc.ffprobeData.Count)
+            if (videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done || x.MainData.run == RunEnum.Warning) == videoFunc.ffprobeData.Count)
                 TaskbarProgress.Set(videoFunc.ffprobeData.Count, videoFunc.ffprobeData.Count);
             else
                 TaskbarProgress.Error();
@@ -1427,6 +1441,8 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
             if (Cts == null)
                 return ffprobeOutput;
 
+            bool isWriteCsv = false;
+
             ffprobeOutput = ProcessAction(ff => new()
             {
                 Cts = Cts,
@@ -1437,7 +1453,15 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                 ActionOut = sr =>
                 {
                     f2.appendText = sr;
-                    WriteFile.WriteHashCsv(sr, ff);
+                    try
+                    {
+                        WriteFile.WriteHashCsv(sr, ff);
+                        isWriteCsv = true;
+                    }
+                    catch
+                    {
+                        isWriteCsv = false;
+                    }
                 },
                 ActionErr = sr =>
                 {
@@ -1445,6 +1469,9 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                     WriteFile.WriteLog(sr);
                 }
             }, ffprobeOutput, RunEnum.Hash, ref exitCode, ref msg);
+
+            if (!isWriteCsv)
+                ffprobeOutput.MainData.run = RunEnum.Warning;
 
             return ffprobeOutput;
         }

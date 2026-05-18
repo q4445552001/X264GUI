@@ -39,5 +39,8 @@ namespace X264GUIv2.Enums
 
         [Display(Name = "停止")]
         Stop,
+
+        [Display(Name = "警告")]
+        Warning,
     }
 }

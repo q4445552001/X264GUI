@@ -78,7 +78,7 @@ namespace X264GUIv2
                 WriteFile.WriteLog(ex.Message);
             }
 
-            form.progressText.Text = $"{ffprobeData.Count(x => x.MainData.run == RunEnum.Done)}/{ffprobeData.Count}";
+            form.progressText.Text = $"{ffprobeData.Count(x => x.MainData.run == RunEnum.Done || x.MainData.run == RunEnum.Warning)}/{ffprobeData.Count}";
             form.runBtn.Enabled = form.listView1.Items.Count != 0;
         }
 

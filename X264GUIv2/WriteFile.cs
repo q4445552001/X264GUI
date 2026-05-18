@@ -36,6 +36,7 @@ namespace X264GUIv2
         {
             try
             {
+                str = str.Replace("\t", ",");
                 string filePath = $@"{ffprobeOutput.MainData.InFilePath}\_hash_{DateTime.Now:yyyyMMdd}.csv";
                 using StreamWriter sw = new(filePath, true);
                 sw.WriteLine(str);
@@ -44,6 +45,7 @@ namespace X264GUIv2
             catch
             {
                 WriteLog($"[csv寫入失敗] {str}");
+                throw;
             }
         }
     }
