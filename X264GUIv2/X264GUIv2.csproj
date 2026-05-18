@@ -56,7 +56,7 @@
 	</ItemGroup>
 	<ItemGroup>
 	  <None Update="runtime-desktop-8.0.26-windows-x64-installer.txt">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
 	  </None>
 	</ItemGroup>
 </Project>
