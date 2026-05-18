@@ -602,23 +602,10 @@ namespace X264GUIv2
         public static string[] HashCheck(FfprobeOutput ffprobeOutput)
         {
             List<string> arr = [];
-            arr.Add($@"/wildcard");
+            arr.Add($@"/file");
             arr.Add($@"""{ffprobeOutput.MainData.OutFile}""");
-            arr.Add($@"0");
             arr.Add($@"/stab");
-            arr.Add($@"""{ffprobeOutput.MainData.InFilePath}\{ffprobeOutput.MainData.avsTempFile}.hash""");
-
-            return [.. arr];
-        }
-
-        public static string[] HashCopy(FfprobeOutput ffprobeOutput)
-        {
-            List<string> arr = [];
-            arr.Add($@"/c");
-            arr.Add($@"type");
-            arr.Add($@"""{ffprobeOutput.MainData.InFilePath}\{ffprobeOutput.MainData.avsTempFile}.hash""");
-            arr.Add($@">>");
-            arr.Add($@"""{ffprobeOutput.MainData.InFilePath}\_hash_{DateTime.Now:yyyyMMdd}.txt""");
+            arr.Add($@"""""");
 
             return [.. arr];
         }

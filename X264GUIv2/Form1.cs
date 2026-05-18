@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms.VisualStyles;
 using X264GUIv2.Enums;
@@ -799,6 +800,7 @@ namespace X264GUIv2
                     listView1.Items[idx2].SubItems[subStatusIdx]!.ForeColor = Color.Black;
                     listView1.Items[idx2].SubItems[subStatusIdx]!.Text = RunEnum.Done.GetDisplayName();
                 }
+                Cts.Cancel();
             }
             catch (Exception ex)
             {
@@ -1416,22 +1418,12 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                 RunPath = ff.MainData.InFilePath,
                 FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\HashMyFiles\HashMyFiles.exe",
                 ArgumentList = VideoFunc.HashCheck(ff),
-                ActionErr = sr =>
+                Encoding = Encoding.Unicode,
+                ActionOut = sr =>
                 {
                     f2.appendText = sr;
-                    WriteFile.WriteLog(sr);
-                }
-            }, ffprobeOutput, RunEnum.Hash, ref exitCode, ref msg);
-
-            if (exitCode != 0)
-                return ffprobeOutput;
-
-            ffprobeOutput = ProcessAction(ff => new()
-            {
-                Cts = Cts,
-                RunPath = ff.MainData.InFilePath,
-                FileName = $@"%windir%\system32\cmd.exe",
-                ArgumentList = VideoFunc.HashCopy(ff),
+                    WriteFile.WriteHashCsv(sr, ff);
+                },
                 ActionErr = sr =>
                 {
                     f2.appendText = sr;

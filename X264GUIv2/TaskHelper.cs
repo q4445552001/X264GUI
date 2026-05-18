@@ -38,7 +38,12 @@ namespace X264GUIv2
         /// </summary>
         public Action<string>? ActionErr { get; set; }
 
+        /// <summary>
+        /// 取得或設定視窗狀態，用於啟動處理序時。
+        /// </summary>
         public ProcessWindowStyle WindowStyle { get; set; } = ProcessWindowStyle.Hidden;
+
+        public Encoding Encoding { get; set; } = Encoding.UTF8;
 
         private bool isClose { get; set; } = false;
         public string isCloseMsg { get; private set; } = string.Empty;
@@ -80,9 +85,9 @@ namespace X264GUIv2
                     RedirectStandardOutput = true, //應用程式的文字輸出是否寫入至 StandardOutput 資料流。
                     WorkingDirectory = Environment.CurrentDirectory, //當 UseShellExecute 屬性為 false 時，取得或設定要啟動之處理序的工作目錄。 當 UseShellExecute 為 true 時，取得或設定包含要啟動之處理序的目錄。
                     Arguments = argument, //參數
-                    StandardOutputEncoding = Encoding.UTF8,
-                    StandardErrorEncoding = Encoding.UTF8,
-                    StandardInputEncoding = Encoding.UTF8,
+                    StandardOutputEncoding = Encoding,
+                    StandardErrorEncoding = Encoding,
+                    StandardInputEncoding = Encoding,
                 }
             };
 

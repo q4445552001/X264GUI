@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
+using X264GUIv2.Models;
 
 namespace X264GUIv2
 {
@@ -22,6 +23,21 @@ namespace X264GUIv2
                 action?.Invoke(str);
 
                 using StreamWriter sw = new(WritePath, true);
+                sw.WriteLine(str);
+                sw.Close();
+            }
+            catch { }
+        }
+
+        /// <summary>
+        /// 寫入csv
+        /// </summary>
+        public static void WriteHashCsv(string str, FfprobeOutput ffprobeOutput)
+        {
+            try
+            {
+                string filePath = $@"{ffprobeOutput.MainData.InFilePath}\_hash_{DateTime.Now:yyyyMMdd}.csv";
+                using StreamWriter sw = new(filePath, true);
                 sw.WriteLine(str);
                 sw.Close();
             }
