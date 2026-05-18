@@ -23,10 +23,9 @@ namespace X264GUIv2
 
         public void ffmpegOutput(FfprobeOutput ffprobeOutput, string sr, Stopwatch sw1, Stopwatch sw2, WeighAllot weighAllot)
         {
-            form.listView1.Items[form.useIdx].SubItems[form.subTimeIdx]!.Text = OtherControlFunc.timeConv(sw2);
             form.timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
-            int str = sr.IndexOf('=');
 
+            int str = sr.IndexOf('=');
             if (str <= 0)
                 return;
 
@@ -35,6 +34,11 @@ namespace X264GUIv2
 
             if (key == "out_time_ms" && double.TryParse(value, out double outTimeMs))
             {
+                if (!OtherControlFunc.listViewIsRefresh())
+                    return;
+
+                form.listView1.Items[form.useIdx].SubItems[form.subTimeIdx]!.Text = OtherControlFunc.timeConv(sw2);
+
                 double currentSeconds = outTimeMs / 1_000_000.0;
                 double pro = currentSeconds / ffprobeOutput.MainData.duration * 100.0;
                 form.listView1.Items[form.useIdx].SubItems[form.subProgressIdx]!.Text = $"{pro:F1} %";

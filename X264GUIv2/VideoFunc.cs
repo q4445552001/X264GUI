@@ -373,7 +373,7 @@ namespace X264GUIv2
         {
             try
             {
-                Thread.Sleep(1000);
+                Thread.Sleep(100);
                 File.Delete($"{ffprobeOutput.MainData.InFile}.ffindex");
                 File.Delete(@$"{ffprobeOutput.MainData.InFilePath}\x2642pass.stats.temp");
                 File.Delete(@$"{ffprobeOutput.MainData.InFilePath}\x2642pass.stats.mbtree.temp");

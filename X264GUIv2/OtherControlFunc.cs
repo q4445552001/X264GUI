@@ -129,6 +129,18 @@ namespace X264GUIv2
             return lis;
         }
 
+        public static bool listViewIsRefresh()
+        {
+            bool refresh = false;
+            if ((DateTime.UtcNow - Global._lastUiUpdate).TotalMilliseconds >= Global._lastUiUpdateTime)
+            {
+                refresh = true;
+                Global._lastUiUpdate = DateTime.UtcNow;
+            }
+
+            return refresh;
+        }
+
         public static void UpItem(this ListView listView)
         {
             foreach (ListViewItem item in listView.SelectedItems)

@@ -23,9 +23,12 @@ namespace X264GUIv2
         /// </summary>
         public int useIdx { get; set; } = -1;
 
+        #region listview 欄位索引
         public readonly int subStatusIdx;
         public readonly int subProgressIdx;
         public readonly int subTimeIdx;
+        #endregion
+
         #endregion
 
         #region 內建元件
@@ -801,10 +804,10 @@ namespace X264GUIv2
                     listView1.Items[idx2].SubItems[subStatusIdx]!.ForeColor = Color.Black;
                     listView1.Items[idx2].SubItems[subStatusIdx]!.Text = RunEnum.Done.GetDisplayName();
                 }
-                Cts.Cancel();
             }
             catch (Exception ex)
             {
+                Cts?.Cancel();
                 WriteFile.WriteLog(ex.Message);
                 OtherControlFunc.ShowError(ex.Message);
             }
@@ -1160,19 +1163,23 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                 ActionErr = sr =>
                 {
                     f2.appendText = sr;
-                    listView1.Items[useIdx].SubItems[subTimeIdx]!.Text = OtherControlFunc.timeConv(sw2);
                     timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
+
+                    if (sr.Contains("[error]"))
+                    {
+                        ff.MainData.run = RunEnum.Error;
+                        throw new Exception(sr);
+                    }
+
+                    if (!OtherControlFunc.listViewIsRefresh())
+                        return;
+
+                    listView1.Items[useIdx].SubItems[subTimeIdx]!.Text = OtherControlFunc.timeConv(sw2);
                     if (sr.IndexOf("frames,") != -1 && sr.IndexOf('[') != -1)
                     {
                         double prodata = Math.Round(Convert.ToDouble(sr.Substring(sr.IndexOf('[') + 1, sr.LastIndexOf('%') - 1)), 2);
                         listView1.Items[useIdx].SubItems[subProgressIdx]!.Text = $"{prodata:F1} %";
                         form1Control.calculateProgres(ff, (float)prodata, weighAllot);
-                    }
-
-                    if (sr.IndexOf("[error]") != -1)
-                    {
-                        ff.MainData.run = RunEnum.Error;
-                        throw new Exception(sr);
                     }
                 }
             }, ffprobeOutput, RunEnum.OnePass, ref exitCode, ref msg);
@@ -1198,19 +1205,23 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                 ActionErr = sr =>
                 {
                     f2.appendText = sr;
-                    listView1.Items[useIdx].SubItems[subTimeIdx]!.Text = OtherControlFunc.timeConv(sw2);
                     timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
+
+                    if (sr.Contains("[error]"))
+                    {
+                        ff.MainData.run = RunEnum.Error;
+                        throw new Exception(sr);
+                    }
+
+                    if (!OtherControlFunc.listViewIsRefresh())
+                        return;
+
+                    listView1.Items[useIdx].SubItems[subTimeIdx]!.Text = OtherControlFunc.timeConv(sw2);
                     if (sr.IndexOf("frames,") != -1 && sr.IndexOf('[') != -1)
                     {
                         double prodata = Math.Round(Convert.ToDouble(sr.Substring(sr.IndexOf('[') + 1, sr.LastIndexOf('%') - 1)), 2);
                         listView1.Items[useIdx].SubItems[subProgressIdx]!.Text = $"{prodata:F1} %";
                         form1Control.calculateProgres(ff, (float)prodata, weighAllot);
-                    }
-
-                    if (sr.IndexOf("[error]") != -1)
-                    {
-                        ff.MainData.run = RunEnum.Error;
-                        throw new Exception(sr);
                     }
                 }
             }, ffprobeOutput, RunEnum.TwoPass, ref exitCode, ref msg);
@@ -1252,8 +1263,12 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                 ActionErr = sr =>
                 {
                     f2.appendText = sr;
-                    listView1.Items[useIdx].SubItems[subTimeIdx]!.Text = OtherControlFunc.timeConv(sw2);
                     timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
+
+                    if (!OtherControlFunc.listViewIsRefresh())
+                        return;
+
+                    listView1.Items[useIdx].SubItems[subTimeIdx]!.Text = OtherControlFunc.timeConv(sw2);
 
                     Match match = Regex.Match(sr, @"\((\d+)/(\d+)\)");
                     if (match.Success)
