@@ -56,6 +56,8 @@ namespace X264GUIv2
                 Environment.CurrentDirectory = RunPath;
             }
 
+            FileName = Environment.ExpandEnvironmentVariables(FileName);
+
             if (!File.Exists(FileName ?? ""))
                 throw new Exception(@$"""{FileName}"" 無效路徑");
 

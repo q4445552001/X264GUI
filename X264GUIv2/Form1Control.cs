@@ -140,6 +140,8 @@ namespace X264GUIv2
             form.AutoTrimToolStripMenuItem.Enabled = isClose;
             form.loadAvsToolStripMenuItem.Enabled = isClose;
             form.createMergeToolStripMenuItem.Enabled = isClose;
+            form.kHzToolStripMenuItem.Enabled = isClose;
+            form.HASHToolStripMenuItem.Enabled = isClose;
 
             form.listDiffViewItem.Enabled = isClose;
             form.listRestViewItem.Enabled = isClose;

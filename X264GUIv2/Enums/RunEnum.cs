@@ -28,6 +28,9 @@ namespace X264GUIv2.Enums
         [Display(Name = "合併")]
         Merge,
 
+        [Display(Name = "Hash")]
+        Hash,
+
         [Display(Name = "錯誤")]
         Error,
 

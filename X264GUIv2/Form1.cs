@@ -985,6 +985,14 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                 }
             }
 
+            if (HASHToolStripMenuItem.Checked)
+            {
+                string hashMsg = string.Empty;
+                ffprobeOutput = hashProcess(ffprobeOutput, ref exitCode, ref hashMsg);
+                if (!string.IsNullOrWhiteSpace(hashMsg))
+                    WriteFile.WriteLog(hashMsg);
+            }
+
             VideoFunc.Delete(ffprobeOutput);
             listView1.Items[useIdx].SubItems[subProgressIdx]!.Text = "100 %";
             listView1.Items[useIdx].SubItems[subStatusIdx]!.Text = RunEnum.Done.GetDisplayName();
@@ -1334,6 +1342,46 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                     WriteFile.WriteLog(sr);
                 }
             }, ffprobeOutput, RunEnum.TwoPass, ref exitCode, ref msg);
+
+            return ffprobeOutput;
+        }
+
+        /// <summary>
+        /// Hash
+        /// </summary>
+        private FfprobeOutput hashProcess(FfprobeOutput ffprobeOutput, ref int exitCode, ref string msg)
+        {
+            if (Cts == null)
+                return ffprobeOutput;
+
+            ffprobeOutput = ProcessAction(ff => new()
+            {
+                Cts = Cts,
+                RunPath = ff.MainData.InFilePath,
+                FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\HashMyFiles\HashMyFiles.exe",
+                ArgumentList = VideoFunc.HashCheck(ff),
+                ActionErr = sr =>
+                {
+                    f2.appendText = sr;
+                    WriteFile.WriteLog(sr);
+                }
+            }, ffprobeOutput, RunEnum.Hash, ref exitCode, ref msg);
+
+            if (exitCode != 0)
+                return ffprobeOutput;
+
+            ffprobeOutput = ProcessAction(ff => new()
+            {
+                Cts = Cts,
+                RunPath = ff.MainData.InFilePath,
+                FileName = $@"%windir%\system32\cmd.exe",
+                ArgumentList = VideoFunc.HashCopy(ff),
+                ActionErr = sr =>
+                {
+                    f2.appendText = sr;
+                    WriteFile.WriteLog(sr);
+                }
+            }, ffprobeOutput, RunEnum.Hash, ref exitCode, ref msg);
 
             return ffprobeOutput;
         }
