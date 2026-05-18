@@ -397,7 +397,7 @@
             OrigToolStripMenuItem.CheckState = CheckState.Checked;
             OrigToolStripMenuItem.Name = "OrigToolStripMenuItem";
             OrigToolStripMenuItem.Size = new Size(180, 22);
-            OrigToolStripMenuItem.Text = "原始值";
+            OrigToolStripMenuItem.Text = "預設";
             OrigToolStripMenuItem.Click += OrigToolStripMenuItem_Click;
             // 
             // kHz441ToolStripMenuItem

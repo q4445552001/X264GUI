@@ -14,11 +14,6 @@ namespace X264GUIv2
         public readonly Form1Control form1Control;
 
         /// <summary>
-        /// 初始化彼特率
-        /// </summary>
-        public int bitRateDefault = 1000000;
-
-        /// <summary>
         /// 目前使用的ListItem
         /// </summary>
         public int useIdx { get; set; } = -1;
@@ -67,7 +62,7 @@ namespace X264GUIv2
             bitrateNumeric.Increment = new decimal([100, 0, 0, 0]);
             bitrateNumeric.Maximum = new decimal([100000, 0, 0, 0]);
             bitrateNumeric.Minimum = new decimal([1, 0, 0, 0]);
-            bitrateNumeric.Value = bitRateDefault / 1000;
+            bitrateNumeric.Value = Global.BitRateDefault / 1000;
 
             foreach (BitrateEnum e in Enum.GetValues<BitrateEnum>())
                 bitrateCBox.Items.Add(new ComboboxItem(Enum.GetName(e)!, ((int)e).ToString()));

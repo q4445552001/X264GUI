@@ -254,13 +254,13 @@ namespace X264GUIv2
                 if (bitrateEnum == BitrateEnum.Auto)
                 {
                     if (ffprobeOutputMain.videoType == VideoTypeEnum.Aviscript)
-                        ffprobeOutputMain.NewDetail.bitrate = form.bitRateDefault;
+                        ffprobeOutputMain.NewDetail.bitrate = Global.BitRateDefault;
                     else
                     {
-                        if (ffprobeOutputMain.OriDetail.bitrate < form.bitRateDefault)
+                        if (ffprobeOutputMain.OriDetail.bitrate < Global.BitRateDefault)
                             ffprobeOutputMain.NewDetail.bitrate = ffprobeOutputMain.OriDetail.bitrate - 100000;
-                        else if ((ffprobeOutputMain.OriDetail.bitrate - 100000) > form.bitRateDefault)
-                            ffprobeOutputMain.NewDetail.bitrate = form.bitRateDefault;
+                        else if ((ffprobeOutputMain.OriDetail.bitrate - 100000) > Global.BitRateDefault)
+                            ffprobeOutputMain.NewDetail.bitrate = Global.BitRateDefault;
                         else
                             ffprobeOutputMain.NewDetail.bitrate = ffprobeOutputMain.OriDetail.bitrate - 100000;
                     }
