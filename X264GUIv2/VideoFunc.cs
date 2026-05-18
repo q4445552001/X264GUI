@@ -438,6 +438,7 @@ namespace X264GUIv2
             arr.Add($@"-progress pipe:1");
             arr.Add($@"-nostats");
             arr.Add($@"-loglevel error");
+            arr.Add($@"-y");
             return [.. arr];
         }
 
@@ -466,6 +467,7 @@ namespace X264GUIv2
             arr.Add($@"-progress pipe:1");
             arr.Add($@"-nostats");
             arr.Add($@"-loglevel error");
+            arr.Add($@"-y");
             return [.. arr];
         }
 
@@ -545,6 +547,7 @@ namespace X264GUIv2
             arr.Add($@"-progress pipe:1");
             arr.Add($@"-nostats");
             arr.Add($@"-loglevel error");
+            arr.Add($@"-y");
             return [.. arr];
         }
 
@@ -592,6 +595,7 @@ namespace X264GUIv2
             arr.Add($@"-progress pipe:1");
             arr.Add($@"-nostats");
             arr.Add($@"-loglevel error");
+            arr.Add($@"-y");
             return [.. arr];
         }
 

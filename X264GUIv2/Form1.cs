@@ -1082,6 +1082,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                         $@"-progress pipe:1",
                         $@"-nostats",
                         $@"-loglevel error",
+                        $@"-y",
                     },
                     ActionOut = sr =>
                     {
