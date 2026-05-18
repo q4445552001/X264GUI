@@ -598,7 +598,8 @@ namespace X264GUIv2
                     videoFunc.Encode([.. f]);
                 }
 
-                runBtn.Enabled = true;
+                videoFunc.ffprobeData = listView1.SortIdx(videoFunc.ffprobeData);
+                runBtn.Enabled = listView1.Items.Count != 0;
             }
             catch (Exception ex)
             {

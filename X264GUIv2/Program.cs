@@ -1,8 +1,6 @@
 using System.Text;
 using X264GUIv2.Models;
 
-//TODO: 拖檔案後調整數值 順序會跑掉
-
 namespace X264GUIv2
 {
     internal static class Program
