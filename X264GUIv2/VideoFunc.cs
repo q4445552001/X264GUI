@@ -139,6 +139,9 @@ namespace X264GUIv2
                 audioSize = audioSize,
                 isAac = audio?.codec_name == "aac",
                 audioMap = audio?.index ?? 0,
+                AudionFormat = audio?.codec_name ?? string.Empty,
+                AudioCodec = audio?.codec_tag_string ?? string.Empty,
+                AudioSamplineRate = audio?.codec_time_base ?? string.Empty,
                 videoCodeName = video.codec_name ?? "",
                 InFile = input.File,
                 idx = input.index,
@@ -513,9 +516,10 @@ namespace X264GUIv2
             arr.Add($@"-i {ffprobeOutput.MainData.InFile}");
             if (form.AutoTrimToolStripMenuItem.Checked)
             {
-                arr.Add($@"-ar 48000");
+                int hz = AudioCalculate(ffprobeOutput);
+                arr.Add($@"-ar {hz}");
                 arr.Add($@"-ac 2");
-                arr.Add($@"-af ""aresample=48000,asetpts=PTS-STARTPTS""");
+                arr.Add($@"-af ""aresample={hz},asetpts=PTS-STARTPTS""");
                 arr.Add($@"-c:a aac");
                 arr.Add($@"-q:a 1");
             }
@@ -561,9 +565,10 @@ namespace X264GUIv2
 
             if (form.AutoTrimToolStripMenuItem.Checked)
             {
-                arr.Add($@"-ar 48000");
+                int hz = AudioCalculate(ffprobeOutput);
+                arr.Add($@"-ar {hz}");
                 arr.Add($@"-ac 2");
-                arr.Add($@"-af ""aresample=48000,asetpts=PTS-STARTPTS""");
+                arr.Add($@"-af ""aresample={hz},asetpts=PTS-STARTPTS""");
                 arr.Add($@"-c:a aac");
                 arr.Add($@"-q:a 1");
             }
@@ -587,6 +592,32 @@ namespace X264GUIv2
             arr.Add($@"-nostats");
             arr.Add($@"-loglevel error");
             return [.. arr];
+        }
+
+        public int AudioCalculate(FfprobeOutput ffprobeOutput)
+        {
+            AudioHz audioHz = AudioHz.Default;
+            if (form.OrigToolStripMenuItem.Checked)
+            {
+                audioHz = form.OrigToolStripMenuItem.getAudio_khz();
+            }
+            else if (form.kHz441ToolStripMenuItem.Checked)
+            {
+                audioHz = form.kHz441ToolStripMenuItem.getAudio_khz();
+            }
+            else if (form.kHz480ToolStripMenuItem.Checked)
+            {
+                audioHz = form.kHz480ToolStripMenuItem.getAudio_khz();
+            }
+
+            if (audioHz == AudioHz.Default && ffprobeOutput.MainData.audioMap > 0)
+            {
+                string[] audioSamplineRate = ffprobeOutput.MainData.AudioSamplineRate.Split("/");
+                if (audioSamplineRate.Length == 2 && int.TryParse(audioSamplineRate[1], out int rate))
+                    return rate;
+            }
+
+            return (int)audioHz;
         }
     }
 }

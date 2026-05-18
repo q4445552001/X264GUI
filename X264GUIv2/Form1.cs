@@ -101,7 +101,11 @@ namespace X264GUIv2
             subProgressIdx = listView1.findSubitemIdx(nameof(DetailsItem.Progress));
             subTimeIdx = listView1.findSubitemIdx(nameof(DetailsItem.Time));
 
+            OrigToolStripMenuItem.Tag = AudioHz.Default;
+            kHz441ToolStripMenuItem.Tag = AudioHz._441;
+            kHz480ToolStripMenuItem.Tag = AudioHz._480;
             settingToolStripMenuItem.DropDown.Closing += settingToolStripMenuItem_DropDownClosing;
+            kHzToolStripMenuItem.DropDown.Closing += settingToolStripMenuItem_DropDownClosing;
 
             #region ContextMenuStrip
             listViewMenu = new();
@@ -499,6 +503,24 @@ namespace X264GUIv2
                 WriteFile.WriteLog(ex.Message);
                 OtherControlFunc.ShowError(ex.Message);
             }
+        }
+
+        private void OrigToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            kHz441ToolStripMenuItem.Checked = false;
+            kHz480ToolStripMenuItem.Checked = false;
+        }
+
+        private void kHz441ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OrigToolStripMenuItem.Checked = false;
+            kHz480ToolStripMenuItem.Checked = false;
+        }
+
+        private void kHz480ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OrigToolStripMenuItem.Checked = false;
+            kHz441ToolStripMenuItem.Checked = false;
         }
 
         private void settingToolStripMenuItem_DropDownClosing(object? sender, ToolStripDropDownClosingEventArgs e)
@@ -990,6 +1012,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
 
             if (AutoTrimToolStripMenuItem.Checked)
             {
+                int hz = videoFunc.AudioCalculate(ffprobeOutput);
                 ffprobeOutput = ProcessAction(ff => new()
                 {
                     Cts = Cts,
@@ -997,9 +1020,9 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                     FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\ffmpeg\ffmpeg.exe",
                     ArgumentList = {
                         $@"-i ""{ff.MainData.InFilePath}\{ff.MainData.InFileName}""",
-                        $@"-ar 48000",
+                        $@"-ar {hz}",
                         $@"-ac 2",
-                        $@"-af ""aresample=48000,asetpts=PTS-STARTPTS""",
+                        $@"-af ""aresample={hz},asetpts=PTS-STARTPTS""",
                         $@"-c:a aac",
                         $@"-q:a 1 ""{ff.MainData.InFilePath}\{ff.MainData.avsTempFile}.aac""",
                         $@"-fflags +genpts",
@@ -1372,5 +1395,6 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
             return ffprobeOutput;
         }
         #endregion
+
     }
 }

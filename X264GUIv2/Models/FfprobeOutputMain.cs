@@ -33,6 +33,9 @@ namespace X264GUIv2.Models
         public bool isAac { get; set; } = false;
 
         public int audioMap { get; set; } = 0;
+        public string AudionFormat { get; set; } = "aac";
+        public string AudioCodec { get; set; } = "mp4a";
+        public string AudioSamplineRate { get; set; } = "1/44100";
 
         private VideoTypeEnum? _videoType { get; set; }
         public VideoTypeEnum videoType
@@ -90,6 +93,9 @@ namespace X264GUIv2.Models
             duration = duration,
             videoSize = videoSize,
             audioSize = audioSize,
+            AudioCodec = AudioCodec,
+            AudionFormat = AudionFormat,
+            AudioSamplineRate = AudioSamplineRate,
             idx = idx,
             run = run,
 

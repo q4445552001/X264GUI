@@ -94,7 +94,6 @@ namespace X264GUIv2
             UpdateProgres(totalProgress, 100);
         }
 
-
         public void btnControl(bool isClose)
         {
             form.stopBtn.Enabled = !isClose;

@@ -68,11 +68,21 @@ namespace X264GUIv2
             detailsItem.VideoType = string.Format(FfprobeOutputMain.videoType.GetDisplayName(), videoType.ToUpper());
 
             detailsItem.Text = Path.GetFileName(FfprobeOutputMain.InFile) +
+                    $"\n\n#1" +
                     $"\nBitRate: {(FfprobeOutputMain.OriDetail.bitrate == 0 ? "NUL" : FfprobeOutputMain.OriDetail.bitrate / 1000)} kb/s" +
                     $"\nFPS模式: {Enum.GetName(FfprobeOutputMain.OriDetail.frameMode)}" +
                     $"\nFPS: {Math.Round(FfprobeOutputMain.OriDetail.frameRate, 3)}" +
                     $"\n解析度: {FfprobeOutputMain.OriDetail.resolution}" +
                     $"\n檔案大小: {(OldCapacity == "0" ? "NUL" : OldCapacity)} MB";
+
+            if (FfprobeOutputMain.audioMap > 0)
+            {
+                detailsItem.Text += "\n\n#2"
+                + $"\nFormat: {FfprobeOutputMain.AudionFormat}"
+                + $"\nCodec: {FfprobeOutputMain.AudioCodec}"
+                + $"\nSampling rate: {FfprobeOutputMain.AudioSamplineRate}"
+                + $"\n檔案大小: {Math.Round(FfprobeOutputMain.audioSize / 1024 / 1024, 2)} MB";
+            }
 
             return detailsItem;
         }
@@ -207,6 +217,14 @@ namespace X264GUIv2
                     UseShellExecute = true,
                 });
             }
+        }
+
+        public static AudioHz getAudio_khz(this ToolStripMenuItem toolStripMenuItem)
+        {
+            if (toolStripMenuItem.Tag is AudioHz audioHz)
+                return audioHz;
+
+            return AudioHz.Default;
         }
 
         public static int findFfprobItem(this List<FfprobeOutput> ffprobeOutputs, Guid? guid)

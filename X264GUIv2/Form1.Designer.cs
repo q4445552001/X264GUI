@@ -66,6 +66,12 @@
             logViewClearToolStripMenuItem = new ToolStripMenuItem();
             settingToolStripMenuItem = new ToolStripMenuItem();
             AutoTrimToolStripMenuItem = new ToolStripMenuItem();
+            kHzToolStripMenuItem = new ToolStripMenuItem();
+            OrigToolStripMenuItem = new ToolStripMenuItem();
+            kHz441ToolStripMenuItem = new ToolStripMenuItem();
+            kHz480ToolStripMenuItem = new ToolStripMenuItem();
+            toolStripSeparator4 = new ToolStripSeparator();
+            HASHToolStripMenuItem = new ToolStripMenuItem();
             upBtn = new Button();
             dnBtn = new Button();
             ((System.ComponentModel.ISupportInitialize)bitrateNumeric).BeginInit();
@@ -365,7 +371,7 @@
             // 
             // settingToolStripMenuItem
             // 
-            settingToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { AutoTrimToolStripMenuItem });
+            settingToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { AutoTrimToolStripMenuItem, kHzToolStripMenuItem, toolStripSeparator4, HASHToolStripMenuItem });
             settingToolStripMenuItem.Name = "settingToolStripMenuItem";
             settingToolStripMenuItem.Size = new Size(43, 20);
             settingToolStripMenuItem.Text = "設定";
@@ -374,8 +380,53 @@
             // 
             AutoTrimToolStripMenuItem.CheckOnClick = true;
             AutoTrimToolStripMenuItem.Name = "AutoTrimToolStripMenuItem";
-            AutoTrimToolStripMenuItem.Size = new Size(146, 22);
+            AutoTrimToolStripMenuItem.Size = new Size(180, 22);
             AutoTrimToolStripMenuItem.Text = "啟用音軌修剪";
+            // 
+            // kHzToolStripMenuItem
+            // 
+            kHzToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { OrigToolStripMenuItem, kHz441ToolStripMenuItem, kHz480ToolStripMenuItem });
+            kHzToolStripMenuItem.Name = "kHzToolStripMenuItem";
+            kHzToolStripMenuItem.Size = new Size(180, 22);
+            kHzToolStripMenuItem.Text = "音軌修剪採樣";
+            // 
+            // OrigToolStripMenuItem
+            // 
+            OrigToolStripMenuItem.Checked = true;
+            OrigToolStripMenuItem.CheckOnClick = true;
+            OrigToolStripMenuItem.CheckState = CheckState.Checked;
+            OrigToolStripMenuItem.Name = "OrigToolStripMenuItem";
+            OrigToolStripMenuItem.Size = new Size(180, 22);
+            OrigToolStripMenuItem.Text = "原始值";
+            OrigToolStripMenuItem.Click += OrigToolStripMenuItem_Click;
+            // 
+            // kHz441ToolStripMenuItem
+            // 
+            kHz441ToolStripMenuItem.CheckOnClick = true;
+            kHz441ToolStripMenuItem.Name = "kHz441ToolStripMenuItem";
+            kHz441ToolStripMenuItem.Size = new Size(180, 22);
+            kHz441ToolStripMenuItem.Text = "44.1 kHz";
+            kHz441ToolStripMenuItem.Click += kHz441ToolStripMenuItem_Click;
+            // 
+            // kHz480ToolStripMenuItem
+            // 
+            kHz480ToolStripMenuItem.CheckOnClick = true;
+            kHz480ToolStripMenuItem.Name = "kHz480ToolStripMenuItem";
+            kHz480ToolStripMenuItem.Size = new Size(180, 22);
+            kHz480ToolStripMenuItem.Text = "48.0 kHz";
+            kHz480ToolStripMenuItem.Click += kHz480ToolStripMenuItem_Click;
+            // 
+            // toolStripSeparator4
+            // 
+            toolStripSeparator4.Name = "toolStripSeparator4";
+            toolStripSeparator4.Size = new Size(177, 6);
+            // 
+            // HASHToolStripMenuItem
+            // 
+            HASHToolStripMenuItem.CheckOnClick = true;
+            HASHToolStripMenuItem.Name = "HASHToolStripMenuItem";
+            HASHToolStripMenuItem.Size = new Size(180, 22);
+            HASHToolStripMenuItem.Text = "啟用HASH檢查";
             // 
             // upBtn
             // 
@@ -478,5 +529,11 @@
         public ToolStripMenuItem installPathToolStripMenuItem;
         public ToolStripMenuItem loadAvsToolStripMenuItem;
         public ToolStripMenuItem createMergeToolStripMenuItem;
+        public ToolStripMenuItem kHzToolStripMenuItem;
+        public ToolStripMenuItem OrigToolStripMenuItem;
+        public ToolStripMenuItem kHz441ToolStripMenuItem;
+        public ToolStripMenuItem kHz480ToolStripMenuItem;
+        public ToolStripSeparator toolStripSeparator4;
+        public ToolStripMenuItem HASHToolStripMenuItem;
     }
 }
