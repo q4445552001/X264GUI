@@ -197,9 +197,10 @@ namespace X264GUIv2
                 char spinner = spinnerChars[spinnerIndex];
                 spinnerIndex = (spinnerIndex + 1) % spinnerChars.Length;
                 Font font = new("Consolas", 12, FontStyle.Bold);
-                PointF pt = new(form.progressBar1.Width / 2 - (str.Length * 4), form.progressBar1.Height / 2 - 10);
+                string showStr = $"{spinner} {str}...";
+                PointF pt = new(form.progressBar1.Width / 2 - (showStr.Length * 4), form.progressBar1.Height / 2 - 10);
                 form.progressBar1.Value = 100;
-                BarGraphics.DrawString($"{spinner} {str}...", font, Brushes.White, pt);
+                BarGraphics.DrawString(showStr, font, Brushes.White, pt);
             }
 
             while (true)
