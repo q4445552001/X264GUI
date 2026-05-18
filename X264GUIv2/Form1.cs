@@ -38,6 +38,7 @@ namespace X264GUIv2
         public readonly ToolStripMenuItem listDnViewItem;
         public readonly ToolStripMenuItem listRestViewItem;
         public readonly ToolStripMenuItem listMergeEditViewItem;
+        public readonly ToolStripMenuItem listHashViewItem;
         #endregion
 
         #region 初始化
@@ -128,6 +129,9 @@ namespace X264GUIv2
             listMergeEditViewItem = new() { Text = "編輯影片合併" };
             listMergeEditViewItem.Click += listMergeEditViewItem_Click;
 
+            listHashViewItem = new() { Text = "Hash檢查" };
+            listHashViewItem.Click += listHashViewItem_Click;
+
             listViewMenu.Items.AddRange([
                 listFolderViewItem,
                 new ToolStripSeparator(),
@@ -139,6 +143,8 @@ namespace X264GUIv2
                 listDnViewItem,
                 new ToolStripSeparator(),
                 listMergeEditViewItem,
+                new ToolStripSeparator(),
+                listHashViewItem,
             ]);
             #endregion
         }
@@ -643,6 +649,8 @@ namespace X264GUIv2
                 int idx = videoFunc.ffprobeData.findFfprobItem((Guid?)item.Tag);
                 listMergeEditViewItem.Enabled =
                     (Cts == null || Cts.Token.IsCancellationRequested) && videoFunc.ffprobeData[idx].MainData.videoType == VideoTypeEnum.Merge;
+                listHashViewItem.Enabled =
+                    (Cts == null || Cts.Token.IsCancellationRequested) && videoFunc.ffprobeData[idx].MainData.run == RunEnum.Done;
 
                 listView1.FocusedItem = item;
                 listViewMenu.Tag = item.Tag;
@@ -728,6 +736,9 @@ namespace X264GUIv2
 
         private void listRestViewItem_Click(object? sender, EventArgs e)
         {
+            if (!(MessageBox.Show("確定重置狀態?", "提示", MessageBoxButtons.YesNo) == DialogResult.Yes))
+                return;
+
             try
             {
                 foreach (ListViewItem item in listView1.SelectedItems)
@@ -757,6 +768,40 @@ namespace X264GUIv2
 
                 f3.ShowDialog(ffprobeOutput);
                 //OtherControlFunc.openFolder(ffprobeOutput.MainData.InFile);
+            }
+            catch (Exception ex)
+            {
+                WriteFile.WriteLog(ex.Message);
+                OtherControlFunc.ShowError(ex.Message);
+            }
+        }
+
+        private void listHashViewItem_Click(object? sender, EventArgs e)
+        {
+            try
+            {
+                Cts = new();
+                foreach (ListViewItem item in listView1.SelectedItems)
+                {
+                    int idx1 = videoFunc.ffprobeData.findFfprobItem((Guid?)item.Tag);
+                    int idx2 = listView1.findListItem((Guid?)item.Tag);
+
+                    videoFunc.ffprobeData[idx1].MainData.run = RunEnum.Hash;
+                    listView1.Items[idx2].SubItems[subStatusIdx]!.ForeColor = Color.Black;
+                    listView1.Items[idx2].SubItems[subStatusIdx]!.Text = RunEnum.Hash.GetDisplayName();
+
+                    int exitCode = 0;
+                    string hashMsg = string.Empty;
+                    videoFunc.ffprobeData[idx1] = hashProcess(videoFunc.ffprobeData[idx1], ref exitCode, ref hashMsg);
+                    if (!string.IsNullOrWhiteSpace(hashMsg))
+                        WriteFile.WriteLog(hashMsg);
+
+                    VideoFunc.Delete(videoFunc.ffprobeData[idx1]);
+                    videoFunc.ffprobeData[idx1].MainData.run = RunEnum.Done;
+                    listView1.Items[idx2].SubItems[subStatusIdx]!.ForeColor = Color.Black;
+                    listView1.Items[idx2].SubItems[subStatusIdx]!.Text = RunEnum.Done.GetDisplayName();
+                }
+                Cts.Cancel();
             }
             catch (Exception ex)
             {
