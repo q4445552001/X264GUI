@@ -6,8 +6,14 @@ namespace X264GUIv2
 {
     public class Form1Control(Form1 form)
     {
-        public void bitrateCBoxControl()
+        public void bitrateCBoxControl(bool isClose)
         {
+            if (!isClose)
+            {
+                form.bitrateNumeric.Enabled = false;
+                return;
+            }
+
             if (!int.TryParse((form.bitrateCBox.SelectedItem as ComboboxItem)?.Value, out int v))
                 return;
 
@@ -127,7 +133,7 @@ namespace X264GUIv2
             form.upBtn.Enabled = isClose;
             form.dnBtn.Enabled = isClose;
             form.bitrateCBox.Enabled = isClose;
-            bitrateCBoxControl();
+            bitrateCBoxControl(isClose);
             form.fpsCBox.Enabled = isClose;
             form.resolutionCBox.Enabled = isClose;
             form.coreCBox.Enabled = isClose;
