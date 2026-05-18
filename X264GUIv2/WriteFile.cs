@@ -41,7 +41,10 @@ namespace X264GUIv2
                 sw.WriteLine(str);
                 sw.Close();
             }
-            catch { }
+            catch
+            {
+                WriteLog($"[csv寫入失敗] {str}");
+            }
         }
     }
 }

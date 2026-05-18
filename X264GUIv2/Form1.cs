@@ -777,33 +777,48 @@ namespace X264GUIv2
 
         private void listHashViewItem_Click(object? sender, EventArgs e)
         {
+            form1Control.btnControl(false);
+
             try
             {
                 Cts = new();
-                foreach (ListViewItem item in listView1.SelectedItems)
+                Task.Run(() =>
                 {
-                    int idx1 = videoFunc.ffprobeData.findFfprobItem((Guid?)item.Tag);
-                    int idx2 = listView1.findListItem((Guid?)item.Tag);
+                    foreach (ListViewItem item in listView1.SelectedItems)
+                    {
+                        if (Cts == null || Cts.Token.IsCancellationRequested)
+                            return;
 
-                    videoFunc.ffprobeData[idx1].MainData.run = RunEnum.Hash;
-                    listView1.Items[idx2].SubItems[subStatusIdx]!.ForeColor = Color.Black;
-                    listView1.Items[idx2].SubItems[subStatusIdx]!.Text = RunEnum.Hash.GetDisplayName();
+                        Task.Run(() => form1Control.UpdateProgresLoop("Hash Checking", Cts), Cts.Token);
 
-                    int exitCode = 0;
-                    string hashMsg = string.Empty;
-                    videoFunc.ffprobeData[idx1] = hashProcess(videoFunc.ffprobeData[idx1], ref exitCode, ref hashMsg);
-                    if (!string.IsNullOrWhiteSpace(hashMsg))
-                        WriteFile.WriteLog(hashMsg);
+                        int idx1 = videoFunc.ffprobeData.findFfprobItem((Guid?)item.Tag);
+                        int idx2 = listView1.findListItem((Guid?)item.Tag);
+                        useIdx = idx2;
 
-                    VideoFunc.Delete(videoFunc.ffprobeData[idx1]);
-                    videoFunc.ffprobeData[idx1].MainData.run = RunEnum.Done;
-                    listView1.Items[idx2].SubItems[subStatusIdx]!.ForeColor = Color.Black;
-                    listView1.Items[idx2].SubItems[subStatusIdx]!.Text = RunEnum.Done.GetDisplayName();
-                }
-                Cts.Cancel();
+                        videoFunc.ffprobeData[idx1].MainData.run = RunEnum.Hash;
+                        listView1.Items[idx2].SubItems[subStatusIdx]!.ForeColor = Color.Black;
+                        listView1.Items[idx2].SubItems[subStatusIdx]!.Text = RunEnum.Hash.GetDisplayName();
+
+                        int exitCode = 0;
+                        string hashMsg = string.Empty;
+                        videoFunc.ffprobeData[idx1] = hashProcess(videoFunc.ffprobeData[idx1], ref exitCode, ref hashMsg);
+                        if (!string.IsNullOrWhiteSpace(hashMsg))
+                            throw new Exception(hashMsg);
+
+                        VideoFunc.Delete(videoFunc.ffprobeData[idx1]);
+                        videoFunc.ffprobeData[idx1].MainData.run = RunEnum.Done;
+                        listView1.Items[idx2].SubItems[subStatusIdx]!.ForeColor = Color.Black;
+                        listView1.Items[idx2].SubItems[subStatusIdx]!.Text = RunEnum.Done.GetDisplayName();
+                    }
+
+                    Cts.Cancel();
+
+                    form1Control.btnControl(true);
+                }, Cts.Token);
             }
             catch (Exception ex)
             {
+                form1Control.btnControl(true);
                 Cts?.Cancel();
                 WriteFile.WriteLog(ex.Message);
                 OtherControlFunc.ShowError(ex.Message);

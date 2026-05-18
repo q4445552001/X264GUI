@@ -185,7 +185,7 @@ namespace X264GUIv2
         /// <summary>
         /// 進度條轉圈圈
         /// </summary>
-        public void UpdateProgresLoop(CancellationTokenSource cts)
+        public void UpdateProgresLoop(string str, CancellationTokenSource cts)
         {
             int spinnerIndex = 0;
             char[] spinnerChars = ['|', '/', '-', '\\'];
@@ -194,12 +194,12 @@ namespace X264GUIv2
             {
                 Graphics BarGraphics = form.progressBar1.CreateGraphics();
                 form.progressBar1.PerformStep();
-                int spinner = spinnerChars[spinnerIndex];
+                char spinner = spinnerChars[spinnerIndex];
                 spinnerIndex = (spinnerIndex + 1) % spinnerChars.Length;
                 Font font = new("Consolas", 12, FontStyle.Bold);
-                PointF pt = new(form.progressBar1.Width / 2 - 20, form.progressBar1.Height / 2 - 10);
+                PointF pt = new(form.progressBar1.Width / 2 - (str.Length * 4), form.progressBar1.Height / 2 - 10);
                 form.progressBar1.Value = 100;
-                BarGraphics.DrawString($"{spinner} Loading...", font, Brushes.White, pt);
+                BarGraphics.DrawString($"{spinner} {str}...", font, Brushes.White, pt);
             }
 
             while (true)
