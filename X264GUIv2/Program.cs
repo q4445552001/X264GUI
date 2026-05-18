@@ -3,6 +3,7 @@ using X264GUIv2.Models;
 
 namespace X264GUIv2
 {
+    //TODO: listHashViewItem_Click UpdateProgresLoop 要調整程式碼
     internal static class Program
     {
         [STAThread]
