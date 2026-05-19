@@ -583,8 +583,16 @@ namespace X264GUIv2
 
         private void settingToolStripMenuItem_DropDownClosing(object? sender, ToolStripDropDownClosingEventArgs e)
         {
-            if (e.CloseReason == ToolStripDropDownCloseReason.ItemClicked)
-                e.Cancel = true;
+            if (sender is ToolStripDropDownMenu toolStripDropDownMenu)
+            {
+                Point cursorPos = Cursor.Position;
+                Point menuLocation = toolStripDropDownMenu.PointToClient(cursorPos);
+                ToolStripItem? mouseOverItem = toolStripDropDownMenu.GetItemAt(menuLocation);
+                if (mouseOverItem != null && mouseOverItem == HASHPathToolStripMenuItem)
+                    e.Cancel = false;
+                else if (e.CloseReason == ToolStripDropDownCloseReason.ItemClicked)
+                    e.Cancel = true;
+            }
         }
         #endregion
 
