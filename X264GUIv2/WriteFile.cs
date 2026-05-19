@@ -36,10 +36,8 @@ namespace X264GUIv2
         {
             try
             {
-                string path = Environment.ExpandEnvironmentVariables(Global.HASHPath);
-
                 str = str.Replace("\t", ",");
-                string filePath = $@"{path}\{Assembly.GetExecutingAssembly().EntryPoint?.DeclaringType?.Namespace}_HASH.csv";
+                string filePath = $@"{Global.HASHPath}\{Assembly.GetExecutingAssembly().EntryPoint?.DeclaringType?.Namespace}_HASH.csv";
                 using StreamWriter sw = new(filePath, true);
                 sw.WriteLine(str);
                 sw.Close();

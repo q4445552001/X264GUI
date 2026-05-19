@@ -7,7 +7,5 @@
         public bool kHz441_Click { get; set; } = false;
         public bool kHz480_Click { get; set; } = false;
         public bool HASH_Click { get; set; } = false;
-
-        public string HashPath { get; set; } = Global.HASHPath;
     }
 }

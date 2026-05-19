@@ -146,6 +146,10 @@ namespace X264GUIv2
                 listHashViewItem,
             ]);
             #endregion
+
+            using var sql = new sqlLiteFunc();
+            SettingsUser? settingsUser = sql.SelectSettingsUser();
+            Global.HASHPath = settingsUser?.HashPath ?? Global.HASHPath;
         }
 
         private void Form1_Load(object sender, EventArgs e) => CheckForIllegalCrossThreadCalls = false;
@@ -159,6 +163,13 @@ namespace X264GUIv2
             }
             else
             {
+                var sql = new sqlLiteFunc();
+                sql.InsertUser(new()
+                {
+                    HashPath = Global.HASHPath,
+                });
+                sql.Dispose();
+
                 e.Cancel = false;
             }
         }
@@ -428,7 +439,6 @@ namespace X264GUIv2
                 kHz441ToolStripMenuItem.Checked = settings?.kHz441_Click ?? kHz441ToolStripMenuItem.Checked;
                 kHz480ToolStripMenuItem.Checked = settings?.kHz480_Click ?? kHz480ToolStripMenuItem.Checked;
                 HASHToolStripMenuItem.Checked = settings?.HASH_Click ?? HASHToolStripMenuItem.Checked;
-                Global.HASHPath = settings?.HashPath ?? Global.HASHPath;
 
                 foreach (FfprobeOutput i in loadData)
                 {
@@ -485,14 +495,13 @@ namespace X264GUIv2
                 videoFunc.ffprobeData = listView1.SortIdx(videoFunc.ffprobeData);
 
                 using var sql = new sqlLiteFunc();
-                sql.Insert(videoFunc.ffprobeData, new()
+                sql.InsertMain(videoFunc.ffprobeData, new()
                 {
                     AutoTrim_Click = AutoTrimToolStripMenuItem.Checked,
                     KhzDefault_Click = kHzDefaultToolStripMenuItem.Checked,
                     kHz441_Click = kHz441ToolStripMenuItem.Checked,
                     kHz480_Click = kHz480ToolStripMenuItem.Checked,
                     HASH_Click = HASHToolStripMenuItem.Checked,
-                    HashPath = Global.HASHPath,
                 });
             }
             catch (Exception ex)
@@ -510,7 +519,7 @@ namespace X264GUIv2
                     return;
 
                 using var sql = new sqlLiteFunc();
-                sql.DropTable();
+                sql.DropTableMain();
             }
             catch (Exception ex)
             {

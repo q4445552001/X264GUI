@@ -14,6 +14,7 @@ namespace X264GUIv2
         private readonly SqlLiteTableCreate mainSql = GetTableCreateSql<FfprobeOutputMain>();
         private readonly SqlLiteTableCreate detailSql = GetTableCreateSql<FfprobeOutputDetail>();
         private readonly SqlLiteTableCreate settingsSql = GetTableCreateSql<Settings>();
+        private readonly SqlLiteTableCreate settingsUserSql = GetTableCreateSql<SettingsUser>();
 
         public sqlLiteFunc()
         {
@@ -22,27 +23,13 @@ namespace X264GUIv2
             connection = new SqliteConnection($@"Data Source={AppDomain.CurrentDomain.BaseDirectory}{dbName};Pooling=False;");
             connection.Open();
 
-            CreateTable();
+            CreateTableMain();
+            CreateTableSettingsUser();
         }
 
-        public void CreateTable()
+        public void InsertMain(IList<FfprobeOutput> ffprobeOutputs, Settings settings)
         {
-            var command = connection.CreateCommand();
-            command.CommandText = @$"CREATE TABLE IF NOT EXISTS Detail ({detailSql.CreateStr})";
-            command.ExecuteNonQuery();
-
-            command.CommandText = @$"CREATE TABLE IF NOT EXISTS Main ({mainSql.CreateStr})";
-            command.ExecuteNonQuery();
-
-            command.CommandText = @$"CREATE TABLE IF NOT EXISTS Settings ({settingsSql.CreateStr})";
-            command.ExecuteNonQuery();
-        }
-
-        public void Insert(IList<FfprobeOutput> ffprobeOutputs, Settings settings)
-        {
-            connection.Execute("DELETE FROM Detail");
-            connection.Execute("DELETE FROM Main");
-            connection.Execute("DELETE FROM Settings");
+            DropTableMain();
 
             #region Detail
 
@@ -144,14 +131,39 @@ namespace X264GUIv2
             #endregion
         }
 
-        public void DropTable()
+        public void InsertUser(SettingsUser settingsUser)
+        {
+            DropTableSettingsUser();
+            connection.Execute(@$"INSERT INTO SettingsUser ({settingsUserSql.Str}) VALUES ({settingsUserSql.InsStr})", new List<object> { settingsUser });
+        }
+
+        public void CreateTableMain()
+        {
+            connection.Execute(@$"CREATE TABLE IF NOT EXISTS Detail ({detailSql.CreateStr})");
+            connection.Execute(@$"CREATE TABLE IF NOT EXISTS Main ({mainSql.CreateStr})");
+            connection.Execute(@$"CREATE TABLE IF NOT EXISTS Settings ({settingsSql.CreateStr})");
+        }
+
+        public void DropTableMain()
         {
             connection.Execute(@"DROP TABLE IF EXISTS Main");
             connection.Execute(@"DROP TABLE IF EXISTS Detail");
             connection.Execute(@"DROP TABLE IF EXISTS Settings");
-            CreateTable();
+            CreateTableMain();
         }
 
+        public void CreateTableSettingsUser()
+        {
+            connection.Execute(@$"CREATE TABLE IF NOT EXISTS SettingsUser ({settingsUserSql.CreateStr})");
+        }
+
+        public void DropTableSettingsUser()
+        {
+            connection.Execute(@"DROP TABLE IF EXISTS SettingsUser");
+            CreateTableSettingsUser();
+        }
+
+        #region SELECT
         public List<FfprobeOutput> SelectTable()
         {
             IEnumerable<FfprobeOutputMain> ffprobeOutputs = connection.Query<FfprobeOutputMain>("select * from Main");
@@ -201,6 +213,9 @@ namespace X264GUIv2
         }
 
         public Settings? SelectSettings() => connection.Query<Settings>("select * from Settings").FirstOrDefault();
+        public SettingsUser? SelectSettingsUser() => connection.Query<SettingsUser>("select * from SettingsUser").FirstOrDefault();
+
+        #endregion
 
         public void Dispose()
         {
@@ -209,7 +224,10 @@ namespace X264GUIv2
             GC.SuppressFinalize(this);
         }
 
-        public static SqlLiteTableCreate GetTableCreateSql<T>()
+        /// <summary>
+        /// 建立動態語法
+        /// </summary>
+        private static SqlLiteTableCreate GetTableCreateSql<T>()
         {
             SqlLiteTableCreate sqlLiteTableCreate = new();
 
@@ -244,6 +262,9 @@ namespace X264GUIv2
             return sqlLiteTableCreate;
         }
 
+        /// <summary>
+        /// GUID轉換器
+        /// </summary>
         public class GuidTypeHandler : SqlMapper.TypeHandler<Guid>
         {
             public override void SetValue(IDbDataParameter parameter, Guid value) =>
