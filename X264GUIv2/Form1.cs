@@ -101,7 +101,7 @@ namespace X264GUIv2
             subProgressIdx = listView1.findSubitemIdx(nameof(DetailsItem.Progress));
             subTimeIdx = listView1.findSubitemIdx(nameof(DetailsItem.Time));
 
-            OrigToolStripMenuItem.Tag = AudioHz.Default;
+            kHzDefaultToolStripMenuItem.Tag = AudioHz.Default;
             kHz441ToolStripMenuItem.Tag = AudioHz._441;
             kHz480ToolStripMenuItem.Tag = AudioHz._480;
             settingToolStripMenuItem.DropDown.Closing += settingToolStripMenuItem_DropDownClosing;
@@ -422,6 +422,14 @@ namespace X264GUIv2
                 List<FfprobeOutput> loadData = [.. sql.SelectTable().OrderBy(x => x.MainData.idx)];
                 List<FfprobeOutput> cacheData = [];
 
+                Settings? settings = sql.SelectSettings();
+                AutoTrimToolStripMenuItem.Checked = settings?.AutoTrim_Click ?? AutoTrimToolStripMenuItem.Checked;
+                kHzDefaultToolStripMenuItem.Checked = settings?.KhzDefault_Click ?? kHzDefaultToolStripMenuItem.Checked;
+                kHz441ToolStripMenuItem.Checked = settings?.kHz441_Click ?? kHz441ToolStripMenuItem.Checked;
+                kHz480ToolStripMenuItem.Checked = settings?.kHz480_Click ?? kHz480ToolStripMenuItem.Checked;
+                HASHToolStripMenuItem.Checked = settings?.HASH_Click ?? HASHToolStripMenuItem.Checked;
+                Global.HASHPath = settings?.HashPath ?? Global.HASHPath;
+
                 foreach (FfprobeOutput i in loadData)
                 {
                     if (videoFunc.ffprobeData.Any(x => x.MainData.Guid == i.MainData.Guid))
@@ -468,22 +476,24 @@ namespace X264GUIv2
             try
             {
                 if (videoFunc.ffprobeData.Count == 0)
-                {
                     if (e is FormClosingEventArgs)
                         return;
 
-                    OtherControlFunc.ShowError("無可儲存資料");
-                    return;
-                }
-
-                if (!(MessageBox.Show("確定儲存進度?", "提示", MessageBoxButtons.YesNo) == DialogResult.Yes))
+                if (!(MessageBox.Show("確定儲存進度及設定?", "提示", MessageBoxButtons.YesNo) == DialogResult.Yes))
                     return;
 
                 videoFunc.ffprobeData = listView1.SortIdx(videoFunc.ffprobeData);
 
                 using var sql = new sqlLiteFunc();
-                sql.Insert(videoFunc.ffprobeData);
-                MessageBox.Show("儲存成功");
+                sql.Insert(videoFunc.ffprobeData, new()
+                {
+                    AutoTrim_Click = AutoTrimToolStripMenuItem.Checked,
+                    KhzDefault_Click = kHzDefaultToolStripMenuItem.Checked,
+                    kHz441_Click = kHz441ToolStripMenuItem.Checked,
+                    kHz480_Click = kHz480ToolStripMenuItem.Checked,
+                    HASH_Click = HASHToolStripMenuItem.Checked,
+                    HashPath = Global.HASHPath,
+                });
             }
             catch (Exception ex)
             {
@@ -491,6 +501,7 @@ namespace X264GUIv2
                 OtherControlFunc.ShowError(ex.Message);
             }
         }
+
         private void dbClearToolStripMenuItem_Click(object sender, EventArgs e)
         {
             try
@@ -524,7 +535,7 @@ namespace X264GUIv2
             }
         }
 
-        private void OrigToolStripMenuItem_Click(object sender, EventArgs e)
+        private void kHzDefaultToolStripMenuItem_Click(object sender, EventArgs e)
         {
             kHz441ToolStripMenuItem.Checked = false;
             kHz480ToolStripMenuItem.Checked = false;
@@ -532,14 +543,42 @@ namespace X264GUIv2
 
         private void kHz441ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            OrigToolStripMenuItem.Checked = false;
+            kHzDefaultToolStripMenuItem.Checked = false;
             kHz480ToolStripMenuItem.Checked = false;
         }
 
         private void kHz480ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            OrigToolStripMenuItem.Checked = false;
+            kHzDefaultToolStripMenuItem.Checked = false;
             kHz441ToolStripMenuItem.Checked = false;
+        }
+
+        private void HASHPathToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                FolderBrowserDialog folderDialog = new();
+                if (folderDialog.ShowDialog() != DialogResult.OK)
+                    return;
+
+                Global.HASHPath = folderDialog.SelectedPath;
+            }
+            catch (Exception ex)
+            {
+                WriteFile.WriteLog(ex.Message);
+            }
+        }
+
+        private void HASHOpenToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                OtherControlFunc.openFolder(Global.HASHPath);
+            }
+            catch (Exception ex)
+            {
+                WriteFile.WriteLog(ex.Message);
+            }
         }
 
         private void settingToolStripMenuItem_DropDownClosing(object? sender, ToolStripDropDownClosingEventArgs e)
@@ -797,14 +836,17 @@ namespace X264GUIv2
             try
             {
                 Cts = new();
+                if (Cts == null || Cts.Token.IsCancellationRequested)
+                    return;
+
+                Task.Run(() => form1Control.UpdateProgresLoop("Hash Checking", Cts), Cts.Token);
+
                 Task.Run(() =>
                 {
                     foreach (ListViewItem item in listView1.SelectedItems)
                     {
                         if (Cts == null || Cts.Token.IsCancellationRequested)
                             return;
-
-                        Task.Run(() => form1Control.UpdateProgresLoop("Hash Checking", Cts), Cts.Token);
 
                         int idx1 = videoFunc.ffprobeData.findFfprobItem((Guid?)item.Tag);
                         int idx2 = listView1.findListItem((Guid?)item.Tag);
@@ -817,8 +859,6 @@ namespace X264GUIv2
                         int exitCode = 0;
                         string hashMsg = string.Empty;
                         videoFunc.ffprobeData[idx1] = hashProcess(videoFunc.ffprobeData[idx1], ref exitCode, ref hashMsg);
-                        if (!string.IsNullOrWhiteSpace(hashMsg))
-                            throw new Exception(hashMsg);
 
                         VideoFunc.Delete(videoFunc.ffprobeData[idx1]);
                         videoFunc.ffprobeData[idx1].MainData.run = videoFunc.ffprobeData[idx1].MainData.run == RunEnum.Warning ? RunEnum.Warning : RunEnum.Done;
@@ -1466,14 +1506,19 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                 Cts = Cts,
                 RunPath = ff.MainData.InFilePath,
                 FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\HashMyFiles\HashMyFiles.exe",
-                ArgumentList = VideoFunc.HashCheck(ff),
+                ArgumentList = {
+                        $@"/file",
+                        $@"""{ffprobeOutput.MainData.OutFile}""",
+                        $@"/stab",
+                        $@"""""",
+                },
                 Encoding = Encoding.Unicode,
                 ActionOut = sr =>
                 {
                     f2.appendText = sr;
                     try
                     {
-                        WriteFile.WriteHashCsv(sr, ff);
+                        WriteFile.WriteHashCsv(sr);
                         isWriteCsv = true;
                     }
                     catch
@@ -1551,6 +1596,5 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
             return ffprobeOutput;
         }
         #endregion
-
     }
 }

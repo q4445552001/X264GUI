@@ -598,16 +598,5 @@ namespace X264GUIv2
             arr.Add($@"-y");
             return [.. arr];
         }
-
-        public static string[] HashCheck(FfprobeOutput ffprobeOutput)
-        {
-            List<string> arr = [];
-            arr.Add($@"/file");
-            arr.Add($@"""{ffprobeOutput.MainData.OutFile}""");
-            arr.Add($@"/stab");
-            arr.Add($@"""""");
-
-            return [.. arr];
-        }
     }
 }

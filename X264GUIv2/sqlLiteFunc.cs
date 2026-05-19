@@ -13,6 +13,7 @@ namespace X264GUIv2
 
         private readonly SqlLiteTableCreate mainSql = GetTableCreateSql<FfprobeOutputMain>();
         private readonly SqlLiteTableCreate detailSql = GetTableCreateSql<FfprobeOutputDetail>();
+        private readonly SqlLiteTableCreate settingsSql = GetTableCreateSql<Settings>();
 
         public sqlLiteFunc()
         {
@@ -32,12 +33,16 @@ namespace X264GUIv2
 
             command.CommandText = @$"CREATE TABLE IF NOT EXISTS Main ({mainSql.CreateStr})";
             command.ExecuteNonQuery();
+
+            command.CommandText = @$"CREATE TABLE IF NOT EXISTS Settings ({settingsSql.CreateStr})";
+            command.ExecuteNonQuery();
         }
 
-        public void Insert(IList<FfprobeOutput> ffprobeOutputs)
+        public void Insert(IList<FfprobeOutput> ffprobeOutputs, Settings settings)
         {
             connection.Execute("DELETE FROM Detail");
             connection.Execute("DELETE FROM Main");
+            connection.Execute("DELETE FROM Settings");
 
             #region Detail
 
@@ -133,12 +138,17 @@ namespace X264GUIv2
 
             connection.Execute(@$"INSERT INTO Main ({mainSql.Str}) VALUES ({mainSql.InsStr})", main);
             #endregion
+
+            #region Settings
+            connection.Execute(@$"INSERT INTO Settings ({settingsSql.Str}) VALUES ({settingsSql.InsStr})", new List<object> { settings });
+            #endregion
         }
 
         public void DropTable()
         {
             connection.Execute(@"DROP TABLE IF EXISTS Main");
             connection.Execute(@"DROP TABLE IF EXISTS Detail");
+            connection.Execute(@"DROP TABLE IF EXISTS Settings");
             CreateTable();
         }
 
@@ -189,6 +199,8 @@ namespace X264GUIv2
 
             return ffprobes1;
         }
+
+        public Settings? SelectSettings() => connection.Query<Settings>("select * from Settings").FirstOrDefault();
 
         public void Dispose()
         {

@@ -9,6 +9,11 @@
         /// </summary>
         public static readonly int BitRateDefault = 1000000;
 
+        /// <summary>
+        /// HASH儲存位置
+        /// </summary>
+        public static string HASHPath { get; set; } = "%temp%";
+
         #region listview更新頻率限制
         public static readonly int _lastUiUpdateTime = 1000;
         public static DateTime _lastUiUpdate { get; set; } = DateTime.MinValue;

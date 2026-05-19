@@ -49,9 +49,9 @@ namespace X264GUIv2
         public int AudioCalculate(FfprobeOutput ffprobeOutput)
         {
             AudioHz audioHz = AudioHz.Default;
-            if (form.OrigToolStripMenuItem.Checked)
+            if (form.kHzDefaultToolStripMenuItem.Checked)
             {
-                audioHz = form.OrigToolStripMenuItem.getAudio_khz();
+                audioHz = form.kHzDefaultToolStripMenuItem.getAudio_khz();
             }
             else if (form.kHz441ToolStripMenuItem.Checked)
             {
@@ -147,11 +147,14 @@ namespace X264GUIv2
             form.clearToolStripMenuItem.Enabled = isClose;
             form.dbLoadToolStripMenuItem.Enabled = isClose;
             form.dbClearToolStripMenuItem.Enabled = isClose;
+            form.dbSaveToolStripMenuItem.Enabled = isClose;
             form.AutoTrimToolStripMenuItem.Enabled = isClose;
             form.loadAvsToolStripMenuItem.Enabled = isClose;
             form.createMergeToolStripMenuItem.Enabled = isClose;
             form.kHzToolStripMenuItem.Enabled = isClose;
             form.HASHToolStripMenuItem.Enabled = isClose;
+            form.HASHPathToolStripMenuItem.Enabled = isClose;
+            form.HASHOpenToolStripMenuItem.Enabled = isClose;
 
             form.listDiffViewItem.Enabled = isClose;
             form.listRestViewItem.Enabled = isClose;

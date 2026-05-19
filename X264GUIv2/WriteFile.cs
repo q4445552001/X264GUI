@@ -32,12 +32,14 @@ namespace X264GUIv2
         /// <summary>
         /// 寫入csv
         /// </summary>
-        public static void WriteHashCsv(string str, FfprobeOutput ffprobeOutput)
+        public static void WriteHashCsv(string str)
         {
             try
             {
+                string path = Environment.ExpandEnvironmentVariables(Global.HASHPath);
+
                 str = str.Replace("\t", ",");
-                string filePath = $@"{ffprobeOutput.MainData.InFilePath}\_hash_{DateTime.Now:yyyyMMdd}.csv";
+                string filePath = $@"{path}\{Assembly.GetExecutingAssembly().EntryPoint?.DeclaringType?.Namespace}_HASH.csv";
                 using StreamWriter sw = new(filePath, true);
                 sw.WriteLine(str);
                 sw.Close();

@@ -214,6 +214,8 @@ namespace X264GUIv2
             if (string.IsNullOrWhiteSpace(path))
                 return;
 
+            path = Environment.ExpandEnvironmentVariables(path);
+
             if (File.Exists(path))
                 path = Path.GetDirectoryName(path);
 
