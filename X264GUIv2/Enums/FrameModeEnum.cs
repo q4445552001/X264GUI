@@ -2,7 +2,7 @@
 {
     public enum FrameModeEnum
     {
-        CBR,
-        VBR,
+        CFR,
+        VFR,
     }
 }

@@ -151,7 +151,7 @@ namespace X264GUIv2
             {
                 Guid = ffprobeOutput.Guid,
                 bitrate = bitrateTemp,
-                frameMode = video.r_frame_rate == video.avg_frame_rate ? FrameModeEnum.CBR : FrameModeEnum.VBR,
+                frameMode = video.r_frame_rate == video.avg_frame_rate ? FrameModeEnum.CFR : FrameModeEnum.VFR,
                 frameStr = video.r_frame_rate ?? video.avg_frame_rate ?? "24000/1001",
                 resolutionW = video.width,
                 resolutionH = video.height,
@@ -222,16 +222,19 @@ namespace X264GUIv2
                 duration = frames / fps,
                 InFile = input.File,
                 idx = input.index,
-                OriDetail = new()
-                {
-                    frameStr = fpsStr,
-                    resolutionW = width,
-                    resolutionH = height,
-                }
+            };
+
+            ffprobeOutput.OriDetail = new()
+            {
+                Guid = ffprobeOutput.Guid,
+                frameStr = fpsStr,
+                resolutionW = width,
+                resolutionH = height,
             };
 
             ffprobeOutput.NewDetail = new()
             {
+                Guid = ffprobeOutput.OriDetail.Guid,
                 bitrate = ffprobeOutput.OriDetail.bitrate,
                 frameMode = ffprobeOutput.OriDetail.frameMode,
                 frameStr = ffprobeOutput.OriDetail.frameStr,
@@ -413,17 +416,30 @@ namespace X264GUIv2
         public string[] XonepassAvs(FfprobeOutput ffprobeOutput)
         {
             List<string> arr = [];
+            string threads = form.coreCBox.SelectedItem?.ToString() ?? "0";
+
+            arr.Add($@"--x26x-binary ""{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\x264.exe""");
+            arr.Add($@"--bframes 0");
+            arr.Add($@"--bitrate {ffprobeOutput.MainData.NewDetail.bitrate / 1000}");
+            arr.Add($@"--pass 1");
+            arr.Add($@"--threads {threads}");
+            arr.Add($@"--stats ""x2642pass.stats""");
+            arr.Add($@"-o NUL ""{ffprobeOutput.MainData.InFile}""");
+            return [.. arr];
+        }
+
+        public string[] XonepassFfmpeg(FfprobeOutput ffprobeOutput)
+        {
+            List<string> arr = [];
 
             string threads = form.coreCBox.SelectedItem?.ToString() ?? "0";
             List<string> vf = [];
-            if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal)
-            {
-                if (ffprobeOutput.MainData.OriDetail.frameMode == FrameModeEnum.VBR || ffprobeOutput.MainData.NewDetail.frameStr != ffprobeOutput.MainData.OriDetail.frameStr)
-                    vf.Add($@"fps={ffprobeOutput.MainData.NewDetail.frameStr}");
-                vf.Add($@"scale={ffprobeOutput.MainData.NewDetail.resolutionW}:{ffprobeOutput.MainData.NewDetail.resolutionH}");
-                if (!string.IsNullOrWhiteSpace(ffprobeOutput.MainData.SubtitlesFile))
-                    vf.Add($@"ass='{ffprobeOutput.MainData.avsTempFile}.ass'");
-            }
+
+            if (ffprobeOutput.MainData.OriDetail.frameMode == FrameModeEnum.VFR || ffprobeOutput.MainData.NewDetail.frameStr != ffprobeOutput.MainData.OriDetail.frameStr)
+                vf.Add($@"fps={ffprobeOutput.MainData.NewDetail.frameStr}");
+            vf.Add($@"scale={ffprobeOutput.MainData.NewDetail.resolutionW}:{ffprobeOutput.MainData.NewDetail.resolutionH}");
+            if (!string.IsNullOrWhiteSpace(ffprobeOutput.MainData.SubtitlesFile))
+                vf.Add($@"ass='{ffprobeOutput.MainData.avsTempFile}.ass'");
 
             arr.Add($@"-i {ffprobeOutput.MainData.InFile}");
             if (vf.Count > 0)
@@ -448,7 +464,7 @@ namespace X264GUIv2
 
             string threads = form.coreCBox.SelectedItem?.ToString() ?? "0";
             List<string> vf = [];
-            if (ffprobeOutput.MainData.OriDetail.frameMode == FrameModeEnum.VBR || ffprobeOutput.MainData.NewDetail.frameStr != ffprobeOutput.MainData.OriDetail.frameStr)
+            if (ffprobeOutput.MainData.OriDetail.frameMode == FrameModeEnum.VFR || ffprobeOutput.MainData.NewDetail.frameStr != ffprobeOutput.MainData.OriDetail.frameStr)
                 vf.Add($@"fps={ffprobeOutput.MainData.NewDetail.frameStr}");
             vf.Add($@"scale={ffprobeOutput.MainData.NewDetail.resolutionW}:{ffprobeOutput.MainData.NewDetail.resolutionH}");
 
@@ -504,25 +520,38 @@ namespace X264GUIv2
         public string[] XtwopassAvs(FfprobeOutput ffprobeOutput)
         {
             List<string> arr = [];
+            string threads = form.coreCBox.SelectedItem?.ToString() ?? "0";
+            arr.Add($@"--x26x-binary ""{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\x264.exe""");
+            arr.Add($@"--bframes 0");
+            arr.Add($@"--bitrate {ffprobeOutput.MainData.NewDetail.bitrate / 1000}");
+            arr.Add($@"--pass 2");
+            arr.Add($@"--threads {threads}");
+            arr.Add($@"--stats ""x2642pass.stats""");
+            arr.Add($@"-o ""{ffprobeOutput.MainData.avsTempFile}.264"" ""{ffprobeOutput.MainData.InFile}""");
+            return [.. arr];
+        }
+
+        public string[] XtwopassFfmpeg(FfprobeOutput ffprobeOutput)
+        {
+            List<string> arr = [];
 
             string threads = form.coreCBox.SelectedItem?.ToString() ?? "0";
             List<string> vf = [];
-            if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal)
-            {
-                if (ffprobeOutput.MainData.OriDetail.frameMode == FrameModeEnum.VBR || ffprobeOutput.MainData.NewDetail.frameStr != ffprobeOutput.MainData.OriDetail.frameStr)
-                    vf.Add($@"fps={ffprobeOutput.MainData.NewDetail.frameStr}");
-                vf.Add($@"scale={ffprobeOutput.MainData.NewDetail.resolutionW}:{ffprobeOutput.MainData.NewDetail.resolutionH}");
-                if (!string.IsNullOrWhiteSpace(ffprobeOutput.MainData.SubtitlesFile))
-                    vf.Add($@"ass='{ffprobeOutput.MainData.avsTempFile}.ass'");
-            }
+
+            if (ffprobeOutput.MainData.OriDetail.frameMode == FrameModeEnum.VFR || ffprobeOutput.MainData.NewDetail.frameStr != ffprobeOutput.MainData.OriDetail.frameStr)
+                vf.Add($@"fps={ffprobeOutput.MainData.NewDetail.frameStr}");
+            vf.Add($@"scale={ffprobeOutput.MainData.NewDetail.resolutionW}:{ffprobeOutput.MainData.NewDetail.resolutionH}");
+            if (!string.IsNullOrWhiteSpace(ffprobeOutput.MainData.SubtitlesFile))
+                vf.Add($@"ass='{ffprobeOutput.MainData.avsTempFile}.ass'");
 
             arr.Add($@"-i {ffprobeOutput.MainData.InFile}");
             if (form.AutoTrimToolStripMenuItem.Checked)
             {
                 int hz = form.form1Control.AudioCalculate(ffprobeOutput);
-                arr.Add($@"-ar {hz}");
+                if (hz != 0)
+                    arr.Add($@"-ar {hz}");
                 arr.Add($@"-ac 2");
-                arr.Add($@"-af ""aresample={hz},asetpts=PTS-STARTPTS""");
+                arr.Add($@"-af ""{(hz == 0 ? "" : $"aresample={hz},")}asetpts=PTS-STARTPTS""");
                 arr.Add($@"-c:a aac");
                 arr.Add($@"-q:a 1");
             }
@@ -557,7 +586,7 @@ namespace X264GUIv2
 
             string threads = form.coreCBox.SelectedItem?.ToString() ?? "0";
             List<string> vf = [];
-            if (ffprobeOutput.MainData.OriDetail.frameMode == FrameModeEnum.VBR || ffprobeOutput.MainData.NewDetail.frameStr != ffprobeOutput.MainData.OriDetail.frameStr)
+            if (ffprobeOutput.MainData.OriDetail.frameMode == FrameModeEnum.VFR || ffprobeOutput.MainData.NewDetail.frameStr != ffprobeOutput.MainData.OriDetail.frameStr)
                 vf.Add($@"fps={ffprobeOutput.MainData.NewDetail.frameStr}");
             vf.Add($@"scale={ffprobeOutput.MainData.NewDetail.resolutionW}:{ffprobeOutput.MainData.NewDetail.resolutionH}");
 
@@ -570,9 +599,10 @@ namespace X264GUIv2
             if (form.AutoTrimToolStripMenuItem.Checked)
             {
                 int hz = form.form1Control.AudioCalculate(ffprobeOutput);
-                arr.Add($@"-ar {hz}");
+                if (hz != 0)
+                    arr.Add($@"-ar {hz}");
                 arr.Add($@"-ac 2");
-                arr.Add($@"-af ""aresample={hz},asetpts=PTS-STARTPTS""");
+                arr.Add($@"-af ""{(hz == 0 ? "" : $"aresample={hz},")}asetpts=PTS-STARTPTS""");
                 arr.Add($@"-c:a aac");
                 arr.Add($@"-q:a 1");
             }

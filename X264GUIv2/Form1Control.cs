@@ -46,6 +46,28 @@ namespace X264GUIv2
             }
         }
 
+        public void avs4x26xOutput(FfprobeOutput ffprobeOutput, string sr, Stopwatch sw1, Stopwatch sw2, WeighAllot weighAllot)
+        {
+            form.timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
+
+            if (sr.Contains("[error]"))
+            {
+                ffprobeOutput.MainData.run = RunEnum.Error;
+                throw new Exception(sr);
+            }
+
+            if (!OtherControlFunc.listViewIsRefresh())
+                return;
+
+            form.listView1.Items[form.useIdx].SubItems[form.subTimeIdx]!.Text = OtherControlFunc.timeConv(sw2);
+            if (sr.IndexOf("frames,") != -1 && sr.IndexOf('[') != -1)
+            {
+                double prodata = Math.Round(Convert.ToDouble(sr.Substring(sr.IndexOf('[') + 1, sr.LastIndexOf('%') - 1)), 2);
+                form.listView1.Items[form.useIdx].SubItems[form.subProgressIdx]!.Text = $"{prodata:F1} %";
+                calculateProgres(ffprobeOutput, (float)prodata, weighAllot);
+            }
+        }
+
         public int AudioCalculate(FfprobeOutput ffprobeOutput)
         {
             AudioHz audioHz = AudioHz.Default;
@@ -82,19 +104,19 @@ namespace X264GUIv2
 
             float audioWeight = ffprobeOutput.MainData.videoType switch
             {
-                VideoTypeEnum.Normal => weighAllot.weightAudio,
-                VideoTypeEnum.Aviscript or VideoTypeEnum.Merge => weighAllot.weightAudio / 2,
+                VideoTypeEnum.Normal or VideoTypeEnum.Aviscript => weighAllot.weightAudio,
+                VideoTypeEnum.Merge => weighAllot.weightAudio / 2,
                 _ => 0f
             };
 
             float mergeWeight = 0f;
-            if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Aviscript || ffprobeOutput.MainData.videoType == VideoTypeEnum.Merge || !ffprobeOutput.MainData.isLocalEncode)
+            if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Merge || !ffprobeOutput.MainData.isLocalEncode)
                 mergeWeight = weighAllot.weightMerge / 2;
 
             float completedWeight = 0f;
             float currentWeight = 0f;
 
-            if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Aviscript || !ffprobeOutput.MainData.isLocalEncode)
+            if (!ffprobeOutput.MainData.isLocalEncode)
             {
                 currentWeight += weighAllot.weightAudio / 2f;
                 currentWeight += weighAllot.weightMerge / 2f;
@@ -108,7 +130,7 @@ namespace X264GUIv2
                     break;
 
                 case RunEnum.OnePass:
-                    if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Aviscript || !ffprobeOutput.MainData.isLocalEncode)
+                    if (!ffprobeOutput.MainData.isLocalEncode)
                         completedWeight = 0f;
                     else
                         completedWeight = audioWeight + mergeWeight;
@@ -154,7 +176,6 @@ namespace X264GUIv2
             form.kHzToolStripMenuItem.Enabled = isClose;
             form.HASHToolStripMenuItem.Enabled = isClose;
             form.HASHPathToolStripMenuItem.Enabled = isClose;
-            form.HASHOpenToolStripMenuItem.Enabled = isClose;
 
             form.listDiffViewItem.Enabled = isClose;
             form.listRestViewItem.Enabled = isClose;

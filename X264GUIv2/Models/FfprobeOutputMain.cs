@@ -108,7 +108,7 @@ namespace X264GUIv2.Models
     {
         public int bitrate { get; set; } = 0;
 
-        public FrameModeEnum frameMode { get; set; } = FrameModeEnum.CBR;
+        public FrameModeEnum frameMode { get; set; } = FrameModeEnum.CFR;
 
         public string frameStr { get; set; } = "24000/1001";
 

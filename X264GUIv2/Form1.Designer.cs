@@ -315,26 +315,26 @@
             // dbLoadToolStripMenuItem
             // 
             dbLoadToolStripMenuItem.Name = "dbLoadToolStripMenuItem";
-            dbLoadToolStripMenuItem.Size = new Size(180, 22);
+            dbLoadToolStripMenuItem.Size = new Size(158, 22);
             dbLoadToolStripMenuItem.Text = "載入進度及設定";
             dbLoadToolStripMenuItem.Click += dbLoadToolStripMenuItem_Click;
             // 
             // dbSaveToolStripMenuItem
             // 
             dbSaveToolStripMenuItem.Name = "dbSaveToolStripMenuItem";
-            dbSaveToolStripMenuItem.Size = new Size(180, 22);
+            dbSaveToolStripMenuItem.Size = new Size(158, 22);
             dbSaveToolStripMenuItem.Text = "儲存進度及設定";
             dbSaveToolStripMenuItem.Click += dbSaveToolStripMenuItem_Click;
             // 
             // toolStripSeparator3
             // 
             toolStripSeparator3.Name = "toolStripSeparator3";
-            toolStripSeparator3.Size = new Size(177, 6);
+            toolStripSeparator3.Size = new Size(155, 6);
             // 
             // dbClearToolStripMenuItem
             // 
             dbClearToolStripMenuItem.Name = "dbClearToolStripMenuItem";
-            dbClearToolStripMenuItem.Size = new Size(180, 22);
+            dbClearToolStripMenuItem.Size = new Size(158, 22);
             dbClearToolStripMenuItem.Text = "清除進度及設定";
             dbClearToolStripMenuItem.Click += dbClearToolStripMenuItem_Click;
             // 
@@ -348,33 +348,33 @@
             // installPathToolStripMenuItem
             // 
             installPathToolStripMenuItem.Name = "installPathToolStripMenuItem";
-            installPathToolStripMenuItem.Size = new Size(180, 22);
+            installPathToolStripMenuItem.Size = new Size(167, 22);
             installPathToolStripMenuItem.Text = "開啟安裝資料夾";
             installPathToolStripMenuItem.Click += installPathToolStripMenuItem_Click;
             // 
             // HASHOpenToolStripMenuItem
             // 
             HASHOpenToolStripMenuItem.Name = "HASHOpenToolStripMenuItem";
-            HASHOpenToolStripMenuItem.Size = new Size(180, 22);
+            HASHOpenToolStripMenuItem.Size = new Size(167, 22);
             HASHOpenToolStripMenuItem.Text = "開啟HASH資料夾";
             HASHOpenToolStripMenuItem.Click += HASHOpenToolStripMenuItem_Click;
             // 
             // toolStripSeparator2
             // 
             toolStripSeparator2.Name = "toolStripSeparator2";
-            toolStripSeparator2.Size = new Size(177, 6);
+            toolStripSeparator2.Size = new Size(164, 6);
             // 
             // logViewToolStripMenuItem
             // 
             logViewToolStripMenuItem.Name = "logViewToolStripMenuItem";
-            logViewToolStripMenuItem.Size = new Size(180, 22);
+            logViewToolStripMenuItem.Size = new Size(167, 22);
             logViewToolStripMenuItem.Text = "LogView";
             logViewToolStripMenuItem.Click += logViewToolStripMenuItem_Click;
             // 
             // logViewClearToolStripMenuItem
             // 
             logViewClearToolStripMenuItem.Name = "logViewClearToolStripMenuItem";
-            logViewClearToolStripMenuItem.Size = new Size(180, 22);
+            logViewClearToolStripMenuItem.Size = new Size(167, 22);
             logViewClearToolStripMenuItem.Text = "LogView 清除";
             logViewClearToolStripMenuItem.Click += logViewClearToolStripMenuItem_Click;
             // 
@@ -389,15 +389,15 @@
             // 
             AutoTrimToolStripMenuItem.CheckOnClick = true;
             AutoTrimToolStripMenuItem.Name = "AutoTrimToolStripMenuItem";
-            AutoTrimToolStripMenuItem.Size = new Size(179, 22);
+            AutoTrimToolStripMenuItem.Size = new Size(180, 22);
             AutoTrimToolStripMenuItem.Text = "啟用音軌修剪";
             // 
             // kHzToolStripMenuItem
             // 
             kHzToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { kHzDefaultToolStripMenuItem, kHz441ToolStripMenuItem, kHz480ToolStripMenuItem });
             kHzToolStripMenuItem.Name = "kHzToolStripMenuItem";
-            kHzToolStripMenuItem.Size = new Size(179, 22);
-            kHzToolStripMenuItem.Text = "音軌修剪採樣";
+            kHzToolStripMenuItem.Size = new Size(180, 22);
+            kHzToolStripMenuItem.Text = "音軌 修剪/AVS 採樣";
             // 
             // kHzDefaultToolStripMenuItem
             // 
@@ -405,7 +405,7 @@
             kHzDefaultToolStripMenuItem.CheckOnClick = true;
             kHzDefaultToolStripMenuItem.CheckState = CheckState.Checked;
             kHzDefaultToolStripMenuItem.Name = "kHzDefaultToolStripMenuItem";
-            kHzDefaultToolStripMenuItem.Size = new Size(122, 22);
+            kHzDefaultToolStripMenuItem.Size = new Size(180, 22);
             kHzDefaultToolStripMenuItem.Text = "預設";
             kHzDefaultToolStripMenuItem.Click += kHzDefaultToolStripMenuItem_Click;
             // 
@@ -413,7 +413,7 @@
             // 
             kHz441ToolStripMenuItem.CheckOnClick = true;
             kHz441ToolStripMenuItem.Name = "kHz441ToolStripMenuItem";
-            kHz441ToolStripMenuItem.Size = new Size(122, 22);
+            kHz441ToolStripMenuItem.Size = new Size(180, 22);
             kHz441ToolStripMenuItem.Text = "44.1 kHz";
             kHz441ToolStripMenuItem.Click += kHz441ToolStripMenuItem_Click;
             // 
@@ -421,26 +421,26 @@
             // 
             kHz480ToolStripMenuItem.CheckOnClick = true;
             kHz480ToolStripMenuItem.Name = "kHz480ToolStripMenuItem";
-            kHz480ToolStripMenuItem.Size = new Size(122, 22);
+            kHz480ToolStripMenuItem.Size = new Size(180, 22);
             kHz480ToolStripMenuItem.Text = "48.0 kHz";
             kHz480ToolStripMenuItem.Click += kHz480ToolStripMenuItem_Click;
             // 
             // toolStripSeparator4
             // 
             toolStripSeparator4.Name = "toolStripSeparator4";
-            toolStripSeparator4.Size = new Size(176, 6);
+            toolStripSeparator4.Size = new Size(177, 6);
             // 
             // HASHToolStripMenuItem
             // 
             HASHToolStripMenuItem.CheckOnClick = true;
             HASHToolStripMenuItem.Name = "HASHToolStripMenuItem";
-            HASHToolStripMenuItem.Size = new Size(179, 22);
+            HASHToolStripMenuItem.Size = new Size(180, 22);
             HASHToolStripMenuItem.Text = "啟用HASH檢查";
             // 
             // HASHPathToolStripMenuItem
             // 
             HASHPathToolStripMenuItem.Name = "HASHPathToolStripMenuItem";
-            HASHPathToolStripMenuItem.Size = new Size(179, 22);
+            HASHPathToolStripMenuItem.Size = new Size(180, 22);
             HASHPathToolStripMenuItem.Text = "設定HASH儲存位置";
             HASHPathToolStripMenuItem.Click += HASHPathToolStripMenuItem_Click;
             // 

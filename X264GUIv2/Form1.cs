@@ -204,6 +204,15 @@ namespace X264GUIv2
                         try
                         {
                             useIdx = idx;
+
+                            if (!videoFunc.ffprobeData[itemIdx].MainData.isLocalEncode)
+                            {
+                                videoFunc.ffprobeData[itemIdx].MainData.run = RunEnum.Error;
+                                errProcess(videoFunc.ffprobeData[itemIdx], -1, out _);
+                                WriteFile.WriteLog(@$"""{videoFunc.ffprobeData[itemIdx].MainData.InFilePath}"" 路徑非[{Global.CodePage}]語言");
+                                continue;
+                            }
+
                             mainProcess(videoFunc.ffprobeData[itemIdx], sw1, sw2);
                             if (videoFunc.ffprobeData[itemIdx].MainData.run == RunEnum.Stop)
                                 break;
@@ -232,7 +241,7 @@ namespace X264GUIv2
             if (Cts != null && !Cts.Token.IsCancellationRequested)
             {
                 Cts.Cancel();
-                listView1.Items[useIdx].UseItemStyleForSubItems = false;
+                //listView1.Items[useIdx].UseItemStyleForSubItems = false;
                 listView1.Items[useIdx].SubItems[subStatusIdx]!.Text = RunEnum.Stop.GetDisplayName();
 
                 var idx = videoFunc.ffprobeData.findFfprobItem((Guid?)listView1.Items[useIdx].Tag);
@@ -1007,7 +1016,7 @@ namespace X264GUIv2
             if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal)
             {
                 string frameStr = "";
-                if (ffprobeOutput.MainData.OriDetail.frameMode == FrameModeEnum.VBR || ffprobeOutput.MainData.OriDetail.frameStr != ffprobeOutput.MainData.NewDetail.frameStr)
+                if (ffprobeOutput.MainData.OriDetail.frameMode == FrameModeEnum.VFR || ffprobeOutput.MainData.OriDetail.frameStr != ffprobeOutput.MainData.NewDetail.frameStr)
                     frameStr = $@", fpsnum={ffprobeOutput.MainData.NewDetail.fpsnum}, fpsden={ffprobeOutput.MainData.NewDetail.fpsden}";
 
                 string avs = $@"
@@ -1038,18 +1047,18 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
             }
             #endregion
 
-            WeighAllot weighAllot = new(
+            WeighAllot weighAllot = new((
                 ffprobeOutput.MainData.isLocalEncode &&
                 ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal &&
-                ffprobeOutput.MainData.audioMap > 0 && AutoTrimToolStripMenuItem.Checked
+                ffprobeOutput.MainData.audioMap > 0 && AutoTrimToolStripMenuItem.Checked) || ffprobeOutput.MainData.videoType == VideoTypeEnum.Aviscript
             );
 
             TaskbarProgress.Set(videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done || x.MainData.run == RunEnum.Warning), videoFunc.ffprobeData.Count);
             string mapMsg = string.Empty;
-            if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal && ffprobeOutput.MainData.isLocalEncode)
+            if ((ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal || ffprobeOutput.MainData.videoType == VideoTypeEnum.Aviscript) && ffprobeOutput.MainData.isLocalEncode)
             {
-                ffprobeOutput = audioProcess(ffprobeOutput, sw1, sw2, weighAllot, ref mapMsg);
-                ffprobeOutput = errProcess(ffprobeOutput, 0, out RunEnum isRunAudio);
+                ffprobeOutput = audioProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref mapMsg);
+                ffprobeOutput = errProcess(ffprobeOutput, exitCode, out RunEnum isRunAudio);
                 switch (isRunAudio)
                 {
                     case RunEnum.Stop: return;
@@ -1072,7 +1081,10 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                     if (ffprobeOutput.MainData.isLocalEncode)
                         ffprobeOutput = onePassProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref onePassMsg);
                     else
-                        ffprobeOutput = onePassAvsProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref onePassMsg);
+                        ffprobeOutput = onePassFfmpegProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref onePassMsg);
+                    break;
+                case VideoTypeEnum.Ffmpeg:
+                    ffprobeOutput = onePassFfmpegProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref onePassMsg);
                     break;
                 default:
                     ffprobeOutput = onePassProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref onePassMsg);
@@ -1099,7 +1111,10 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                     if (ffprobeOutput.MainData.isLocalEncode)
                         ffprobeOutput = twoPassProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref onePassMsg);
                     else
-                        ffprobeOutput = twoPassAvsProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref onePassMsg);
+                        ffprobeOutput = twoPassFfmpegProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref onePassMsg);
+                    break;
+                case VideoTypeEnum.Ffmpeg:
+                    ffprobeOutput = twoPassFfmpegProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref onePassMsg);
                     break;
                 default:
                     ffprobeOutput = twoPassProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref onePassMsg);
@@ -1112,7 +1127,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                 case RunEnum.Error: throw new Exception($"{RunEnum.TwoPass.GetDisplayName()} {twoPassMsg}");
             }
 
-            if (ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal && ffprobeOutput.MainData.isLocalEncode)
+            if ((ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal || ffprobeOutput.MainData.videoType == VideoTypeEnum.Aviscript) && ffprobeOutput.MainData.isLocalEncode)
             {
                 string mergeMsg = string.Empty;
                 TaskbarProgress.Set(videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done || x.MainData.run == RunEnum.Warning), videoFunc.ffprobeData.Count);
@@ -1160,14 +1175,14 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
         /// <summary>
         /// 音效處理
         /// </summary>
-        private FfprobeOutput audioProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, WeighAllot weighAllot, ref string msg)
+        private FfprobeOutput audioProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, WeighAllot weighAllot, ref int exitCode, ref string msg)
         {
-            if (Cts == null || Cts.Token.IsCancellationRequested || ffprobeOutput.MainData.audioMap == 0)
+            if (Cts == null || Cts.Token.IsCancellationRequested)
+                return ffprobeOutput;
+            if (ffprobeOutput.MainData.videoType != VideoTypeEnum.Aviscript && ffprobeOutput.MainData.audioMap == 0)
                 return ffprobeOutput;
 
-            int exitCode = 0;
-
-            if (AutoTrimToolStripMenuItem.Checked)
+            if (AutoTrimToolStripMenuItem.Checked || ffprobeOutput.MainData.videoType == VideoTypeEnum.Aviscript)
             {
                 int hz = form1Control.AudioCalculate(ffprobeOutput);
                 ffprobeOutput = ProcessAction(ff => new()
@@ -1177,11 +1192,11 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                     FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\ffmpeg\ffmpeg.exe",
                     ArgumentList = {
                         $@"-i ""{ff.MainData.InFilePath}\{ff.MainData.InFileName}""",
-                        $@"-ar {hz}",
+                        $@"{(hz == 0 ? "" : $"-ar {hz}")}",
                         $@"-ac 2",
-                        $@"-af ""aresample={hz},asetpts=PTS-STARTPTS""",
+                        $@"-af ""{(hz == 0 ? "" : $"aresample={hz},")}asetpts=PTS-STARTPTS""",
                         $@"-c:a aac",
-                        $@"-q:a 1 ""{ff.MainData.InFilePath}\{ff.MainData.avsTempFile}.aac""",
+                        $@"-q:a 5 ""{ff.MainData.InFilePath}\{ff.MainData.avsTempFile}.aac""",
                         $@"-fflags +genpts",
                         $@"-avoid_negative_ts make_zero",
                         $@"-movflags +faststart",
@@ -1206,6 +1221,12 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                 if (Cts == null)
                     return ffprobeOutput;
 
+                string audioFile;
+                if (ffprobeOutput.MainData.isAac)
+                    audioFile = $@"{ffprobeOutput.MainData.InFilePath}\{ffprobeOutput.MainData.avsTempFile}.aac";
+                else
+                    audioFile = $@"{ffprobeOutput.MainData.InFilePath}\{ffprobeOutput.MainData.avsTempFile}.raw";
+
                 ffprobeOutput = ProcessAction(ff => new()
                 {
                     Cts = Cts,
@@ -1213,7 +1234,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                     FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\mkvextract.exe",
                     ArgumentList = {
                         $@"tracks ""{ff.MainData.InFile}""",
-                        $@"1:""{ff.MainData.InFilePath}\{ff.MainData.avsTempFile}.aac""",
+                        $@"1:""{audioFile}""",
                     },
                     ActionOut = sr =>
                     {
@@ -1222,28 +1243,46 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                     }
                 }, ffprobeOutput, RunEnum.SoundSeparation, ref exitCode, ref msg);
 
-                if (!ffprobeOutput.MainData.isAac)
-                {
-                    ffprobeOutput = ProcessAction(ff => new()
-                    {
-                        Cts = Cts,
-                        RunPath = ff.MainData.InFilePath,
-                        FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\eac3to\eac3to.exe",
-                        ArgumentList = {
-                            $@"-log=NUL",
-                            $@"""{ff.MainData.InFilePath}\{ff.MainData.avsTempFile}.aac""",
-                            $@"""{ff.MainData.InFilePath}\{ff.MainData.avsTempFile}.mp4""",
-                         },
-                        ActionOut = sr =>
-                        {
-                            timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
-                            f2.appendText = sr;
-                        },
-                    }, ffprobeOutput, RunEnum.SoundProcessing, ref exitCode, ref msg);
-                }
+                ffprobeOutput = eac3toProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref msg);
             }
 
             timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
+            return ffprobeOutput;
+        }
+
+        private FfprobeOutput eac3toProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, WeighAllot weighAllot, ref int exitCode, ref string msg)
+        {
+            if (Cts == null)
+                return ffprobeOutput;
+
+            string audioFile;
+            if (Path.GetExtension(ffprobeOutput.MainData.InFile).Equals($".{VideoExt.mkv}", StringComparison.CurrentCultureIgnoreCase) && !ffprobeOutput.MainData.isAac)
+                audioFile = $@"{ffprobeOutput.MainData.InFilePath}\{ffprobeOutput.MainData.avsTempFile}.raw";
+            else
+                return ffprobeOutput;
+
+            ffprobeOutput = ProcessAction(ff => new()
+            {
+                Cts = Cts,
+                RunPath = ff.MainData.InFilePath,
+                FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\eac3to\eac3to.exe",
+                ArgumentList = {
+                   $@"-log=NUL",
+                   $@"""{audioFile}""",
+                   $@"""{ff.MainData.InFile}\{ff.MainData.avsTempFile}.aac""",
+                },
+                ActionOut = sr =>
+                {
+                    timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
+                    f2.appendText = sr;
+                },
+                ActionErr = sr =>
+                {
+                    timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
+                    f2.appendText = sr;
+                },
+            }, ffprobeOutput, RunEnum.SoundProcessing, ref exitCode, ref msg);
+
             return ffprobeOutput;
         }
 
@@ -1265,24 +1304,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                 ActionErr = sr =>
                 {
                     f2.appendText = sr;
-                    timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
-
-                    if (sr.Contains("[error]"))
-                    {
-                        ff.MainData.run = RunEnum.Error;
-                        throw new Exception(sr);
-                    }
-
-                    if (!OtherControlFunc.listViewIsRefresh())
-                        return;
-
-                    listView1.Items[useIdx].SubItems[subTimeIdx]!.Text = OtherControlFunc.timeConv(sw2);
-                    if (sr.IndexOf("frames,") != -1 && sr.IndexOf('[') != -1)
-                    {
-                        double prodata = Math.Round(Convert.ToDouble(sr.Substring(sr.IndexOf('[') + 1, sr.LastIndexOf('%') - 1)), 2);
-                        listView1.Items[useIdx].SubItems[subProgressIdx]!.Text = $"{prodata:F1} %";
-                        form1Control.calculateProgres(ff, (float)prodata, weighAllot);
-                    }
+                    form1Control.avs4x26xOutput(ff, sr, sw1, sw2, weighAllot);
                 }
             }, ffprobeOutput, RunEnum.OnePass, ref exitCode, ref msg);
 
@@ -1307,24 +1329,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                 ActionErr = sr =>
                 {
                     f2.appendText = sr;
-                    timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
-
-                    if (sr.Contains("[error]"))
-                    {
-                        ff.MainData.run = RunEnum.Error;
-                        throw new Exception(sr);
-                    }
-
-                    if (!OtherControlFunc.listViewIsRefresh())
-                        return;
-
-                    listView1.Items[useIdx].SubItems[subTimeIdx]!.Text = OtherControlFunc.timeConv(sw2);
-                    if (sr.IndexOf("frames,") != -1 && sr.IndexOf('[') != -1)
-                    {
-                        double prodata = Math.Round(Convert.ToDouble(sr.Substring(sr.IndexOf('[') + 1, sr.LastIndexOf('%') - 1)), 2);
-                        listView1.Items[useIdx].SubItems[subProgressIdx]!.Text = $"{prodata:F1} %";
-                        form1Control.calculateProgres(ff, (float)prodata, weighAllot);
-                    }
+                    form1Control.avs4x26xOutput(ff, sr, sw1, sw2, weighAllot);
                 }
             }, ffprobeOutput, RunEnum.TwoPass, ref exitCode, ref msg);
 
@@ -1359,7 +1364,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                 FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\mp4box.exe",
                 ArgumentList = {
                     $@"-add ""{ff.MainData.avsTempFile}.264""",
-                    $@"{(ff.MainData.audioMap > 0 ? $@"-add ""{audioFile}""#audio" : "")}",
+                    $@"{((ff.MainData.audioMap > 0 || ff.MainData.videoType == VideoTypeEnum.Aviscript) ? $@"-add ""{audioFile}""#audio" : "")}",
                     $@"""{ff.MainData.OutFile}"""
                 },
                 ActionErr = sr =>
@@ -1402,17 +1407,12 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                 Cts = Cts,
                 RunPath = ff.MainData.InFilePath,
                 AutoCloseDialogBox = "Warning",
-                FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\ffmpeg\ffmpeg.exe",
+                FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\avs4x26x.exe",
                 ArgumentList = videoFunc.XonepassAvs(ff),
-                ActionOut = sr =>
-                {
-                    f2.appendText = sr;
-                    form1Control.ffmpegOutput(ff, sr, sw1, sw2, weighAllot);
-                },
                 ActionErr = sr =>
                 {
                     f2.appendText = sr;
-                    WriteFile.WriteLog(sr);
+                    form1Control.avs4x26xOutput(ff, sr, sw1, sw2, weighAllot);
                 }
             }, ffprobeOutput, RunEnum.OnePass, ref exitCode, ref msg);
 
@@ -1432,8 +1432,63 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                 Cts = Cts,
                 RunPath = ff.MainData.InFilePath,
                 AutoCloseDialogBox = "Warning",
-                FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\ffmpeg\ffmpeg.exe",
+                FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\x264\avs4x26x.exe",
                 ArgumentList = videoFunc.XtwopassAvs(ff),
+                ActionErr = sr =>
+                {
+                    f2.appendText = sr;
+                    form1Control.avs4x26xOutput(ff, sr, sw1, sw2, weighAllot);
+                }
+            }, ffprobeOutput, RunEnum.TwoPass, ref exitCode, ref msg);
+
+            return ffprobeOutput;
+        }
+
+        /// <summary>
+        /// OnePass
+        /// </summary>
+        private FfprobeOutput onePassFfmpegProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, WeighAllot weighAllot, ref int exitCode, ref string msg)
+        {
+            if (Cts == null)
+                return ffprobeOutput;
+
+            ffprobeOutput = ProcessAction(ff => new()
+            {
+                Cts = Cts,
+                RunPath = ff.MainData.InFilePath,
+                AutoCloseDialogBox = "Warning",
+                FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\ffmpeg\ffmpeg.exe",
+                ArgumentList = videoFunc.XonepassFfmpeg(ff),
+                ActionOut = sr =>
+                {
+                    f2.appendText = sr;
+                    form1Control.ffmpegOutput(ff, sr, sw1, sw2, weighAllot);
+                },
+                ActionErr = sr =>
+                {
+                    f2.appendText = sr;
+                    WriteFile.WriteLog(sr);
+                }
+            }, ffprobeOutput, RunEnum.OnePass, ref exitCode, ref msg);
+
+            return ffprobeOutput;
+        }
+
+        /// <summary>
+        /// TwoPass
+        /// </summary>
+        private FfprobeOutput twoPassFfmpegProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, WeighAllot weighAllot, ref int exitCode, ref string msg)
+        {
+            if (Cts == null)
+                return ffprobeOutput;
+
+            ffprobeOutput = ProcessAction(ff => new()
+            {
+                Cts = Cts,
+                RunPath = ff.MainData.InFilePath,
+                AutoCloseDialogBox = "Warning",
+                FileName = $@"{AppDomain.CurrentDomain.SetupInformation.ApplicationBase}bin\ffmpeg\ffmpeg.exe",
+                ArgumentList = videoFunc.XtwopassFfmpeg(ff),
                 ActionOut = sr =>
                 {
                     f2.appendText = sr;
@@ -1560,7 +1615,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
         {
             if (exitCode != 0 && ffprobeOutput.MainData.run != RunEnum.Stop)
             {
-                listView1.Items[useIdx].UseItemStyleForSubItems = false;
+                //listView1.Items[useIdx].UseItemStyleForSubItems = false;
                 listView1.Items[useIdx].SubItems[subStatusIdx]!.Text = RunEnum.Error.GetDisplayName();
                 ffprobeOutput.MainData.run = RunEnum.Error;
                 listView1.Items[useIdx].SubItems[subStatusIdx]!.ForeColor = Color.Red;
@@ -1568,7 +1623,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
 
             if (ffprobeOutput.MainData.run == RunEnum.Stop)
             {
-                listView1.Items[useIdx].UseItemStyleForSubItems = false;
+                //listView1.Items[useIdx].UseItemStyleForSubItems = false;
                 listView1.Items[useIdx].SubItems[subStatusIdx]!.ForeColor = Color.Red;
             }
 

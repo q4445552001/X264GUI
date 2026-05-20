@@ -54,7 +54,7 @@ namespace X264GUIv2
 
             detailsItem.FileName = FfprobeOutputMain.InFileName;
             detailsItem.BitRate = $"{(FfprobeOutputMain.OriDetail.bitrate == 0 ? "NUL" : FfprobeOutputMain.OriDetail.bitrate / 1000)} > {FfprobeOutputMain.NewDetail.bitrate / 1000} kb/s";
-            detailsItem.FpsMode = $"{(FfprobeOutputMain.videoType == VideoTypeEnum.Aviscript ? "NUL" : FfprobeOutputMain.OriDetail.frameMode)} > {FrameModeEnum.CBR}";
+            detailsItem.FpsMode = $"{(FfprobeOutputMain.videoType == VideoTypeEnum.Aviscript ? "NUL" : FfprobeOutputMain.OriDetail.frameMode)} > {FrameModeEnum.CFR}";
             detailsItem.Fps = $"{Math.Round(FfprobeOutputMain.OriDetail.frameRate, 3)} > {Math.Round(FfprobeOutputMain.NewDetail.frameRate, 3)}";
             detailsItem.Resolution = $"{FfprobeOutputMain.OriDetail.resolution} > {FfprobeOutputMain.NewDetail.resolution}";
             detailsItem.Duration = TimeSpan.FromSeconds(FfprobeOutputMain.duration).ToString(@"hh\:mm\:ss");

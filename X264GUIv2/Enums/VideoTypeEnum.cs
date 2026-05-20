@@ -10,5 +10,7 @@ namespace X264GUIv2.Enums
         Aviscript,
         [Display(Name = "影片合併")]
         Merge,
+        [Display(Name = "FFMPEG")]
+        Ffmpeg,
     }
 }
