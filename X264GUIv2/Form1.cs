@@ -208,7 +208,7 @@ namespace X264GUIv2
                             if (!videoFunc.ffprobeData[itemIdx].MainData.isLocalEncode)
                             {
                                 videoFunc.ffprobeData[itemIdx].MainData.run = RunEnum.Error;
-                                errProcess(videoFunc.ffprobeData[itemIdx], -1, out _);
+                                errProcess(videoFunc.ffprobeData[itemIdx], sw2, -1);
                                 WriteFile.WriteLog(@$"""{videoFunc.ffprobeData[itemIdx].MainData.InFilePath}"" 路徑非[{Global.CodePage}]語言");
                                 continue;
                             }
@@ -219,7 +219,7 @@ namespace X264GUIv2
                         }
                         catch (Exception ex)
                         {
-                            errProcess(videoFunc.ffprobeData[itemIdx], -1, out RunEnum isRun);
+                            errProcess(videoFunc.ffprobeData[itemIdx], sw2, -1);
                             WriteFile.WriteLog(ex.Message);
                             continue;
                         }
@@ -314,6 +314,15 @@ namespace X264GUIv2
 
         private void diffToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (listView1.SelectedItems.Count == 0)
+            {
+                OtherControlFunc.ShowError("請選擇一個檔案");
+                return;
+            }
+
+            if (!(MessageBox.Show("確定移除?", "提示", MessageBoxButtons.YesNo) == DialogResult.Yes))
+                return;
+
             try
             {
                 for (int i = listView1.SelectedItems.Count - 1; i >= 0; i--)
@@ -453,6 +462,9 @@ namespace X264GUIv2
                 {
                     if (videoFunc.ffprobeData.Any(x => x.MainData.Guid == i.MainData.Guid))
                         continue;
+
+                    if (i.MergeData is not null)
+                        i.MainData = VideoFunc.mergeFunc(i.MergeData).MainData;
 
                     cacheData.Add(i);
                 }
@@ -1058,8 +1070,8 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
             if ((ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal || ffprobeOutput.MainData.videoType == VideoTypeEnum.Aviscript) && ffprobeOutput.MainData.isLocalEncode)
             {
                 ffprobeOutput = audioProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref mapMsg);
-                ffprobeOutput = errProcess(ffprobeOutput, exitCode, out RunEnum isRunAudio);
-                switch (isRunAudio)
+                ffprobeOutput.MainData.run = errProcess(ffprobeOutput, sw2, exitCode);
+                switch (ffprobeOutput.MainData.run)
                 {
                     case RunEnum.Stop: return;
                     case RunEnum.Error: throw new Exception($"{RunEnum.SoundProcessing.GetDisplayName()} {mapMsg}");
@@ -1090,8 +1102,8 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                     ffprobeOutput = onePassProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref onePassMsg);
                     break;
             }
-            ffprobeOutput = errProcess(ffprobeOutput, exitCode, out RunEnum isRunOnePass);
-            switch (isRunOnePass)
+            ffprobeOutput.MainData.run = errProcess(ffprobeOutput, sw2, exitCode);
+            switch (ffprobeOutput.MainData.run)
             {
                 case RunEnum.Stop: return;
                 case RunEnum.Error: throw new Exception($"{RunEnum.OnePass.GetDisplayName()} {onePassMsg}");
@@ -1120,8 +1132,8 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                     ffprobeOutput = twoPassProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref onePassMsg);
                     break;
             }
-            ffprobeOutput = errProcess(ffprobeOutput, exitCode, out RunEnum isRunTwoPass);
-            switch (isRunTwoPass)
+            ffprobeOutput.MainData.run = errProcess(ffprobeOutput, sw2, exitCode);
+            switch (ffprobeOutput.MainData.run)
             {
                 case RunEnum.Stop: return;
                 case RunEnum.Error: throw new Exception($"{RunEnum.TwoPass.GetDisplayName()} {twoPassMsg}");
@@ -1132,8 +1144,8 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                 string mergeMsg = string.Empty;
                 TaskbarProgress.Set(videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done || x.MainData.run == RunEnum.Warning), videoFunc.ffprobeData.Count);
                 ffprobeOutput = mergeProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref mergeMsg);
-                ffprobeOutput = errProcess(ffprobeOutput, exitCode, out RunEnum isRunMerge);
-                switch (isRunMerge)
+                ffprobeOutput.MainData.run = errProcess(ffprobeOutput, sw2, exitCode);
+                switch (ffprobeOutput.MainData.run)
                 {
                     case RunEnum.Stop: return;
                     case RunEnum.Error: throw new Exception($"{RunEnum.Merge.GetDisplayName()} {mergeMsg}");
@@ -1146,30 +1158,13 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                 ffprobeOutput = hashProcess(ffprobeOutput, ref exitCode, ref hashMsg);
                 if (!string.IsNullOrWhiteSpace(hashMsg))
                     WriteFile.WriteLog(hashMsg);
+
+                if (exitCode != 0)
+                    ffprobeOutput.MainData.run = RunEnum.Warning;
             }
 
-            VideoFunc.Delete(ffprobeOutput);
-            listView1.Items[useIdx].SubItems[subProgressIdx]!.Text = "100 %";
-            listView1.Items[useIdx].SubItems[subStatusIdx]!.Text = ffprobeOutput.MainData.run == RunEnum.Warning ? RunEnum.Warning.GetDisplayName() : RunEnum.Done.GetDisplayName();
             ffprobeOutput.MainData.run = ffprobeOutput.MainData.run == RunEnum.Warning ? RunEnum.Warning : RunEnum.Done;
-
-            listView1.Items[useIdx].SubItems[subStatusIdx]!.ForeColor = ffprobeOutput.MainData.run switch
-            {
-                RunEnum.Warning => Color.DarkGoldenrod,
-                RunEnum.Error => Color.Red,
-                RunEnum.Stop => Color.Red,
-                RunEnum.Done => Color.Green,
-                _ => Color.Black,
-            };
-
-            form1Control.UpdateProgres(100, 100);
-            if (videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done || x.MainData.run == RunEnum.Warning) == videoFunc.ffprobeData.Count)
-                TaskbarProgress.Set(videoFunc.ffprobeData.Count, videoFunc.ffprobeData.Count);
-            else
-                TaskbarProgress.Error();
-
-            TimeSpan Timemint = TimeSpan.FromSeconds(sw2.Elapsed.TotalSeconds);
-            listView1.Items[useIdx].SubItems[subTimeIdx]!.Text = string.Format("{0:D2}:{1:D2}:{2:D2}", Timemint.Hours, Timemint.Minutes, Timemint.Seconds);
+            ffprobeOutput.MainData.run = errProcess(ffprobeOutput, sw2, exitCode);
         }
 
         /// <summary>
@@ -1243,14 +1238,14 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                     }
                 }, ffprobeOutput, RunEnum.SoundSeparation, ref exitCode, ref msg);
 
-                ffprobeOutput = eac3toProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref msg);
+                ffprobeOutput = eac3toProcess(ffprobeOutput, sw1, ref exitCode, ref msg);
             }
 
             timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
             return ffprobeOutput;
         }
 
-        private FfprobeOutput eac3toProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, WeighAllot weighAllot, ref int exitCode, ref string msg)
+        private FfprobeOutput eac3toProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, ref int exitCode, ref string msg)
         {
             if (Cts == null)
                 return ffprobeOutput;
@@ -1611,31 +1606,42 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
             return ffprobeOutput;
         }
 
-        private FfprobeOutput errProcess(FfprobeOutput ffprobeOutput, int exitCode, out RunEnum run)
+        private RunEnum errProcess(FfprobeOutput ffprobeOutput, Stopwatch sw, int exitCode)
         {
-            if (exitCode != 0 && ffprobeOutput.MainData.run != RunEnum.Stop)
+            if (exitCode != 0 && ffprobeOutput.MainData.run != RunEnum.Stop && ffprobeOutput.MainData.run != RunEnum.Warning)
             {
-                //listView1.Items[useIdx].UseItemStyleForSubItems = false;
                 listView1.Items[useIdx].SubItems[subStatusIdx]!.Text = RunEnum.Error.GetDisplayName();
                 ffprobeOutput.MainData.run = RunEnum.Error;
-                listView1.Items[useIdx].SubItems[subStatusIdx]!.ForeColor = Color.Red;
-            }
-
-            if (ffprobeOutput.MainData.run == RunEnum.Stop)
-            {
-                //listView1.Items[useIdx].UseItemStyleForSubItems = false;
-                listView1.Items[useIdx].SubItems[subStatusIdx]!.ForeColor = Color.Red;
             }
 
             if (ffprobeOutput.MainData.run == RunEnum.Error)
-            {
-                run = RunEnum.Error;
                 TaskbarProgress.Error();
-            }
+            else if (videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done || x.MainData.run == RunEnum.Warning) == videoFunc.ffprobeData.Count)
+                TaskbarProgress.Set(videoFunc.ffprobeData.Count, videoFunc.ffprobeData.Count);
             else
-                run = ffprobeOutput.MainData.run;
+                TaskbarProgress.Error();
 
-            return ffprobeOutput;
+            if (ffprobeOutput.MainData.run == RunEnum.Done || ffprobeOutput.MainData.run == RunEnum.Warning)
+            {
+                VideoFunc.Delete(ffprobeOutput);
+                listView1.Items[useIdx].SubItems[subProgressIdx]!.Text = "100 %";
+                listView1.Items[useIdx].SubItems[subStatusIdx]!.Text = ffprobeOutput.MainData.run.GetDisplayName();
+                form1Control.UpdateProgres(100, 100);
+            }
+
+            listView1.Items[useIdx].SubItems[subStatusIdx]!.ForeColor = ffprobeOutput.MainData.run switch
+            {
+                RunEnum.Warning => Color.DarkGoldenrod,
+                RunEnum.Error => Color.Red,
+                RunEnum.Stop => Color.Red,
+                RunEnum.Done => Color.Green,
+                _ => Color.Black,
+            };
+
+            TimeSpan Timemint = TimeSpan.FromSeconds(sw.Elapsed.TotalSeconds);
+            listView1.Items[useIdx].SubItems[subTimeIdx]!.Text = string.Format("{0:D2}:{1:D2}:{2:D2}", Timemint.Hours, Timemint.Minutes, Timemint.Seconds);
+
+            return ffprobeOutput.MainData.run;
         }
 
         private FfprobeOutput ProcessAction(Func<FfprobeOutput, TaskHelper> action, FfprobeOutput ffprobeOutput, RunEnum runEnum, ref int exitCode, ref string msg)

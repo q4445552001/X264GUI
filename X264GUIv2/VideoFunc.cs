@@ -49,7 +49,10 @@ namespace X264GUIv2
                     merge.MainData = changeFunc(merge.MainData);
                     if (merge.MergeData is not null)
                         for (var i = 0; i < merge.MergeData.Count; i++)
+                        {
                             merge.MergeData[i] = changeFunc(merge.MergeData[i]);
+                            merge.MergeData[i].mergeIdx = merge.MergeData[i].idx;
+                        }
                     data = [merge];
                 }
                 else
@@ -341,14 +344,13 @@ namespace X264GUIv2
         {
             FfprobeOutput merge = new()
             {
-                MainData = ffprobeOutputMains.First(x => x.idx == 0).Clone(),
+                MainData = ffprobeOutputMains.First(x => x.mergeIdx == 0).Clone(),
                 MergeData = [.. ffprobeOutputMains.Select(x => x.Clone())],
             };
 
             for (int i = 0; i < merge.MergeData.Count; i++)
             {
                 merge.MergeData[i].MergeGuid = merge.MainData.Guid;
-                merge.MergeData[i].idx = -merge.MergeData[i].idx;
                 merge.MergeData[i].videoType = VideoTypeEnum.Merge;
             }
 
@@ -446,8 +448,8 @@ namespace X264GUIv2
                 arr.Add($@"-vf ""{string.Join(",", vf)}""");
             arr.Add($@"-c:v libx264");
             arr.Add($@"-b:v {ffprobeOutput.MainData.NewDetail.bitrate / 1000}k");
-            arr.Add($@"-maxrate {ffprobeOutput.bufSize() / 2 / 1000}k");
-            arr.Add($@"-bufsize {ffprobeOutput.bufSize() / 1000}k");
+            arr.Add($@"-maxrate {ffprobeOutput.MainData.maxrate / 1000}k");
+            arr.Add($@"-bufsize {ffprobeOutput.MainData.bufsize / 1000}k");
             arr.Add($@"-pass 1");
             arr.Add($@"-an");
             arr.Add($@"-f mp4 NUL");
@@ -477,8 +479,8 @@ namespace X264GUIv2
                 arr.Add($@"-vf ""{string.Join(",", vf)}""");
             arr.Add($@"-c:v libx264");
             arr.Add($@"-b:v {ffprobeOutput.MainData.NewDetail.bitrate / 1000}k");
-            arr.Add($@"-maxrate {ffprobeOutput.bufSize() / 2 / 1000}k");
-            arr.Add($@"-bufsize {ffprobeOutput.bufSize() / 1000}k");
+            arr.Add($@"-maxrate {ffprobeOutput.MainData.maxrate / 1000}k");
+            arr.Add($@"-bufsize {ffprobeOutput.MainData.bufsize / 1000}k");
             arr.Add($@"-pass 1");
             arr.Add($@"-an");
             arr.Add($@"-f mp4 NUL");
@@ -567,8 +569,8 @@ namespace X264GUIv2
                 arr.Add($@"-vf ""{string.Join(",", vf)}""");
             arr.Add($@"-c:v libx264");
             arr.Add($@"-b:v {ffprobeOutput.MainData.NewDetail.bitrate / 1000}k");
-            arr.Add($@"-maxrate {ffprobeOutput.bufSize() / 2 / 1000}k");
-            arr.Add($@"-bufsize {ffprobeOutput.bufSize() / 1000}k");
+            arr.Add($@"-maxrate {ffprobeOutput.MainData.maxrate / 1000}k");
+            arr.Add($@"-bufsize {ffprobeOutput.MainData.bufsize / 1000}k");
             arr.Add($@"-pass 2");
             arr.Add($@"""{ffprobeOutput.MainData.OutFile}""");
             arr.Add($@"-y");
@@ -618,8 +620,8 @@ namespace X264GUIv2
             }
             arr.Add($@"-c:v libx264");
             arr.Add($@"-b:v {ffprobeOutput.MainData.NewDetail.bitrate / 1000}k");
-            arr.Add($@"-maxrate {ffprobeOutput.bufSize() / 2 / 1000}k");
-            arr.Add($@"-bufsize {ffprobeOutput.bufSize() / 1000}k");
+            arr.Add($@"-maxrate {ffprobeOutput.MainData.maxrate / 1000}k");
+            arr.Add($@"-bufsize {ffprobeOutput.MainData.bufsize / 1000}k");
             arr.Add($@"-pass 2");
             arr.Add($@"""{ffprobeOutput.MainData.OutFile}""");
             arr.Add($@"-y");

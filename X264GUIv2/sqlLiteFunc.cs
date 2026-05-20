@@ -94,6 +94,7 @@ namespace X264GUIv2
                 x.MainData.audioSize,
                 x.MainData.InFile,
                 x.MainData.idx,
+                x.MainData.mergeIdx,
                 run = (int)x.MainData.run,
                 x.MainData.videoType,
                 x.MainData.audioMap,
@@ -113,6 +114,7 @@ namespace X264GUIv2
                 p.audioSize,
                 p.InFile,
                 x.MainData.idx,
+                p.mergeIdx,
                 run = (int)p.run,
                 p.videoType,
                 p.audioMap,
@@ -194,6 +196,7 @@ namespace X264GUIv2
                         AudioSamplineRate = ffprobeOutput.AudioSamplineRate,
                         videoCodeName = ffprobeOutput.videoCodeName,
                         idx = ffprobeOutput.idx,
+                        mergeIdx = ffprobeOutput.mergeIdx,
                         run = ffprobeOutput.run,
                         OriDetail = detail1,
                         NewDetail = detail2,
@@ -201,12 +204,12 @@ namespace X264GUIv2
                 }];
 
             List<FfprobeOutput> ffprobes1 = [.. ffprobes.Where(x => x.MainData.MergeGuid is null).OrderBy(x => x.MainData.idx)];
-            List<FfprobeOutput> ffprobes2 = [.. ffprobes.Where(x => x.MainData.MergeGuid is not null).OrderBy(x => x.MainData.idx)];
+            List<FfprobeOutput> ffprobes2 = [.. ffprobes.Where(x => x.MainData.MergeGuid is not null).OrderBy(x => x.MainData.idx).ThenBy(x => x.MainData.mergeIdx)];
 
             ffprobes1.AddRange([..ffprobes2.Where(x => x.MainData.Guid == x.MainData.MergeGuid).Select(x => new FfprobeOutput
             {
                 MainData = x.MainData,
-                MergeData = [..ffprobes2.Where(p => p.MainData.MergeGuid == x.MainData.Guid).OrderBy(p => p.MainData.idx).Select(x => x.MainData)],
+                MergeData = [..ffprobes2.Where(p => p.MainData.MergeGuid == x.MainData.Guid).OrderBy(p => p.MainData.idx).ThenBy(x => x.MainData.mergeIdx).Select(x => x.MainData)],
             })]);
 
             return ffprobes1;

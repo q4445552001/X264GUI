@@ -59,6 +59,7 @@ namespace X264GUIv2.Models
         public double audioSize { get; set; } = 0;
 
         public int idx { get; set; } = 0;
+        public int mergeIdx { get; set; } = 0;
 
         public RunEnum run { get; set; } = RunEnum.Idel;
 
@@ -67,6 +68,12 @@ namespace X264GUIv2.Models
 
         [NotMapped]
         public FfprobeOutputDetail OriDetail { get; set; } = new();
+
+        [NotMapped]
+        public double maxrate => OriDetail.bitrate;
+
+        [NotMapped]
+        public double bufsize => maxrate * 2;
 
         private string? _SubtitlesFile { get; set; }
         [NotMapped]
@@ -97,6 +104,7 @@ namespace X264GUIv2.Models
             AudionFormat = AudionFormat,
             AudioSamplineRate = AudioSamplineRate,
             idx = idx,
+            mergeIdx = mergeIdx,
             run = run,
 
             NewDetail = NewDetail,

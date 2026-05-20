@@ -7,6 +7,7 @@ namespace X264GUIv2
     {
         public readonly Form1 form;
         private FfprobeOutput formFfprobeOutput { get; set; } = new();
+        private FfprobeOutput tempFfprobeOutput { get; set; } = new();
 
         #region 內建元件
         public readonly ContextMenuStrip listViewMenu;
@@ -181,16 +182,12 @@ namespace X264GUIv2
                     return;
 
                 List<FfprobeOutputMain> ffprobeOutputMains = add(openfile.FileNames);
+                tempFfprobeOutput.MainData = formFfprobeOutput.MainData.Clone();
+                tempFfprobeOutput.MergeData = [];
+                tempFfprobeOutput.MergeData.AddRange(ffprobeOutputMains);
 
-                if (formFfprobeOutput.MergeData is null)
-                    formFfprobeOutput.MergeData = [];
-
-                formFfprobeOutput.MergeData.AddRange(ffprobeOutputMains);
-
-                FfprobeOutput merge = VideoFunc.mergeFunc(formFfprobeOutput.MergeData);
-
-                formFfprobeOutput.MainData = merge.MainData;
-                formFfprobeOutput.MergeData = merge.MergeData;
+                FfprobeOutput merge = VideoFunc.mergeFunc(tempFfprobeOutput.MergeData);
+                tempFfprobeOutput.MergeData = merge.MergeData;
 
                 addItem(ffprobeOutputMains);
             }
@@ -268,6 +265,12 @@ namespace X264GUIv2
             if (formFfprobeOutput.MergeData is null)
                 return;
 
+            if (tempFfprobeOutput.MergeData is not null)
+            {
+                formFfprobeOutput.MergeData.AddRange(tempFfprobeOutput.MergeData);
+                tempFfprobeOutput.MergeData = [];
+            }
+
             FfprobeOutputMain? newFfprobeOutputMain = formFfprobeOutput.MergeData.FirstOrDefault(x => x.Guid == editGuids.First().Key);
             if (newFfprobeOutputMain is null)
                 return;
@@ -277,7 +280,7 @@ namespace X264GUIv2
             {
                 if (!editGuids.ContainsKey(formFfprobeOutput.MergeData[i].Guid))
                     continue;
-                formFfprobeOutput.MergeData[i].idx = editGuids[formFfprobeOutput.MergeData[i].Guid];
+                formFfprobeOutput.MergeData[i].mergeIdx = editGuids[formFfprobeOutput.MergeData[i].Guid];
                 newFfprobeOutputMerges.Add(formFfprobeOutput.MergeData[i]);
             }
 
@@ -309,7 +312,7 @@ namespace X264GUIv2
                 (file, state, localVisited) =>
                 {
                     FfprobeOutputMain main = VideoFunc.ffprobe(file);
-                    main.idx = -main.idx;
+                    main.mergeIdx = main.idx;
                     _ffprobe.Add(main);
                     return localVisited;
                 },
@@ -325,7 +328,7 @@ namespace X264GUIv2
 
         private void addItem(List<FfprobeOutputMain> ffprobeOutputMains)
         {
-            foreach (FfprobeOutputMain ffprobe in ffprobeOutputMains.OrderByDescending(x => x.idx))
+            foreach (FfprobeOutputMain ffprobe in ffprobeOutputMains.OrderBy(x => x.mergeIdx))
             {
                 ListViewItem lis = new([ffprobe.InFileName])
                 {
