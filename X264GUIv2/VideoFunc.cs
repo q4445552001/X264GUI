@@ -446,6 +446,8 @@ namespace X264GUIv2
                 arr.Add($@"-vf ""{string.Join(",", vf)}""");
             arr.Add($@"-c:v libx264");
             arr.Add($@"-b:v {ffprobeOutput.MainData.NewDetail.bitrate / 1000}k");
+            arr.Add($@"-maxrate {ffprobeOutput.bufSize() / 2 / 1000}k");
+            arr.Add($@"-bufsize {ffprobeOutput.bufSize() / 1000}k");
             arr.Add($@"-pass 1");
             arr.Add($@"-an");
             arr.Add($@"-f mp4 NUL");
@@ -475,6 +477,8 @@ namespace X264GUIv2
                 arr.Add($@"-vf ""{string.Join(",", vf)}""");
             arr.Add($@"-c:v libx264");
             arr.Add($@"-b:v {ffprobeOutput.MainData.NewDetail.bitrate / 1000}k");
+            arr.Add($@"-maxrate {ffprobeOutput.bufSize() / 2 / 1000}k");
+            arr.Add($@"-bufsize {ffprobeOutput.bufSize() / 1000}k");
             arr.Add($@"-pass 1");
             arr.Add($@"-an");
             arr.Add($@"-f mp4 NUL");
@@ -553,7 +557,7 @@ namespace X264GUIv2
                 arr.Add($@"-ac 2");
                 arr.Add($@"-af ""{(hz == 0 ? "" : $"aresample={hz},")}asetpts=PTS-STARTPTS""");
                 arr.Add($@"-c:a aac");
-                arr.Add($@"-q:a 1");
+                arr.Add($@"-q:a 5");
             }
             else
             {
@@ -563,6 +567,8 @@ namespace X264GUIv2
                 arr.Add($@"-vf ""{string.Join(",", vf)}""");
             arr.Add($@"-c:v libx264");
             arr.Add($@"-b:v {ffprobeOutput.MainData.NewDetail.bitrate / 1000}k");
+            arr.Add($@"-maxrate {ffprobeOutput.bufSize() / 2 / 1000}k");
+            arr.Add($@"-bufsize {ffprobeOutput.bufSize() / 1000}k");
             arr.Add($@"-pass 2");
             arr.Add($@"""{ffprobeOutput.MainData.OutFile}""");
             arr.Add($@"-y");
@@ -604,7 +610,7 @@ namespace X264GUIv2
                 arr.Add($@"-ac 2");
                 arr.Add($@"-af ""{(hz == 0 ? "" : $"aresample={hz},")}asetpts=PTS-STARTPTS""");
                 arr.Add($@"-c:a aac");
-                arr.Add($@"-q:a 1");
+                arr.Add($@"-q:a 5");
             }
             else
             {
@@ -612,6 +618,8 @@ namespace X264GUIv2
             }
             arr.Add($@"-c:v libx264");
             arr.Add($@"-b:v {ffprobeOutput.MainData.NewDetail.bitrate / 1000}k");
+            arr.Add($@"-maxrate {ffprobeOutput.bufSize() / 2 / 1000}k");
+            arr.Add($@"-bufsize {ffprobeOutput.bufSize() / 1000}k");
             arr.Add($@"-pass 2");
             arr.Add($@"""{ffprobeOutput.MainData.OutFile}""");
             arr.Add($@"-y");

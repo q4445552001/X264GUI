@@ -241,6 +241,14 @@ namespace X264GUIv2
             return AudioHz.Default;
         }
 
+        public static double bufSize(this FfprobeOutput ffprobeOutput)
+        {
+            double maxrate = ffprobeOutput.MainData.NewDetail.bitrate * 2;
+            double bufsize = maxrate * 2;
+
+            return bufsize;
+        }
+
         public static int findFfprobItem(this List<FfprobeOutput> ffprobeOutputs, Guid? guid)
         {
             if (guid == null)
