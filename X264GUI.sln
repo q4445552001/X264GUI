@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.2.11415.280
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "X264", "X264.csproj", "{6995BDEF-B464-4916-A3BB-04A9019DE9AF}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "X264GUIv2", "X264GUIv2\X264GUIv2.csproj", "{005A6412-D4DB-F70B-36D8-09DDC573E0D9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "X264", "X264.csproj", "{6995BDEF-B464-4916-A3BB-04A9019DE9AF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
