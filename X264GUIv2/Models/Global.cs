@@ -53,17 +53,34 @@ namespace X264GUIv2.Models
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double DoneRemaining(double now, Stopwatch sw)
         {
-#pragma warning disable IDE0054 // 使用複合指派
+            if (now <= 0)
+                return DoneRemainingTotle;
 
-            if (now > 0)
-            {
-                double elapsedSeconds = sw.ElapsedTicks / (double)Stopwatch.Frequency;
-                DoneRemainingTotle = ((DoneTotle * 100d) - ((now * DoneRemainingUnit) + (100d * DoneCount))) * elapsedSeconds;
-                DoneRemainingTotle = DoneRemainingTotle / ((now * DoneRemainingUnit) + (100d * DoneCount));
-            }
+            // 已完成總影片秒數
+            double completed = DoneCount + now;
+
+            // 全部影片總秒數
+            double allTotal = DoneTotle;
+
+            if (completed <= 0 || allTotal <= 0)
+                return DoneRemainingTotle;
+
+            // 真實耗時
+            double elapsed = sw.Elapsed.TotalSeconds;
+
+            // 每秒真實時間可處理多少影片秒數
+            double speed = completed / elapsed;
+            if (speed <= 0)
+                return DoneRemainingTotle;
+
+            // 剩餘影片秒數
+            double remaining = DoneTotle - completed;
+            if (remaining <= 0)
+                return 0;
+
+            DoneRemainingTotle = remaining / speed;
+
             return DoneRemainingTotle;
-
-#pragma warning restore IDE0054 // 使用複合指派
         }
 
         #endregion
