@@ -51,30 +51,26 @@ namespace X264GUIv2.Models
         /// 剩餘時間
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double DoneRemaining(double now, Stopwatch sw)
+        public static double DoneRemaining(double now, double dur, Stopwatch sw)
         {
             if (now <= 0)
                 return DoneRemainingTotle;
 
             // 已完成總影片秒數
-            double completed = DoneCount + now;
-
-            // 全部影片總秒數
-            double allTotal = DoneTotle;
-
-            if (completed <= 0 || allTotal <= 0)
+            double completed = DoneCount + (now * (dur / 100));
+            //Debug.WriteLine($"已完成總影片秒數: {completed} = {DoneCount} + ({now} * ({dur} / 100))");
+            if (completed <= 0)
                 return DoneRemainingTotle;
 
-            // 真實耗時
-            double elapsed = sw.Elapsed.TotalSeconds;
-
             // 每秒真實時間可處理多少影片秒數
-            double speed = completed / elapsed;
+            double speed = completed / sw.Elapsed.TotalSeconds;
+            //Debug.WriteLine($"每秒真實時間可處理多少影片秒數: {speed} = {completed} / {sw.Elapsed.TotalSeconds}");
             if (speed <= 0)
                 return DoneRemainingTotle;
 
             // 剩餘影片秒數
             double remaining = DoneTotle - completed;
+            //Debug.WriteLine($"剩餘影片秒數: {remaining} = {DoneTotle} - {completed}");
             if (remaining <= 0)
                 return 0;
 

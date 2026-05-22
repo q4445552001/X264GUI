@@ -1030,7 +1030,7 @@ namespace X264GUIv2
             progressText.Text = $"{videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done || x.MainData.run == RunEnum.Warning)}/{videoFunc.ffprobeData.Count}";
 
             stopBtn.Enabled = true;
-            form1Control.UpdateProgres(0, videoFunc.ffprobeData.Count, sw1);
+            form1Control.UpdateProgres(0, videoFunc.ffprobeData.Count, ffprobeOutput.MainData.duration, sw1);
             TaskbarProgress.Clear();
             TaskbarProgress.Set(videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done || x.MainData.run == RunEnum.Warning), videoFunc.ffprobeData.Count);
 
@@ -1635,7 +1635,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                 VideoFunc.Delete(ffprobeOutput);
                 listView1.Items[useIdx].SubItems[subProgressIdx]!.Text = "100 %";
                 listView1.Items[useIdx].SubItems[subStatusIdx]!.Text = ffprobeOutput.MainData.run.GetDisplayName();
-                form1Control.UpdateProgres(100, 100, sw1);
+                form1Control.UpdateProgres(100, 100, ffprobeOutput.MainData.duration, sw1);
                 sw2.Stop();
             }
 

@@ -149,7 +149,7 @@ namespace X264GUIv2
             }
 
             float totalProgress = (completedWeight * 100f) + (currentWeight * pro);
-            UpdateProgres(totalProgress, 100, sw1);
+            UpdateProgres(totalProgress, 100, ffprobeOutput.MainData.duration, sw1);
         }
 
         public void btnControl(bool isClose)
@@ -192,7 +192,7 @@ namespace X264GUIv2
         /// <param name="sw">總消耗時間</param>
         /// <param name="totle">總目標進度</param>
         /// <param name="isPercentage">格式化</param>
-        public void UpdateProgres(float now, float count, Stopwatch sw, bool isPercentage = true)
+        public void UpdateProgres(float now, float count, double dur, Stopwatch sw, bool isPercentage = true)
         {
             if (now > 100 || now < 0)
                 return;
@@ -203,7 +203,7 @@ namespace X264GUIv2
                 form.progressBar1.PerformStep();
                 float v = now / count * 100;
                 string str = isPercentage ? Math.Round(v, 2).ToString("#0.00") + " %" : $"{now:#,##0}/{count:#,##0}";
-                TimeSpan ts = TimeSpan.FromSeconds(Global.DoneRemaining(now, sw));
+                TimeSpan ts = TimeSpan.FromSeconds(Global.DoneRemaining(now, dur, sw));
                 str += $"  eta.{(int)ts.TotalHours:000}:{ts:mm\\:ss}";
                 Font font = new("Consolas", 12, FontStyle.Bold);
                 PointF pt = new(form.progressBar1.Width / 2 - (str.Length * 4), form.progressBar1.Height / 2 - 10);
