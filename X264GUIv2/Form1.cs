@@ -192,7 +192,6 @@ namespace X264GUIv2
 
                     Stopwatch sw2 = new();
                     Global.DoneTotle = videoFunc.ffprobeData.Where(x => x.MainData.run != RunEnum.Done && x.MainData.run != RunEnum.Warning).Sum(x => x.MainData.duration);
-                    Global.DoneRemainingUnit = Global.DoneTotle / videoFunc.ffprobeData.Where(x => x.MainData.run != RunEnum.Done && x.MainData.run != RunEnum.Warning).Count();
                     Global.DoneCount = 0;
 
                     List<ListViewItem> listViewItems = [.. listView1.Items.Cast<ListViewItem>()];
@@ -213,7 +212,7 @@ namespace X264GUIv2
                             {
                                 videoFunc.ffprobeData[itemIdx].MainData.run = RunEnum.Error;
                                 errProcess(videoFunc.ffprobeData[itemIdx], sw1, sw2, -1);
-                                Global.DoneCount += videoFunc.ffprobeData[itemIdx].MainData.duration;
+                                Global.DoneTotle -= videoFunc.ffprobeData[itemIdx].MainData.duration;
                                 WriteFile.WriteLog(@$"""{videoFunc.ffprobeData[itemIdx].MainData.InFilePath}"" 路徑非[{Global.CodePage}]語言");
                                 continue;
                             }
@@ -231,7 +230,7 @@ namespace X264GUIv2
                         catch (Exception ex)
                         {
                             errProcess(videoFunc.ffprobeData[itemIdx], sw1, sw2, -1);
-                            Global.DoneCount += videoFunc.ffprobeData[itemIdx].MainData.duration;
+                            Global.DoneCount -= videoFunc.ffprobeData[itemIdx].MainData.duration;
                             WriteFile.WriteLog(ex.Message);
                             continue;
                         }

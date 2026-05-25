@@ -231,6 +231,8 @@ namespace X264GUIv2
                     UseShellExecute = true,
                 });
             }
+            else
+                MessageBox.Show($"{path} 無此路徑", "錯誤");
         }
 
         public static AudioHz getAudio_khz(this ToolStripMenuItem toolStripMenuItem)

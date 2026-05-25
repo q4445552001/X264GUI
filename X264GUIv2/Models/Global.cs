@@ -38,11 +38,6 @@ namespace X264GUIv2.Models
         public static double DoneCount { get; set; } = 0;
 
         /// <summary>
-        /// 單位
-        /// </summary>
-        public static double DoneRemainingUnit { get; set; } = 1;
-
-        /// <summary>
         /// 上次進度
         /// </summary>
         public static double DoneRemainingTotle { get; set; } = 0d;
