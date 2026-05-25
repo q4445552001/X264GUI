@@ -230,7 +230,7 @@ namespace X264GUIv2
                         catch (Exception ex)
                         {
                             errProcess(videoFunc.ffprobeData[itemIdx], sw1, sw2, -1);
-                            Global.DoneCount -= videoFunc.ffprobeData[itemIdx].MainData.duration;
+                            Global.DoneTotle -= videoFunc.ffprobeData[itemIdx].MainData.duration;
                             WriteFile.WriteLog(ex.Message);
                             continue;
                         }
