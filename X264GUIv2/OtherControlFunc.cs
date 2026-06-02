@@ -170,6 +170,36 @@ namespace X264GUIv2
             }
         }
 
+        public static void setColor(this ListViewItem listViewItem, int subStatusIdx, RunEnum runEnum)
+        {
+            listViewItem.BackColor = runEnum switch
+            {
+                RunEnum.Warning => Color.DarkGoldenrod,
+                RunEnum.Error => Color.Red,
+                RunEnum.Stop => Color.Red,
+                RunEnum.Done => Color.Green,
+                _ => default,
+            };
+
+            listViewItem.SubItems[0].ForeColor = runEnum switch
+            {
+                RunEnum.Warning => Color.White,
+                RunEnum.Error => Color.White,
+                RunEnum.Stop => Color.White,
+                RunEnum.Done => Color.White,
+                _ => default,
+            };
+
+            listViewItem.SubItems[subStatusIdx].ForeColor = runEnum switch
+            {
+                RunEnum.Warning => Color.DarkGoldenrod,
+                RunEnum.Error => Color.Red,
+                RunEnum.Stop => Color.Red,
+                RunEnum.Done => Color.Green,
+                _ => default,
+            };
+        }
+
         /// <summary>
         /// 取得Enum DisplayName
         /// </summary>

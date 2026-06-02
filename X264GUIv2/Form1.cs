@@ -493,14 +493,7 @@ namespace X264GUIv2
                 foreach (var item in videoFunc.ffprobeData)
                 {
                     int idx = listView1.findListItem(item.MainData.Guid);
-                    listView1.Items[idx].SubItems[subStatusIdx].ForeColor = item.MainData.run switch
-                    {
-                        RunEnum.Warning => Color.DarkGoldenrod,
-                        RunEnum.Error => Color.Red,
-                        RunEnum.Stop => Color.Red,
-                        RunEnum.Done => Color.Green,
-                        _ => Color.Black,
-                    };
+                    listView1.Items[idx].setColor(subStatusIdx, item.MainData.run);
                 }
 
                 progressText.Text = $"{videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done || x.MainData.run == RunEnum.Warning)}/{videoFunc.ffprobeData.Count}";
@@ -911,15 +904,8 @@ namespace X264GUIv2
 
                         VideoFunc.Delete(videoFunc.ffprobeData[idx1]);
                         videoFunc.ffprobeData[idx1].MainData.run = videoFunc.ffprobeData[idx1].MainData.run == RunEnum.Warning ? RunEnum.Warning : RunEnum.Done;
-                        listView1.Items[idx2].SubItems[subStatusIdx]!.ForeColor = videoFunc.ffprobeData[idx1].MainData.run switch
-                        {
-                            RunEnum.Warning => Color.DarkGoldenrod,
-                            RunEnum.Error => Color.Red,
-                            RunEnum.Stop => Color.Red,
-                            RunEnum.Done => Color.Green,
-                            _ => Color.Black,
-                        };
 
+                        listView1.Items[idx2].setColor(subStatusIdx, videoFunc.ffprobeData[idx1].MainData.run);
                         listView1.Items[idx2].SubItems[subStatusIdx]!.Text = (videoFunc.ffprobeData[idx1].MainData.run == RunEnum.Warning ? RunEnum.Warning : RunEnum.Done).GetDisplayName();
                     }
 
@@ -1638,15 +1624,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                 sw2.Stop();
             }
 
-            listView1.Items[useIdx].SubItems[subStatusIdx]!.ForeColor = ffprobeOutput.MainData.run switch
-            {
-                RunEnum.Warning => Color.DarkGoldenrod,
-                RunEnum.Error => Color.Red,
-                RunEnum.Stop => Color.Red,
-                RunEnum.Done => Color.Green,
-                _ => Color.Black,
-            };
-
+            listView1.Items[useIdx].setColor(subStatusIdx, ffprobeOutput.MainData.run);
             TimeSpan Timemint = TimeSpan.FromSeconds(sw2.Elapsed.TotalSeconds);
             listView1.Items[useIdx].SubItems[subTimeIdx]!.Text = string.Format("{0:D2}:{1:D2}:{2:D2}", Timemint.Hours, Timemint.Minutes, Timemint.Seconds);
 
