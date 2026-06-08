@@ -138,7 +138,7 @@ namespace X264GUIv2
             ffprobeOutput = new()
             {
                 duration = double.TryParse(stuff.format?.duration, out double _duration) ? _duration : 0,
-                videoSize = int.TryParse(stuff.format?.size, out int _vsize) ? _vsize : 0,
+                videoSize = long.TryParse(stuff.format?.size, out long _vsize) ? _vsize : 0,
                 audioSize = audioSize,
                 isAac = audio?.codec_name == "aac",
                 audioMap = audio?.index ?? 0,
