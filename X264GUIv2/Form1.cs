@@ -1258,7 +1258,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                 ArgumentList = {
                    $@"-log=NUL",
                    $@"""{audioFile}""",
-                   $@"""{ff.MainData.InFilePath}\{ff.MainData.avsTempFile}.aac""",
+                   $@"""{ff.MainData.InFilePath}\{ff.MainData.avsTempFile}.m4a""",
                 },
                 ActionOut = sr =>
                 {
@@ -1344,7 +1344,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                     audioFile = ffprobeOutput.MainData.InFile;
             }
             else
-                audioFile = ffprobeOutput.MainData.InFile;
+                audioFile = $"{ffprobeOutput.MainData.avsTempFile}.m4a";
 
             ffprobeOutput = ProcessAction(ff => new()
             {
