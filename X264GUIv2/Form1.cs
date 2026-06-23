@@ -1171,7 +1171,8 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
             if (ffprobeOutput.MainData.videoType != VideoTypeEnum.Aviscript && ffprobeOutput.MainData.audioMap == 0)
                 return ffprobeOutput;
 
-            if (AutoTrimToolStripMenuItem.Checked || ffprobeOutput.MainData.videoType == VideoTypeEnum.Aviscript)
+            if (AutoTrimToolStripMenuItem.Checked || ffprobeOutput.MainData.videoType == VideoTypeEnum.Aviscript
+                || ffprobeOutput.MainData.AudionFormat.Equals("OPUS", StringComparison.CurrentCultureIgnoreCase))
             {
                 int hz = form1Control.AudioCalculate(ffprobeOutput);
                 ffprobeOutput = ProcessAction(ff => new()
@@ -1649,7 +1650,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
             {
                 TaskHelper t = action.Invoke(ffprobeOutput);
                 exitCode = t.RunTask();
-                msg += string.IsNullOrWhiteSpace(t.isCloseMsg) ? "" : ("\n" + t.isCloseMsg);
+                msg += string.IsNullOrWhiteSpace(t.isCloseMsg) ? "轉換錯誤" : ("\n" + t.isCloseMsg);
             }
             catch (Exception ex)
             {
