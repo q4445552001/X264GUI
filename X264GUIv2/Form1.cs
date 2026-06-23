@@ -1056,7 +1056,9 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
             WeighAllot weighAllot = new((
                 ffprobeOutput.MainData.isLocalEncode &&
                 ffprobeOutput.MainData.videoType == VideoTypeEnum.Normal &&
-                ffprobeOutput.MainData.audioMap > 0 && AutoTrimToolStripMenuItem.Checked) || ffprobeOutput.MainData.videoType == VideoTypeEnum.Aviscript
+                ffprobeOutput.MainData.audioMap > 0 && AutoTrimToolStripMenuItem.Checked)
+                    || ffprobeOutput.MainData.videoType == VideoTypeEnum.Aviscript
+                    || ffprobeOutput.MainData.AudionFormat.Equals("OPUS", StringComparison.CurrentCultureIgnoreCase)
             );
 
             TaskbarProgress.Set(videoFunc.ffprobeData.Count(x => x.MainData.run == RunEnum.Done || x.MainData.run == RunEnum.Warning), videoFunc.ffprobeData.Count);
