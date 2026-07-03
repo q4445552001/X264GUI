@@ -1,4 +1,6 @@
-﻿namespace X264GUIv2.Models
+﻿using X264GUIv2.Enums;
+
+namespace X264GUIv2.Models
 {
     internal class DetailsItem
     {
@@ -9,11 +11,13 @@
         public string Resolution { get; set; } = string.Empty;
         public string Duration { get; set; } = string.Empty;
         public string Size { get; set; } = string.Empty;
-        public string Progress { get; set; } = string.Empty;
-        public string Status { get; set; } = string.Empty;
-        public string Time { get; set; } = string.Empty;
+        public string Progress => StatusEnum == RunEnum.Done ? "100 %" : "0.00 %";
+        public string Status => StatusEnum.GetDisplayName();
+        public string Time = "00:00:00";
         public string Path { get; set; } = string.Empty;
         public string Text { get; set; } = string.Empty;
         public string VideoType { get; set; } = string.Empty;
+
+        public RunEnum StatusEnum { get; set; } = RunEnum.Idel;
     }
 }

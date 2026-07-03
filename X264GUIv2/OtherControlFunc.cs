@@ -59,9 +59,7 @@ namespace X264GUIv2
             detailsItem.Resolution = $"{FfprobeOutputMain.OriDetail.resolution} > {FfprobeOutputMain.NewDetail.resolution}";
             detailsItem.Duration = TimeSpan.FromSeconds(FfprobeOutputMain.duration).ToString(@"hh\:mm\:ss");
             detailsItem.Size = $"{(OldCapacity == "0" ? "NUL" : OldCapacity)} > {NewCapacity}";
-            detailsItem.Progress = "00.00 %";
-            detailsItem.Status = FfprobeOutputMain.run.GetDisplayName();
-            detailsItem.Time = "00:00:00";
+            detailsItem.StatusEnum = FfprobeOutputMain.run;
             detailsItem.Path = FfprobeOutputMain.InFile ?? "";
 
             string videoType = $"{FfprobeOutputMain.videoCodeName}/{Path.GetExtension(FfprobeOutputMain.InFileName).Replace(".", "")}";
@@ -114,7 +112,7 @@ namespace X264GUIv2
                     continue;
 
                 if (_map.TryGetValue(item.Name, out var getter))
-                    row.Add(getter(detailsItem) ?? string.Empty);
+                    row.Add(getter.Invoke(detailsItem) ?? string.Empty);
                 else
                     row.Add(string.Empty);
             }
