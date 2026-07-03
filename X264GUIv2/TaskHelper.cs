@@ -147,6 +147,7 @@ namespace X264GUIv2
             p.Start();
             p.BeginOutputReadLine();
             p.BeginErrorReadLine();
+            TaskHelperAddons.ProcessPids.Add(p.Id, p.ProcessName);
 
             closeDialogBox(p);
 
@@ -168,6 +169,7 @@ namespace X264GUIv2
 
             Environment.CurrentDirectory = Path.GetDirectoryName(Environment.ProcessPath) ?? throw new Exception("路徑失敗");
 
+            TaskHelperAddons.ProcessPids.Remove(p.Id);
             return p.ExitCode;
         }
 

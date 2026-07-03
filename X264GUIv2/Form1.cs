@@ -180,6 +180,12 @@ namespace X264GUIv2
 
         private void runBtn_Click(object sender, EventArgs e)
         {
+            if (Cts != null && !Cts.IsCancellationRequested)
+            {
+                OtherControlFunc.ShowError("執行中");
+                return;
+            }
+
             if (listView1.Items.Count != 0)
             {
                 Cts = new();
@@ -252,6 +258,8 @@ namespace X264GUIv2
             if (Cts != null && !Cts.Token.IsCancellationRequested)
             {
                 Cts.Cancel();
+                TaskHelperAddons.killProcess("neroAacEnc", "ffprobe", "ffmpeg", "x264", "avs4x26x", "mp4box", "eac3to");
+
                 //listView1.Items[useIdx].UseItemStyleForSubItems = false;
                 listView1.Items[useIdx].SubItems[subStatusIdx]!.Text = RunEnum.Stop.GetDisplayName();
 
