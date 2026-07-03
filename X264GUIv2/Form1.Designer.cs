@@ -74,6 +74,12 @@
             toolStripSeparator4 = new ToolStripSeparator();
             HASHToolStripMenuItem = new ToolStripMenuItem();
             HASHPathToolStripMenuItem = new ToolStripMenuItem();
+            toolStripSeparator5 = new ToolStripSeparator();
+            FinshRunPowerToolStripMenuItem = new ToolStripMenuItem();
+            StopToolStripMenuItem = new ToolStripMenuItem();
+            HibernateToolStripMenuItem = new ToolStripMenuItem();
+            SleepToolStripMenuItem = new ToolStripMenuItem();
+            OffToolStripMenuItem = new ToolStripMenuItem();
             upBtn = new Button();
             dnBtn = new Button();
             ((System.ComponentModel.ISupportInitialize)bitrateNumeric).BeginInit();
@@ -380,7 +386,7 @@
             // 
             // settingToolStripMenuItem
             // 
-            settingToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { AutoTrimToolStripMenuItem, kHzToolStripMenuItem, toolStripSeparator4, HASHToolStripMenuItem, HASHPathToolStripMenuItem });
+            settingToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { AutoTrimToolStripMenuItem, kHzToolStripMenuItem, toolStripSeparator4, HASHToolStripMenuItem, HASHPathToolStripMenuItem, toolStripSeparator5, FinshRunPowerToolStripMenuItem });
             settingToolStripMenuItem.Name = "settingToolStripMenuItem";
             settingToolStripMenuItem.Size = new Size(43, 20);
             settingToolStripMenuItem.Text = "設定";
@@ -389,14 +395,14 @@
             // 
             AutoTrimToolStripMenuItem.CheckOnClick = true;
             AutoTrimToolStripMenuItem.Name = "AutoTrimToolStripMenuItem";
-            AutoTrimToolStripMenuItem.Size = new Size(180, 22);
+            AutoTrimToolStripMenuItem.Size = new Size(206, 22);
             AutoTrimToolStripMenuItem.Text = "啟用音軌修剪";
             // 
             // kHzToolStripMenuItem
             // 
             kHzToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { kHzDefaultToolStripMenuItem, kHz441ToolStripMenuItem, kHz480ToolStripMenuItem });
             kHzToolStripMenuItem.Name = "kHzToolStripMenuItem";
-            kHzToolStripMenuItem.Size = new Size(180, 22);
+            kHzToolStripMenuItem.Size = new Size(206, 22);
             kHzToolStripMenuItem.Text = "音軌 修剪/AVS 採樣";
             // 
             // kHzDefaultToolStripMenuItem
@@ -428,21 +434,67 @@
             // toolStripSeparator4
             // 
             toolStripSeparator4.Name = "toolStripSeparator4";
-            toolStripSeparator4.Size = new Size(177, 6);
+            toolStripSeparator4.Size = new Size(203, 6);
             // 
             // HASHToolStripMenuItem
             // 
             HASHToolStripMenuItem.CheckOnClick = true;
             HASHToolStripMenuItem.Name = "HASHToolStripMenuItem";
-            HASHToolStripMenuItem.Size = new Size(180, 22);
+            HASHToolStripMenuItem.Size = new Size(206, 22);
             HASHToolStripMenuItem.Text = "啟用HASH檢查";
             // 
             // HASHPathToolStripMenuItem
             // 
             HASHPathToolStripMenuItem.Name = "HASHPathToolStripMenuItem";
-            HASHPathToolStripMenuItem.Size = new Size(180, 22);
+            HASHPathToolStripMenuItem.Size = new Size(206, 22);
             HASHPathToolStripMenuItem.Text = "設定HASH儲存位置";
             HASHPathToolStripMenuItem.Click += HASHPathToolStripMenuItem_Click;
+            // 
+            // toolStripSeparator5
+            // 
+            toolStripSeparator5.Name = "toolStripSeparator5";
+            toolStripSeparator5.Size = new Size(203, 6);
+            // 
+            // FinshRunPowerToolStripMenuItem
+            // 
+            FinshRunPowerToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { StopToolStripMenuItem, HibernateToolStripMenuItem, SleepToolStripMenuItem, OffToolStripMenuItem });
+            FinshRunPowerToolStripMenuItem.Name = "FinshRunPowerToolStripMenuItem";
+            FinshRunPowerToolStripMenuItem.Size = new Size(206, 22);
+            FinshRunPowerToolStripMenuItem.Text = "轉檔結束後要執行的動作";
+            // 
+            // StopToolStripMenuItem
+            // 
+            StopToolStripMenuItem.Checked = true;
+            StopToolStripMenuItem.CheckOnClick = true;
+            StopToolStripMenuItem.CheckState = CheckState.Checked;
+            StopToolStripMenuItem.Name = "StopToolStripMenuItem";
+            StopToolStripMenuItem.Size = new Size(180, 22);
+            StopToolStripMenuItem.Text = "停用";
+            StopToolStripMenuItem.Click += StopToolStripMenuItem_Click;
+            // 
+            // HibernateToolStripMenuItem
+            // 
+            HibernateToolStripMenuItem.CheckOnClick = true;
+            HibernateToolStripMenuItem.Name = "HibernateToolStripMenuItem";
+            HibernateToolStripMenuItem.Size = new Size(180, 22);
+            HibernateToolStripMenuItem.Text = "休眠";
+            HibernateToolStripMenuItem.Click += HibernateToolStripMenuItem_Click;
+            // 
+            // SleepToolStripMenuItem
+            // 
+            SleepToolStripMenuItem.CheckOnClick = true;
+            SleepToolStripMenuItem.Name = "SleepToolStripMenuItem";
+            SleepToolStripMenuItem.Size = new Size(180, 22);
+            SleepToolStripMenuItem.Text = "睡眠";
+            SleepToolStripMenuItem.Click += SleepToolStripMenuItem_Click;
+            // 
+            // OffToolStripMenuItem
+            // 
+            OffToolStripMenuItem.CheckOnClick = true;
+            OffToolStripMenuItem.Name = "OffToolStripMenuItem";
+            OffToolStripMenuItem.Size = new Size(180, 22);
+            OffToolStripMenuItem.Text = "關機";
+            OffToolStripMenuItem.Click += OffToolStripMenuItem_Click;
             // 
             // upBtn
             // 
@@ -553,5 +605,11 @@
         public ToolStripMenuItem HASHToolStripMenuItem;
         public ToolStripMenuItem HASHPathToolStripMenuItem;
         public ToolStripMenuItem HASHOpenToolStripMenuItem;
+        public ToolStripSeparator toolStripSeparator5;
+        public ToolStripMenuItem FinshRunPowerToolStripMenuItem;
+        public ToolStripMenuItem StopToolStripMenuItem;
+        public ToolStripMenuItem HibernateToolStripMenuItem;
+        public ToolStripMenuItem OffToolStripMenuItem;
+        public ToolStripMenuItem SleepToolStripMenuItem;
     }
 }

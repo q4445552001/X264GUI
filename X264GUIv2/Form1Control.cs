@@ -94,6 +94,55 @@ namespace X264GUIv2
             return (int)audioHz;
         }
 
+        public void Poweroff()
+        {
+            ToolStripMenuItem? item = form.FinshRunPowerToolStripMenuItem.DropDownItems.Cast<ToolStripMenuItem>().FirstOrDefault(x => x.Checked);
+            if (item == null)
+                return;
+
+            PowerEnum? e = (PowerEnum?)item.Tag;
+            if (e == null || e == PowerEnum.Stop)
+                return;
+
+            List<string> par = [];
+            switch (e)
+            {
+                case PowerEnum.Hibernate:
+                    par.Add("-h");
+                    break;
+                case PowerEnum.Out:
+                    par.Add("-l");
+                    break;
+                case PowerEnum.Off:
+                    par.Add("-s");
+                    par.Add("-t");
+                    par.Add("0");
+                    break;
+            }
+
+            int sec = 10;
+
+            CancellationTokenSource _cts = new();
+            Task.Run(() =>
+            {
+                for (int s = 0; s <= sec; s++)
+                {
+                    Thread.Sleep(1000);
+                    if (_cts.IsCancellationRequested)
+                        return;
+                }
+
+                if (_cts.IsCancellationRequested)
+                    return;
+
+                Process.Start("shutdown.exe", string.Join(" ", par));
+            }, _cts.Token);
+
+            DialogResult box = MessageBox.Show($"轉檔完成，{sec} 秒後 {e.GetDisplayName()}", "提示", MessageBoxButtons.OKCancel);
+            if (box == DialogResult.Cancel)
+                _cts.Cancel();
+        }
+
         public void calculateProgres(FfprobeOutput ffprobeOutput, float pro, WeighAllot weighAllot, Stopwatch sw1)
         {
             //WeighAllot weighAllot = new(

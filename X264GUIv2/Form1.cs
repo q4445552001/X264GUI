@@ -104,8 +104,15 @@ namespace X264GUIv2
             kHzDefaultToolStripMenuItem.Tag = AudioHz.Default;
             kHz441ToolStripMenuItem.Tag = AudioHz._441;
             kHz480ToolStripMenuItem.Tag = AudioHz._480;
+
+            StopToolStripMenuItem.Tag = PowerEnum.Stop;
+            HibernateToolStripMenuItem.Tag = PowerEnum.Hibernate;
+            SleepToolStripMenuItem.Tag = PowerEnum.Sleep;
+            OffToolStripMenuItem.Tag = PowerEnum.Off;
+
             settingToolStripMenuItem.DropDown.Closing += settingToolStripMenuItem_DropDownClosing;
             kHzToolStripMenuItem.DropDown.Closing += settingToolStripMenuItem_DropDownClosing;
+            FinshRunPowerToolStripMenuItem.DropDown.Closing += settingToolStripMenuItem_DropDownClosing;
 
             #region ContextMenuStrip
             listViewMenu = new();
@@ -245,10 +252,17 @@ namespace X264GUIv2
                     }
 
                     form1Control.btnControl(true);
-                    Cts.Cancel();
 
                     sw1.Stop();
                     timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
+
+                    if (!Cts.Token.IsCancellationRequested)
+                    {
+                        Cts.Cancel();
+                        form1Control.Poweroff();
+                    }
+
+                    Cts.Cancel();
                 }, Cts.Token);
             }
         }
@@ -593,6 +607,34 @@ namespace X264GUIv2
         {
             kHzDefaultToolStripMenuItem.Checked = false;
             kHz441ToolStripMenuItem.Checked = false;
+        }
+
+        private void StopToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            HibernateToolStripMenuItem.Checked = false;
+            SleepToolStripMenuItem.Checked = false;
+            OffToolStripMenuItem.Checked = false;
+        }
+
+        private void HibernateToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            StopToolStripMenuItem.Checked = false;
+            SleepToolStripMenuItem.Checked = false;
+            OffToolStripMenuItem.Checked = false;
+        }
+
+        private void SleepToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            StopToolStripMenuItem.Checked = false;
+            HibernateToolStripMenuItem.Checked = false;
+            OffToolStripMenuItem.Checked = false;
+        }
+
+        private void OffToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            StopToolStripMenuItem.Checked = false;
+            HibernateToolStripMenuItem.Checked = false;
+            SleepToolStripMenuItem.Checked = false;
         }
 
         private void HASHPathToolStripMenuItem_Click(object sender, EventArgs e)

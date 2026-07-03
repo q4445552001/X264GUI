@@ -8,9 +8,11 @@ namespace X264GUIv2
         [STAThread]
         static void Main(string[] args)
         {
+#if !DEBUG
             using var mutex = new Mutex(true, Application.ProductName, out var isFirstOpen);
             if (!isFirstOpen && MessageBox.Show("程式已開啟", "提示") == DialogResult.OK)
                 Environment.Exit(1);
+#endif
 
             string[] files = [
                 @".\bin\ffmpeg\ffprobe.exe",
