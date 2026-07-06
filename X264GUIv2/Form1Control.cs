@@ -94,6 +94,21 @@ namespace X264GUIv2
             return (int)audioHz;
         }
 
+        public void saveItems()
+        {
+            form.videoFunc.ffprobeData = form.listView1.SortIdx(form.videoFunc.ffprobeData);
+
+            using var sql = new sqlLiteFunc();
+            sql.InsertMain(form.videoFunc.ffprobeData, new()
+            {
+                AutoTrim_Click = form.AutoTrimToolStripMenuItem.Checked,
+                KhzDefault_Click = form.kHzDefaultToolStripMenuItem.Checked,
+                kHz441_Click = form.kHz441ToolStripMenuItem.Checked,
+                kHz480_Click = form.kHz480ToolStripMenuItem.Checked,
+                HASH_Click = form.HASHToolStripMenuItem.Checked,
+            });
+        }
+
         public void Poweroff()
         {
             ToolStripMenuItem? item = form.FinshRunPowerToolStripMenuItem.DropDownItems.Cast<ToolStripMenuItem>().FirstOrDefault(x => x.Checked);
@@ -128,12 +143,14 @@ namespace X264GUIv2
                 for (int s = 0; s <= sec; s++)
                 {
                     Thread.Sleep(1000);
-                    if (_cts.IsCancellationRequested)
-                        return;
+                    if (_cts.IsCancellationRequested) return;
                 }
 
-                if (_cts.IsCancellationRequested)
-                    return;
+                if (_cts.IsCancellationRequested) return;
+
+                saveItems();
+
+                if (_cts.IsCancellationRequested) return;
 
                 Process.Start("shutdown.exe", string.Join(" ", par));
             }, _cts.Token);

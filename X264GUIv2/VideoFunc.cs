@@ -24,20 +24,37 @@ namespace X264GUIv2
                     index = idx,
                 })];
 
+
+                ParallelOptions options = new()
+                {
+                    MaxDegreeOfParallelism = -1
+                };
+
+#if DEBUG
+                options.MaxDegreeOfParallelism = 1;
+#endif
+
                 ConcurrentBag<FfprobeOutputMain> _ffprobe = [];
-                Parallel.ForEach(loadFiles,
+                Parallel.ForEach(loadFiles, options,
                     () => new HashSet<object>(), // 每個 thread 一份
                     (file, state, localVisited) =>
                     {
-                        if (file.videoType == VideoTypeEnum.Aviscript)
-                            _ffprobe.Add(avsffprobe(file));
-                        else
+                        try
                         {
-                            FfprobeOutputMain main = ffprobe(file);
-                            main.videoType = isMerge ? VideoTypeEnum.Merge : main.videoType;
-                            _ffprobe.Add(main);
+                            if (file.videoType == VideoTypeEnum.Aviscript)
+                                _ffprobe.Add(avsffprobe(file));
+                            else
+                            {
+                                FfprobeOutputMain main = ffprobe(file);
+                                main.videoType = isMerge ? VideoTypeEnum.Merge : main.videoType;
+                                _ffprobe.Add(main);
+                            }
+                            return localVisited;
                         }
-                        return localVisited;
+                        catch
+                        {
+                            throw;
+                        }
                     },
                     _ => { }
                 );

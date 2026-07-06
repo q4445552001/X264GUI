@@ -540,17 +540,7 @@ namespace X264GUIv2
                 if (!(MessageBox.Show("確定儲存進度及設定?", "提示", MessageBoxButtons.YesNo) == DialogResult.Yes))
                     return;
 
-                videoFunc.ffprobeData = listView1.SortIdx(videoFunc.ffprobeData);
-
-                using var sql = new sqlLiteFunc();
-                sql.InsertMain(videoFunc.ffprobeData, new()
-                {
-                    AutoTrim_Click = AutoTrimToolStripMenuItem.Checked,
-                    KhzDefault_Click = kHzDefaultToolStripMenuItem.Checked,
-                    kHz441_Click = kHz441ToolStripMenuItem.Checked,
-                    kHz480_Click = kHz480ToolStripMenuItem.Checked,
-                    HASH_Click = HASHToolStripMenuItem.Checked,
-                });
+                form1Control.saveItems();
             }
             catch (Exception ex)
             {
