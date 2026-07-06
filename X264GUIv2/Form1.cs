@@ -248,6 +248,7 @@ namespace X264GUIv2
                             continue;
                         }
 
+                        videoFunc.ffprobeData[itemIdx].MainData.timeConsuming = sw2.Elapsed.TotalSeconds;
                         sw2.Stop();
                     }
 
@@ -981,7 +982,7 @@ namespace X264GUIv2
             {
                 form1Control.bitrateCBoxControl(true);
 
-                listView1.listViewCheck(videoFunc.ffprobeData, idx => videoFunc.ffprobeData[idx].MainData = videoFunc.bitRateFunc(videoFunc.ffprobeData[idx].MainData));
+                listView1.listViewCheck(videoFunc.ffprobeData, idx => videoFunc.ffprobeData[idx].MainData = videoFunc.bitRateFunc(videoFunc.ffprobeData[idx].MainData), subStatusIdx);
             }
             catch (Exception ex)
             {
@@ -993,7 +994,7 @@ namespace X264GUIv2
         {
             try
             {
-                listView1.listViewCheck(videoFunc.ffprobeData, idx => videoFunc.ffprobeData[idx].MainData = videoFunc.fpsFunc(videoFunc.ffprobeData[idx].MainData));
+                listView1.listViewCheck(videoFunc.ffprobeData, idx => videoFunc.ffprobeData[idx].MainData = videoFunc.fpsFunc(videoFunc.ffprobeData[idx].MainData), subStatusIdx);
             }
             catch (Exception ex)
             {
@@ -1005,7 +1006,7 @@ namespace X264GUIv2
         {
             try
             {
-                listView1.listViewCheck(videoFunc.ffprobeData, idx => videoFunc.ffprobeData[idx].MainData = videoFunc.resolutionFunc(videoFunc.ffprobeData[idx].MainData));
+                listView1.listViewCheck(videoFunc.ffprobeData, idx => videoFunc.ffprobeData[idx].MainData = videoFunc.resolutionFunc(videoFunc.ffprobeData[idx].MainData), subStatusIdx);
             }
             catch (Exception ex)
             {
@@ -1031,7 +1032,7 @@ namespace X264GUIv2
                 if (bitrateNumeric.Value == 0)
                     return;
 
-                listView1.listViewCheck(videoFunc.ffprobeData, idx => videoFunc.ffprobeData[idx].MainData = videoFunc.bitRateNumericFunc(videoFunc.ffprobeData[idx].MainData));
+                listView1.listViewCheck(videoFunc.ffprobeData, idx => videoFunc.ffprobeData[idx].MainData = videoFunc.bitRateNumericFunc(videoFunc.ffprobeData[idx].MainData), subStatusIdx);
             }
             catch (Exception ex)
             {

@@ -13,7 +13,7 @@ namespace X264GUIv2.Models
         public string Size { get; set; } = string.Empty;
         public string Progress => StatusEnum == RunEnum.Done ? "100 %" : "0.00 %";
         public string Status => StatusEnum.GetDisplayName();
-        public string Time = "00:00:00";
+        public string Time { get; set; } = "00:00:00";
         public string Path { get; set; } = string.Empty;
         public string Text { get; set; } = string.Empty;
         public string VideoType { get; set; } = string.Empty;

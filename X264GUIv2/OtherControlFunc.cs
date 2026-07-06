@@ -27,7 +27,7 @@ namespace X264GUIv2
             return ffprobeOutputs;
         }
 
-        public static void listViewCheck(this ListView listView, List<FfprobeOutput> ffprobeOutputs, Action<int> action)
+        public static void listViewCheck(this ListView listView, List<FfprobeOutput> ffprobeOutputs, Action<int> action, int subStatusIdx)
         {
             IList<int> idxs = [];
 
@@ -39,6 +39,7 @@ namespace X264GUIv2
                 action.Invoke(idx);
 
                 listView.Items[ffprobeOutputs[idx].MainData.idx] = listView.DataViewObject(ffprobeOutputs[idx].MainData);
+                listView.Items[ffprobeOutputs[idx].MainData.idx].setColor(subStatusIdx, ffprobeOutputs[idx].MainData.run);
             }
 
             foreach (int idx in idxs)
@@ -59,6 +60,7 @@ namespace X264GUIv2
             detailsItem.Resolution = $"{FfprobeOutputMain.OriDetail.resolution} > {FfprobeOutputMain.NewDetail.resolution}";
             detailsItem.Duration = TimeSpan.FromSeconds(FfprobeOutputMain.duration).ToString(@"hh\:mm\:ss");
             detailsItem.Size = $"{(OldCapacity == "0" ? "NUL" : OldCapacity)} > {NewCapacity}";
+            detailsItem.Time = TimeSpan.FromSeconds(FfprobeOutputMain.timeConsuming).ToString(@"hh\:mm\:ss");
             detailsItem.StatusEnum = FfprobeOutputMain.run;
             detailsItem.Path = FfprobeOutputMain.InFile ?? "";
 

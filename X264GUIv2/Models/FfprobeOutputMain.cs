@@ -61,6 +61,7 @@ namespace X264GUIv2.Models
         public int idx { get; set; } = 0;
         public int mergeIdx { get; set; } = 0;
 
+        public double timeConsuming { get; set; } = 0;
         public RunEnum run { get; set; } = RunEnum.Idel;
 
         [NotMapped]
@@ -105,6 +106,7 @@ namespace X264GUIv2.Models
             AudioSamplineRate = AudioSamplineRate,
             idx = idx,
             mergeIdx = mergeIdx,
+            timeConsuming = timeConsuming,
             run = run,
 
             NewDetail = NewDetail,
