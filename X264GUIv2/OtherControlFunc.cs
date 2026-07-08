@@ -246,7 +246,7 @@ namespace X264GUIv2
 
             path = Environment.ExpandEnvironmentVariables(path);
 
-            if (File.Exists(path))
+            if (Path.HasExtension(path))
                 path = Path.GetDirectoryName(path);
 
             //explorer select 會常態占用 shell
