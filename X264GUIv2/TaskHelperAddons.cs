@@ -1,10 +1,11 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 
 namespace X264GUIv2
 {
     public static class TaskHelperAddons
     {
-        public static readonly Dictionary<int, string> ProcessPids = [];
+        public static readonly ConcurrentDictionary<int, string> ProcessPids = [];
 
         public static void killProcess(params string[] names)
         {

@@ -51,9 +51,9 @@ namespace X264GUIv2
                             }
                             return localVisited;
                         }
-                        catch
+                        catch (Exception ex)
                         {
-                            throw;
+                            throw new Exception($"{ex.Message}: {file.File}");
                         }
                     },
                     _ => { }

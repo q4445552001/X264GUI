@@ -135,7 +135,7 @@ namespace X264GUIv2
                     break;
             }
 
-            int sec = 10;
+            int sec = 60;
 
             CancellationTokenSource _cts = new();
             Task.Run(() =>
