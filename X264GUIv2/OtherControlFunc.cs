@@ -58,9 +58,9 @@ namespace X264GUIv2
             detailsItem.FpsMode = $"{(FfprobeOutputMain.videoType == VideoTypeEnum.Aviscript ? "NUL" : FfprobeOutputMain.OriDetail.frameMode)} > {FrameModeEnum.CFR}";
             detailsItem.Fps = $"{Math.Round(FfprobeOutputMain.OriDetail.frameRate, 3)} > {Math.Round(FfprobeOutputMain.NewDetail.frameRate, 3)}";
             detailsItem.Resolution = $"{FfprobeOutputMain.OriDetail.resolution} > {FfprobeOutputMain.NewDetail.resolution}";
-            detailsItem.Duration = TimeSpan.FromSeconds(FfprobeOutputMain.duration).ToString(@"hh\:mm\:ss");
+            detailsItem.Duration = timeConv(TimeSpan.FromSeconds(FfprobeOutputMain.duration));
             detailsItem.Size = $"{(OldCapacity == "0" ? "NUL" : OldCapacity)} > {NewCapacity}";
-            detailsItem.Time = TimeSpan.FromSeconds(FfprobeOutputMain.timeConsuming).ToString(@"hh\:mm\:ss");
+            detailsItem.Time = timeConv(TimeSpan.FromSeconds(FfprobeOutputMain.timeConsuming));
             detailsItem.StatusEnum = FfprobeOutputMain.run;
             detailsItem.Path = FfprobeOutputMain.InFile ?? "";
 
@@ -233,11 +233,8 @@ namespace X264GUIv2
 
         public static int FixEven(int value) => value % 2 == 0 ? value : value + 1;
 
-        public static string timeConv(Stopwatch sw)
-        {
-            TimeSpan Timemint = TimeSpan.FromSeconds(sw.Elapsed.TotalSeconds);
-            return string.Format("{0:D2}:{1:D2}:{2:D2}", Timemint.Hours, Timemint.Minutes, Timemint.Seconds);
-        }
+        public static string timeConv(Stopwatch sw) => timeConv(sw.Elapsed);
+        public static string timeConv(TimeSpan ts) => $"{(int)ts.TotalHours:D2}:{ts.Minutes:D2}:{ts.Seconds:D2}";
 
         public static void openFolder(string? path)
         {

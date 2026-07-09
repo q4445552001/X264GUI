@@ -1669,8 +1669,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
             }
 
             listView1.Items[useIdx].setColor(subStatusIdx, ffprobeOutput.MainData.run);
-            TimeSpan Timemint = TimeSpan.FromSeconds(sw2.Elapsed.TotalSeconds);
-            listView1.Items[useIdx].SubItems[subTimeIdx]!.Text = string.Format("{0:D2}:{1:D2}:{2:D2}", Timemint.Hours, Timemint.Minutes, Timemint.Seconds);
+            listView1.Items[useIdx].SubItems[subTimeIdx]!.Text = OtherControlFunc.timeConv(sw2.Elapsed);
 
             return ffprobeOutput.MainData.run;
         }
