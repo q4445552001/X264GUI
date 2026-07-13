@@ -29,21 +29,28 @@ namespace X264GUIv2
 
         public static void listViewCheck(this ListView listView, List<FfprobeOutput> ffprobeOutputs, Action<int> action, int subStatusIdx)
         {
-            IList<int> idxs = [];
+            IList<int> checkIdxs = [];
+            List<int> selectIdxs = [];
+
+            int[] SelectedIndiceIdxs = [.. listView.SelectedIndices.Cast<int>()];
+            selectIdxs.AddRange(SelectedIndiceIdxs);
 
             IList<ListViewItem> listViews = [.. listView.CheckedItems.Cast<ListViewItem>()];
             foreach (ListViewItem item in listViews)
             {
                 var idx = ffprobeOutputs.findFfprobItem((Guid?)item.Tag);
-                idxs.Add(idx);
+                checkIdxs.Add(idx);
                 action.Invoke(idx);
 
                 listView.Items[ffprobeOutputs[idx].MainData.idx] = listView.DataViewObject(ffprobeOutputs[idx].MainData);
                 listView.Items[ffprobeOutputs[idx].MainData.idx].setColor(subStatusIdx, ffprobeOutputs[idx].MainData.run);
             }
 
-            foreach (int idx in idxs)
+            foreach (int idx in checkIdxs)
                 listView.Items[ffprobeOutputs[idx].MainData.idx].Checked = true;
+
+            foreach (int idx in selectIdxs)
+                listView.Items[idx].Selected = true;
         }
 
         public static DetailsItem DataViewText(FfprobeOutputMain FfprobeOutputMain)
