@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text;
 using X264GUIv2.Models;
 
@@ -42,8 +43,16 @@ namespace X264GUIv2
             }
             #endregion
 
+            Initialize();
             ApplicationConfiguration.Initialize();
             Application.Run(new Form1());
+        }
+
+        private static void Initialize()
+        {
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            assembly.GetCustomAttribute<Version.HashAttribute>();
+            assembly.GetCustomAttribute<Version.TimeAttribute>();
         }
     }
 }

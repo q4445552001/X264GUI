@@ -82,6 +82,7 @@
             OffToolStripMenuItem = new ToolStripMenuItem();
             upBtn = new Button();
             dnBtn = new Button();
+            VersionStripStatusLabel = new ToolStripStatusLabel();
             ((System.ComponentModel.ISupportInitialize)bitrateNumeric).BeginInit();
             statusStrip1.SuspendLayout();
             menuStrip1.SuspendLayout();
@@ -227,7 +228,7 @@
             // 
             // statusStrip1
             // 
-            statusStrip1.Items.AddRange(new ToolStripItem[] { toolStripStatusLabel1, progressText, timeStripStatus });
+            statusStrip1.Items.AddRange(new ToolStripItem[] { VersionStripStatusLabel, toolStripStatusLabel1, progressText, timeStripStatus });
             statusStrip1.Location = new Point(0, 408);
             statusStrip1.Name = "statusStrip1";
             statusStrip1.Size = new Size(759, 22);
@@ -250,7 +251,7 @@
             // 
             timeStripStatus.ImageAlign = ContentAlignment.MiddleLeft;
             timeStripStatus.Name = "timeStripStatus";
-            timeStripStatus.Size = new Size(684, 17);
+            timeStripStatus.Size = new Size(525, 17);
             timeStripStatus.Spring = true;
             timeStripStatus.Text = "00:00:00";
             timeStripStatus.TextAlign = ContentAlignment.MiddleRight;
@@ -411,7 +412,7 @@
             kHzDefaultToolStripMenuItem.CheckOnClick = true;
             kHzDefaultToolStripMenuItem.CheckState = CheckState.Checked;
             kHzDefaultToolStripMenuItem.Name = "kHzDefaultToolStripMenuItem";
-            kHzDefaultToolStripMenuItem.Size = new Size(180, 22);
+            kHzDefaultToolStripMenuItem.Size = new Size(122, 22);
             kHzDefaultToolStripMenuItem.Text = "預設";
             kHzDefaultToolStripMenuItem.Click += kHzDefaultToolStripMenuItem_Click;
             // 
@@ -419,7 +420,7 @@
             // 
             kHz441ToolStripMenuItem.CheckOnClick = true;
             kHz441ToolStripMenuItem.Name = "kHz441ToolStripMenuItem";
-            kHz441ToolStripMenuItem.Size = new Size(180, 22);
+            kHz441ToolStripMenuItem.Size = new Size(122, 22);
             kHz441ToolStripMenuItem.Text = "44.1 kHz";
             kHz441ToolStripMenuItem.Click += kHz441ToolStripMenuItem_Click;
             // 
@@ -427,7 +428,7 @@
             // 
             kHz480ToolStripMenuItem.CheckOnClick = true;
             kHz480ToolStripMenuItem.Name = "kHz480ToolStripMenuItem";
-            kHz480ToolStripMenuItem.Size = new Size(180, 22);
+            kHz480ToolStripMenuItem.Size = new Size(122, 22);
             kHz480ToolStripMenuItem.Text = "48.0 kHz";
             kHz480ToolStripMenuItem.Click += kHz480ToolStripMenuItem_Click;
             // 
@@ -468,7 +469,7 @@
             StopToolStripMenuItem.CheckOnClick = true;
             StopToolStripMenuItem.CheckState = CheckState.Checked;
             StopToolStripMenuItem.Name = "StopToolStripMenuItem";
-            StopToolStripMenuItem.Size = new Size(180, 22);
+            StopToolStripMenuItem.Size = new Size(98, 22);
             StopToolStripMenuItem.Text = "停用";
             StopToolStripMenuItem.Click += StopToolStripMenuItem_Click;
             // 
@@ -476,7 +477,7 @@
             // 
             HibernateToolStripMenuItem.CheckOnClick = true;
             HibernateToolStripMenuItem.Name = "HibernateToolStripMenuItem";
-            HibernateToolStripMenuItem.Size = new Size(180, 22);
+            HibernateToolStripMenuItem.Size = new Size(98, 22);
             HibernateToolStripMenuItem.Text = "休眠";
             HibernateToolStripMenuItem.Click += HibernateToolStripMenuItem_Click;
             // 
@@ -484,7 +485,7 @@
             // 
             SleepToolStripMenuItem.CheckOnClick = true;
             SleepToolStripMenuItem.Name = "SleepToolStripMenuItem";
-            SleepToolStripMenuItem.Size = new Size(180, 22);
+            SleepToolStripMenuItem.Size = new Size(98, 22);
             SleepToolStripMenuItem.Text = "睡眠";
             SleepToolStripMenuItem.Click += SleepToolStripMenuItem_Click;
             // 
@@ -492,7 +493,7 @@
             // 
             OffToolStripMenuItem.CheckOnClick = true;
             OffToolStripMenuItem.Name = "OffToolStripMenuItem";
-            OffToolStripMenuItem.Size = new Size(180, 22);
+            OffToolStripMenuItem.Size = new Size(98, 22);
             OffToolStripMenuItem.Text = "關機";
             OffToolStripMenuItem.Click += OffToolStripMenuItem_Click;
             // 
@@ -515,6 +516,12 @@
             dnBtn.Text = "下移";
             dnBtn.UseVisualStyleBackColor = true;
             dnBtn.Click += dnBtn_Click;
+            // 
+            // VersionStripStatusLabel
+            // 
+            VersionStripStatusLabel.Name = "VersionStripStatusLabel";
+            VersionStripStatusLabel.Size = new Size(128, 17);
+            VersionStripStatusLabel.Text = "版本號";
             // 
             // Form1
             // 
@@ -611,5 +618,6 @@
         public ToolStripMenuItem HibernateToolStripMenuItem;
         public ToolStripMenuItem OffToolStripMenuItem;
         public ToolStripMenuItem SleepToolStripMenuItem;
+        public ToolStripStatusLabel VersionStripStatusLabel;
     }
 }

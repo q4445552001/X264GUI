@@ -59,4 +59,28 @@
 	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
 	  </None>
 	</ItemGroup>
+
+	<Target Name="Git" BeforeTargets="BeforeBuild">
+		<Message Text="取得 GIT HEAD TAG..." Importance="High" />
+		<Exec Command="git rev-parse --short HEAD" IgnoreExitCode="true" ConsoleToMSBuild="true">
+			<Output TaskParameter="ConsoleOutput" PropertyName="_gitHash" />
+		</Exec>
+
+		<ItemGroup>
+			<AssemblyAttribute Include="X264GUIv2.Version.HashAttribute">
+				<_Parameter1>$(_gitHash)</_Parameter1>
+			</AssemblyAttribute>
+		</ItemGroup>
+		
+		<Message Text="取得 GIT HEAD 時間..." Importance="High" />
+		<Exec Command="git log -1 --format=&quot;%25%25cd&quot; --date=format-local:%25%25Y%25%25m%25%25dT%25%25H%25%25M" IgnoreExitCode="true" ConsoleToMSBuild="true">
+			<Output TaskParameter="ConsoleOutput" PropertyName="_gitTime" />
+		</Exec>
+
+		<ItemGroup>
+			<AssemblyAttribute Include="X264GUIv2.Version.TimeAttribute">
+				<_Parameter1>$(_gitTime)</_Parameter1>
+			</AssemblyAttribute>
+		</ItemGroup>
+	</Target>
 </Project>
