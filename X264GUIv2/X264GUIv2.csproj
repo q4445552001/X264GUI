@@ -20,28 +20,28 @@
 
 	<ItemGroup>
 		<Content Include="..\bin\Debug\bin\ffmpeg\*.*">
-			<Link>\bin\ffmpeg\%(Filename)%(Extension)</Link>
+			<Link>.\bin\ffmpeg\%(Filename)%(Extension)</Link>
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 			<Visible>false</Visible>
 		</Content>
 	</ItemGroup>
 	<ItemGroup>
 		<Content Include="..\bin\Debug\bin\eac3to\*.*">
-			<Link>\bin\eac3to\%(Filename)%(Extension)</Link>
+			<Link>.\bin\eac3to\%(Filename)%(Extension)</Link>
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 			<Visible>false</Visible>
 		</Content>
 	</ItemGroup>
 	<ItemGroup>
 		<Content Include="..\bin\Debug\bin\x264\*.*">
-			<Link>\bin\x264\%(Filename)%(Extension)</Link>
+			<Link>.\bin\x264\%(Filename)%(Extension)</Link>
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 			<Visible>false</Visible>
 		</Content>
 	</ItemGroup>
 	<ItemGroup>
 		<Content Include="..\bin\Debug\bin\HashMyFiles\*.*">
-			<Link>\bin\HashMyFiles\%(Filename)%(Extension)</Link>
+			<Link>.\bin\HashMyFiles\%(Filename)%(Extension)</Link>
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 			<Visible>false</Visible>
 		</Content>
