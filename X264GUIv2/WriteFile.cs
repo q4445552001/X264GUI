@@ -36,7 +36,7 @@ namespace X264GUIv2
         {
             try
             {
-                str = str.Replace("\t", ",");
+                str = str.Replace("\t", ",").Replace("\uFEFF", "");
                 string filePath = $@"{Global.HASHPath}\{Assembly.GetExecutingAssembly().EntryPoint?.DeclaringType?.Namespace}_HASH.csv";
                 using StreamWriter sw = new(filePath, true);
                 sw.WriteLine(str);
