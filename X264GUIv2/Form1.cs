@@ -1151,22 +1151,22 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
             switch (ffprobeOutput.MainData.videoType)
             {
                 case VideoTypeEnum.Aviscript:
-                    ffprobeOutput = twoPassAvsProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref onePassMsg);
+                    ffprobeOutput = twoPassAvsProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref twoPassMsg);
                     break;
                 case VideoTypeEnum.Merge:
-                    ffprobeOutput = twoPassMergeProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref onePassMsg);
+                    ffprobeOutput = twoPassMergeProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref twoPassMsg);
                     break;
                 case VideoTypeEnum.Normal:
                     if (ffprobeOutput.MainData.isLocalEncode)
-                        ffprobeOutput = twoPassProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref onePassMsg);
+                        ffprobeOutput = twoPassProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref twoPassMsg);
                     else
-                        ffprobeOutput = twoPassFfmpegProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref onePassMsg);
+                        ffprobeOutput = twoPassFfmpegProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref twoPassMsg);
                     break;
                 case VideoTypeEnum.Ffmpeg:
-                    ffprobeOutput = twoPassFfmpegProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref onePassMsg);
+                    ffprobeOutput = twoPassFfmpegProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref twoPassMsg);
                     break;
                 default:
-                    ffprobeOutput = twoPassProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref onePassMsg);
+                    ffprobeOutput = twoPassProcess(ffprobeOutput, sw1, sw2, weighAllot, ref exitCode, ref twoPassMsg);
                     break;
             }
             ffprobeOutput.MainData.run = errProcess(ffprobeOutput, sw1, sw2, exitCode);
@@ -1193,11 +1193,13 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
             {
                 string hashMsg = string.Empty;
                 ffprobeOutput = hashProcess(ffprobeOutput, ref exitCode, ref hashMsg);
-                if (!string.IsNullOrWhiteSpace(hashMsg))
-                    WriteFile.WriteLog(hashMsg);
 
                 if (exitCode != 0)
+                {
                     ffprobeOutput.MainData.run = RunEnum.Warning;
+                    if (!string.IsNullOrWhiteSpace(hashMsg))
+                        WriteFile.WriteLog(hashMsg);
+                }
             }
 
             ffprobeOutput.MainData.run = ffprobeOutput.MainData.run == RunEnum.Warning ? RunEnum.Warning : RunEnum.Done;

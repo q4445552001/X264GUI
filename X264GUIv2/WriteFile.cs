@@ -6,7 +6,7 @@ namespace X264GUIv2
 {
     internal static class WriteFile
     {
-        public static string WritePath = $"{AppDomain.CurrentDomain.BaseDirectory}{Assembly.GetExecutingAssembly().EntryPoint?.DeclaringType?.Namespace}_{DateTime.Now:yyyyMMdd}_log.txt";
+        public static string WritePath = $"{AppDomain.CurrentDomain.BaseDirectory}{Assembly.GetExecutingAssembly().EntryPoint?.DeclaringType?.Namespace}_{{0}}_log.txt";
 
         /// <summary>
         /// 寫入log
@@ -22,7 +22,7 @@ namespace X264GUIv2
 #endif
                 action?.Invoke(str);
 
-                using StreamWriter sw = new(WritePath, true);
+                using StreamWriter sw = new(string.Format(WritePath, $@"{DateTime.Now:yyyyMMdd}"), true);
                 sw.WriteLine(str);
                 sw.Close();
             }
