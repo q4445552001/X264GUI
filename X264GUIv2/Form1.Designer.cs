@@ -82,7 +82,7 @@
             OffToolStripMenuItem = new ToolStripMenuItem();
             upBtn = new Button();
             dnBtn = new Button();
-            VersionStripStatusLabel = new ToolStripStatusLabel();
+            versionLabel = new Label();
             ((System.ComponentModel.ISupportInitialize)bitrateNumeric).BeginInit();
             statusStrip1.SuspendLayout();
             menuStrip1.SuspendLayout();
@@ -228,7 +228,7 @@
             // 
             // statusStrip1
             // 
-            statusStrip1.Items.AddRange(new ToolStripItem[] { VersionStripStatusLabel, toolStripStatusLabel1, progressText, timeStripStatus });
+            statusStrip1.Items.AddRange(new ToolStripItem[] { toolStripStatusLabel1, progressText, timeStripStatus });
             statusStrip1.Location = new Point(0, 408);
             statusStrip1.Name = "statusStrip1";
             statusStrip1.Size = new Size(759, 22);
@@ -251,7 +251,7 @@
             // 
             timeStripStatus.ImageAlign = ContentAlignment.MiddleLeft;
             timeStripStatus.Name = "timeStripStatus";
-            timeStripStatus.Size = new Size(525, 17);
+            timeStripStatus.Size = new Size(684, 17);
             timeStripStatus.Spring = true;
             timeStripStatus.Text = "00:00:00";
             timeStripStatus.TextAlign = ContentAlignment.MiddleRight;
@@ -517,11 +517,16 @@
             dnBtn.UseVisualStyleBackColor = true;
             dnBtn.Click += dnBtn_Click;
             // 
-            // VersionStripStatusLabel
+            // versionLabel
             // 
-            VersionStripStatusLabel.Name = "VersionStripStatusLabel";
-            VersionStripStatusLabel.Size = new Size(128, 17);
-            VersionStripStatusLabel.Text = "版本號";
+            versionLabel.AutoSize = true;
+            versionLabel.Font = new Font("Microsoft JhengHei UI", 6F);
+            versionLabel.ForeColor = Color.DarkGray;
+            versionLabel.Location = new Point(12, 24);
+            versionLabel.Name = "versionLabel";
+            versionLabel.Size = new Size(21, 10);
+            versionLabel.TabIndex = 23;
+            versionLabel.Text = "版本";
             // 
             // Form1
             // 
@@ -529,6 +534,7 @@
             AutoScaleMode = AutoScaleMode.Font;
             AutoValidate = AutoValidate.EnableAllowFocusChange;
             ClientSize = new Size(759, 430);
+            Controls.Add(versionLabel);
             Controls.Add(dnBtn);
             Controls.Add(upBtn);
             Controls.Add(statusStrip1);
@@ -619,5 +625,6 @@
         public ToolStripMenuItem OffToolStripMenuItem;
         public ToolStripMenuItem SleepToolStripMenuItem;
         public ToolStripStatusLabel VersionStripStatusLabel;
+        public Label versionLabel;
     }
 }

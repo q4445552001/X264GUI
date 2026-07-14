@@ -45,7 +45,7 @@ namespace X264GUIv2
         public Form1()
         {
             InitializeComponent();
-            VersionStripStatusLabel.Text = $"{Version.Time} ({Version.Hash})";
+            versionLabel.Text = $"{Version.Time} ({Version.Hash})";
 
             f2 = new();
             f3 = new(this);
