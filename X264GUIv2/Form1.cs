@@ -885,7 +885,7 @@ namespace X264GUIv2
                     int idx2 = listView1.findListItem((Guid?)item.Tag);
 
                     videoFunc.ffprobeData[idx1].MainData.run = RunEnum.Idel;
-                    listView1.Items[idx2].SubItems[subStatusIdx]!.ForeColor = Color.Black;
+                    listView1.Items[idx2].setColor(subStatusIdx, videoFunc.ffprobeData[idx1].MainData.run);
                     listView1.Items[idx2].SubItems[subStatusIdx]!.Text = RunEnum.Idel.GetDisplayName();
                 }
             }
