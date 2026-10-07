@@ -5,42 +5,42 @@ namespace X264GUIv2.Enums
     public enum RunEnum
     {
         [Display(Name = "Idel")]
-        Idel,
+        Idel = 0,
 
         [Display(Name = "初始化")]
-        Init,
+        Init = 1,
 
         [Display(Name = "音軌分離")]
-        SoundSeparation,
+        SoundSeparation = 2,
 
         [Display(Name = "音軌處理")]
-        SoundProcessing,
+        SoundProcessing = 3,
 
         [Display(Name = "音軌修剪")]
-        AudioTrim,
+        AudioTrim = 4,
 
         [Display(Name = "OnePass")]
-        OnePass,
+        OnePass = 5,
 
         [Display(Name = "TwoPass")]
-        TwoPass,
+        TwoPass = 6,
 
         [Display(Name = "合併")]
-        Merge,
+        Merge = 7,
 
         [Display(Name = "Hash")]
-        Hash,
+        Hash = 8,
 
         [Display(Name = "錯誤")]
-        Error,
+        Error = 9,
 
         [Display(Name = "完成")]
-        Done,
+        Done = 10,
 
         [Display(Name = "停止")]
-        Stop,
+        Stop = 11,
 
         [Display(Name = "警告")]
-        Warning,
+        Warning = 12,
     }
 }
