@@ -265,10 +265,11 @@ namespace X264GUIv2
                 string str = isPercentage ? Math.Round(v, 2).ToString("#0.00") + " %" : $"{now:#,##0}/{count:#,##0}";
                 TimeSpan ts = TimeSpan.FromSeconds(Global.DoneRemaining(now, dur, sw));
                 str += $"  eta.{(int)ts.TotalHours:000}:{ts:mm\\:ss}";
-                Font font = new("Consolas", 12, FontStyle.Bold);
                 PointF pt = new(form.progressBar1.Width / 2 - (str.Length * 4), form.progressBar1.Height / 2 - 10);
                 form.progressBar1.Value = v >= 100 ? 100 : (int)v;
-                BarGraphics.DrawString(str, font, v >= 50 ? Brushes.White : Brushes.Blue, pt);
+
+                Font font = new("Consolas", 12, FontStyle.Bold);
+                BarGraphics.DrawString(str, font, Brushes.Blue, pt);
             }
             form.Invoke(del);
         }
