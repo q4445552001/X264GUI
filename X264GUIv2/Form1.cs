@@ -156,7 +156,7 @@ namespace X264GUIv2
             ]);
             #endregion
 
-            using var sql = new sqlLiteFunc();
+            using sqlLiteFunc sql = new();
             SettingsUser? settingsUser = sql.SelectSettingsUser();
             Global.HASHPath = settingsUser?.HashPath ?? Global.HASHPath;
         }
@@ -172,7 +172,7 @@ namespace X264GUIv2
             }
             else
             {
-                var sql = new sqlLiteFunc();
+                sqlLiteFunc sql = new();
                 sql.InsertUser(new()
                 {
                     HashPath = Global.HASHPath,
@@ -207,6 +207,7 @@ namespace X264GUIv2
 
                     Stopwatch sw2 = new();
                     Global.DoneTotle = videoFunc.ffprobeData.Where(x => x.MainData.run != RunEnum.Done && x.MainData.run != RunEnum.Warning).Sum(x => x.MainData.duration);
+                    Global.TotleTimeConsuming = videoFunc.ffprobeData.Where(x => x.MainData.run == RunEnum.Done).Sum(x => x.MainData.timeConsuming);
                     Global.DoneCount = 0;
 
                     List<ListViewItem> listViewItems = [.. listView1.Items.Cast<ListViewItem>()];
@@ -250,14 +251,21 @@ namespace X264GUIv2
                             continue;
                         }
 
-                        videoFunc.ffprobeData[itemIdx].MainData.timeConsuming = sw2.Elapsed.TotalSeconds;
                         sw2.Stop();
+                        videoFunc.ffprobeData[itemIdx].MainData.timeConsuming = sw2.Elapsed.TotalSeconds;
+
+                        using sqlLiteFunc sql = new();
+                        sql.UpdMainStatus(
+                            videoFunc.ffprobeData[itemIdx].MainData.Guid,
+                            videoFunc.ffprobeData[itemIdx].MainData.run,
+                            videoFunc.ffprobeData[itemIdx].MainData.timeConsuming
+                        );
                     }
 
                     form1Control.btnControl(true);
 
                     sw1.Stop();
-                    timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
+                    timeStripStatus.Text = OtherControlFunc.timeTotleConv(sw1);
 
                     if (!Cts.Token.IsCancellationRequested)
                     {
@@ -483,7 +491,7 @@ namespace X264GUIv2
         {
             try
             {
-                using var sql = new sqlLiteFunc();
+                using sqlLiteFunc sql = new();
                 List<FfprobeOutput> loadData = [.. sql.SelectTable().OrderBy(x => x.MainData.idx)];
                 List<FfprobeOutput> cacheData = [];
 
@@ -558,7 +566,7 @@ namespace X264GUIv2
                 if (!(MessageBox.Show("確定清除進度?", "提示", MessageBoxButtons.YesNo) == DialogResult.Yes))
                     return;
 
-                using var sql = new sqlLiteFunc();
+                using sqlLiteFunc sql = new();
                 sql.DropTableMain();
             }
             catch (Exception ex)
@@ -1275,7 +1283,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                     },
                     ActionOut = sr =>
                     {
-                        timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
+                        timeStripStatus.Text = OtherControlFunc.timeTotleConv(sw1);
                         f2.appendText = sr;
                     }
                 }, ffprobeOutput, RunEnum.SoundSeparation, ref exitCode, ref msg);
@@ -1283,7 +1291,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                 ffprobeOutput = eac3toProcess(ffprobeOutput, sw1, ref exitCode, ref msg);
             }
 
-            timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
+            timeStripStatus.Text = OtherControlFunc.timeTotleConv(sw1);
             return ffprobeOutput;
         }
 
@@ -1310,12 +1318,12 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                 },
                 ActionOut = sr =>
                 {
-                    timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
+                    timeStripStatus.Text = OtherControlFunc.timeTotleConv(sw1);
                     f2.appendText = sr;
                 },
                 ActionErr = sr =>
                 {
-                    timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
+                    timeStripStatus.Text = OtherControlFunc.timeTotleConv(sw1);
                     f2.appendText = sr;
                 },
             }, ffprobeOutput, RunEnum.SoundProcessing, ref exitCode, ref msg);
@@ -1407,7 +1415,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                 ActionErr = sr =>
                 {
                     f2.appendText = sr;
-                    timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
+                    timeStripStatus.Text = OtherControlFunc.timeTotleConv(sw1);
 
                     if (!OtherControlFunc.listViewIsRefresh())
                         return;

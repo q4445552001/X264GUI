@@ -26,6 +26,11 @@ namespace X264GUIv2.Models
             set => _hashPath = value;
         }
 
+        /// <summary>
+        /// 已處理的總時間
+        /// </summary>
+        public static double TotleTimeConsuming { get; set; } = 0;
+
         #region 剩餘時間
         /// <summary>
         /// 目標進度

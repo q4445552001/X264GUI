@@ -23,7 +23,7 @@ namespace X264GUIv2
 
         public void ffmpegOutput(FfprobeOutput ffprobeOutput, string sr, Stopwatch sw1, Stopwatch sw2, WeighAllot weighAllot)
         {
-            form.timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
+            form.timeStripStatus.Text = OtherControlFunc.timeTotleConv(sw1);
 
             int str = sr.IndexOf('=');
             if (str <= 0)
@@ -48,7 +48,7 @@ namespace X264GUIv2
 
         public void avs4x26xOutput(FfprobeOutput ffprobeOutput, string sr, Stopwatch sw1, Stopwatch sw2, WeighAllot weighAllot)
         {
-            form.timeStripStatus.Text = OtherControlFunc.timeConv(sw1);
+            form.timeStripStatus.Text = OtherControlFunc.timeTotleConv(sw1);
 
             if (sr.Contains("[error]"))
             {
@@ -98,7 +98,7 @@ namespace X264GUIv2
         {
             form.videoFunc.ffprobeData = form.listView1.SortIdx(form.videoFunc.ffprobeData);
 
-            using var sql = new sqlLiteFunc();
+            using sqlLiteFunc sql = new();
             sql.InsertMain(form.videoFunc.ffprobeData, new()
             {
                 AutoTrim_Click = form.AutoTrimToolStripMenuItem.Checked,

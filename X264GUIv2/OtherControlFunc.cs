@@ -242,6 +242,7 @@ namespace X264GUIv2
 
         public static string timeConv(Stopwatch sw) => timeConv(sw.Elapsed);
         public static string timeConv(TimeSpan ts) => $"{(int)ts.TotalHours:D2}:{ts.Minutes:D2}:{ts.Seconds:D2}";
+        public static string timeTotleConv(Stopwatch sw) => timeConv(sw.Elapsed.Add(TimeSpan.FromSeconds(Global.TotleTimeConsuming)));
 
         public static void openFolder(string? path)
         {

@@ -8,6 +8,9 @@ namespace X264GUIv2.Models
         public Guid Guid { get; set; } = Guid.NewGuid();
         public Guid? MergeGuid { get; set; }
 
+        /// <summary>
+        /// 檔案路徑
+        /// </summary>
         public string InFile { get; set; } = "";
 
         private string? _InFileName { get; set; }
@@ -30,13 +33,22 @@ namespace X264GUIv2.Models
         [NotMapped]
         public bool isLocalEncode => _isLocalEncode ??= OtherControlFunc.HasNonLocalCodePageChar(InFilePath);
 
+        /// <summary>
+        /// 是否是aac
+        /// </summary>
         public bool isAac { get; set; } = false;
 
+        /// <summary>
+        /// 音軌
+        /// </summary>
         public int audioMap { get; set; } = 0;
         public string AudionFormat { get; set; } = "aac";
         public string AudioCodec { get; set; } = "mp4a";
         public string AudioSamplineRate { get; set; } = "1/44100";
 
+        /// <summary>
+        /// 影片處理方式
+        /// </summary>
         private VideoTypeEnum? _videoType { get; set; }
         public VideoTypeEnum videoType
         {
@@ -53,14 +65,30 @@ namespace X264GUIv2.Models
 
         public string videoCodeName { get; set; } = string.Empty;
 
+        /// <summary>
+        /// 時間長度
+        /// </summary>
         public double duration { get; set; } = 0;
 
+        /// <summary>
+        /// 影軌大小
+        /// </summary>
         public double videoSize { get; set; } = 0;
+
+        /// <summary>
+        /// 音軌大小
+        /// </summary>
         public double audioSize { get; set; } = 0;
 
+        /// <summary>
+        /// 索引
+        /// </summary>
         public int idx { get; set; } = 0;
         public int mergeIdx { get; set; } = 0;
 
+        /// <summary>
+        /// 消耗時間
+        /// </summary>
         public double timeConsuming { get; set; } = 0;
         public RunEnum run { get; set; } = RunEnum.Idel;
 
@@ -140,6 +168,10 @@ namespace X264GUIv2.Models
 
         //DB
         public Guid Guid { get; set; }
+
+        /// <summary>
+        /// 更改後的資料
+        /// </summary>
         public int? isNew { get; set; }
 
         public FfprobeOutputDetail Clone() => new()

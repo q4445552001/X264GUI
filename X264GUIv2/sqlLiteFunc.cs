@@ -3,6 +3,7 @@ using Microsoft.Data.Sqlite;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
 using System.Reflection;
+using X264GUIv2.Enums;
 using X264GUIv2.Models;
 
 namespace X264GUIv2
@@ -165,6 +166,15 @@ namespace X264GUIv2
         {
             connection.Execute(@"DROP TABLE IF EXISTS SettingsUser");
             CreateTableSettingsUser();
+        }
+
+        public void UpdMainStatus(Guid guid, RunEnum run, double timeConsuming)
+        {
+            connection.Execute(@$"
+                UPDATE Main 
+                SET {nameof(FfprobeOutputMain.run)} = {(int)run}, {nameof(FfprobeOutputMain.timeConsuming)} = {timeConsuming} 
+                WHERE GUID = '{guid}'"
+);
         }
 
         #region SELECT
