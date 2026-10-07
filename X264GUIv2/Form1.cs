@@ -206,7 +206,7 @@ namespace X264GUIv2
                     form1Control.btnControl(false);
 
                     Stopwatch sw2 = new();
-                    Global.DoneTotle = videoFunc.ffprobeData.Where(x => x.MainData.run != RunEnum.Done && x.MainData.run != RunEnum.Warning).Sum(x => x.MainData.duration);
+                    Global.DoneTotle = videoFunc.ffprobeData.Where(x => x.MainData.run != RunEnum.Done && x.MainData.run != RunEnum.Warning).Sum(x => x.MainData.duration * 2);
                     Global.TotleTimeConsuming = videoFunc.ffprobeData.Where(x => x.MainData.run == RunEnum.Done).Sum(x => x.MainData.timeConsuming);
                     Global.DoneCount = 0;
 
@@ -228,7 +228,6 @@ namespace X264GUIv2
                             {
                                 videoFunc.ffprobeData[itemIdx].MainData.run = RunEnum.Error;
                                 errProcess(videoFunc.ffprobeData[itemIdx], sw1, sw2, -1);
-                                Global.DoneTotle -= videoFunc.ffprobeData[itemIdx].MainData.duration;
                                 WriteFile.WriteLog(@$"""{videoFunc.ffprobeData[itemIdx].MainData.InFilePath}"" 路徑非[{Global.CodePage}]語言");
                                 continue;
                             }
@@ -240,13 +239,10 @@ namespace X264GUIv2
 
                             if (videoFunc.ffprobeData[itemIdx].MainData.run == RunEnum.Stop)
                                 break;
-
-                            Global.DoneCount += videoFunc.ffprobeData[itemIdx].MainData.duration;
                         }
                         catch (Exception ex)
                         {
                             errProcess(videoFunc.ffprobeData[itemIdx], sw1, sw2, -1);
-                            Global.DoneTotle -= videoFunc.ffprobeData[itemIdx].MainData.duration;
                             WriteFile.WriteLog(ex.Message);
                             continue;
                         }
