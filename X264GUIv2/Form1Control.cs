@@ -13,12 +13,6 @@ namespace X264GUIv2
                 form.bitrateNumeric.Enabled = false;
                 return;
             }
-
-            if (!int.TryParse((form.bitrateCBox.SelectedItem as ComboboxItem)?.Value, out int v))
-                return;
-
-            BitrateEnum bitrateEnum = (BitrateEnum)v;
-            form.bitrateNumeric.Enabled = bitrateEnum == BitrateEnum.Manual;
         }
 
         public void ffmpegOutput(FfprobeOutput ffprobeOutput, string sr, Stopwatch sw1, Stopwatch sw2, WeighAllot weighAllot)

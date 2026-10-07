@@ -280,10 +280,10 @@ namespace X264GUIv2
                         ffprobeOutputMain.NewDetail.bitrate = Global.BitRateDefault;
                     else
                     {
-                        if (ffprobeOutputMain.OriDetail.bitrate < Global.BitRateDefault)
+                        if (ffprobeOutputMain.OriDetail.bitrate < ((int)form.bitrateNumeric.Value * 1000))
                             ffprobeOutputMain.NewDetail.bitrate = ffprobeOutputMain.OriDetail.bitrate - 100000;
-                        else if ((ffprobeOutputMain.OriDetail.bitrate - 100000) > Global.BitRateDefault)
-                            ffprobeOutputMain.NewDetail.bitrate = Global.BitRateDefault;
+                        else if ((ffprobeOutputMain.OriDetail.bitrate - 100000) > ((int)form.bitrateNumeric.Value * 1000))
+                            ffprobeOutputMain.NewDetail.bitrate = ((int)form.bitrateNumeric.Value * 1000);
                         else
                             ffprobeOutputMain.NewDetail.bitrate = ffprobeOutputMain.OriDetail.bitrate - 100000;
                     }
@@ -348,10 +348,7 @@ namespace X264GUIv2
                 if (!int.TryParse(item.Value, out int v))
                     throw new Exception("無效選項");
 
-                BitrateEnum bitrateEnum = (BitrateEnum)v;
-
-                if (bitrateEnum == BitrateEnum.Manual)
-                    ffprobeOutputMain.NewDetail.bitrate = (int)form.bitrateNumeric.Value * 1000;
+                ffprobeOutputMain = bitRateFunc(ffprobeOutputMain);
             }
 
             return ffprobeOutputMain;
