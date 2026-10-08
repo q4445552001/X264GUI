@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
 namespace X264GUIv2.Models
 {
@@ -26,11 +25,6 @@ namespace X264GUIv2.Models
             set => _hashPath = value;
         }
 
-        /// <summary>
-        /// 已處理的總時間
-        /// </summary>
-        public static double TotleTimeConsuming { get; set; } = 0;
-
         #region 剩餘時間
 
         /// <summary>
@@ -44,98 +38,49 @@ namespace X264GUIv2.Models
         public static double DoneCount { get; set; } = 0;
 
         /// <summary>
-        /// 上次剩餘時間
+        /// 上次進度
         /// </summary>
-        public static double DoneRemainingTotle { get; set; } = 0d;
-
-        /// <summary>
-        /// 上次完成進度
-        /// </summary>
-        private static double LastCompleted { get; set; } = 0d;
-
-        /// <summary>
-        /// 上次計算時間
-        /// </summary>
-        private static double LastElapsedSeconds { get; set; } = 0d;
-
-        /// <summary>
-        /// 平滑速度
-        /// </summary>
-        private static double SmoothSpeed { get; set; } = 0d;
+        private static double DoneRemainingTotle { get; set; } = 0d;
 
         /// <summary>
         /// 剩餘時間
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double DoneRemaining(double now, double dur, Stopwatch sw)
+        public static double DoneRemaining(double now, double dur, CustomStopwatch sw1)
         {
-            if (now <= 0 || dur <= 0)
+            if (now <= 0)
                 return DoneRemainingTotle;
 
-            double elapsed = sw.Elapsed.TotalSeconds;
-
-            if (elapsed <= 0)
-                return DoneRemainingTotle;
-
-            // 目前已完成工作量
-            double completed =
-                DoneCount + (now * dur / 100.0);
-
+            // 已完成總影片秒數
+            double completed = DoneCount + (now * (dur / 100));
+            //System.Diagnostics.Debug.WriteLine($"已完成總影片秒數: {completed} = {DoneCount} + ({now} * ({dur} / 100))");
             if (completed <= 0)
                 return DoneRemainingTotle;
 
-            // 第一次執行，只記錄基準
-            if (LastElapsedSeconds <= 0)
-            {
-                LastCompleted = completed;
-                LastElapsedSeconds = elapsed;
-
-                return DoneRemainingTotle;
-            }
-
-            // 本次增加的工作量
-            double deltaCompleted = completed - LastCompleted;
-
-            // 本次實際經過時間
-            double deltaTime = elapsed - LastElapsedSeconds;
-
-            if (deltaCompleted <= 0 || deltaTime <= 0)
+            // 每秒真實時間可處理多少影片秒數
+            double speed = completed / sw1.Elapsed.TotalSeconds;
+            //System.Diagnostics.Debug.WriteLine($"每秒真實時間可處理多少影片秒數: {speed} = {completed} / {sw1.Elapsed.TotalSeconds}");
+            if (speed <= 0)
                 return DoneRemainingTotle;
 
-            // 瞬間速度
-            double instantSpeed = deltaCompleted / deltaTime;
-
-            if (instantSpeed <= 0)
-                return DoneRemainingTotle;
-
-            // 更新基準
-            LastCompleted = completed;
-            LastElapsedSeconds = elapsed;
-
-            // ==========================================
-            // 速度平滑
-            // 新速度佔 30%，舊速度佔 70%
-            // ==========================================
-            if (SmoothSpeed <= 0)
-                SmoothSpeed = instantSpeed;
-            else
-                SmoothSpeed = (SmoothSpeed * 0.7) + (instantSpeed * 0.3);
-
-            // 總工作量
-            // 例如影片 3600 秒 → 7200 工作量
+            // 剩餘影片秒數
             double remaining = DoneTotle - completed;
-
+            //System.Diagnostics.Debug.WriteLine($"剩餘影片秒數: {remaining} = {DoneTotle} - {completed}");
             if (remaining <= 0)
-            {
-                DoneRemainingTotle = 0;
                 return 0;
-            }
 
-            // 預估剩餘時間
-            DoneRemainingTotle = remaining / SmoothSpeed;
+            DoneRemainingTotle = remaining / speed;
+            //System.Diagnostics.Debug.WriteLine($"剩餘秒數: {DoneRemainingTotle} = {remaining} / {speed}");
 
             return DoneRemainingTotle;
         }
+
+        /// <summary>
+        /// EstimationResult
+        /// </summary>
+        /// <param name="SpeedFactor">轉檔倍速 (例如 1.5x)</param>
+        /// <param name="RemainingTime">預估剩餘時間</param>
+        //private record EstimationResult(double SpeedFactor, TimeSpan RemainingTime);
 
         #endregion
 

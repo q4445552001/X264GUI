@@ -200,15 +200,16 @@ namespace X264GUIv2
                 Cts = new();
                 Task.Run(() =>
                 {
-                    Stopwatch sw1 = new();
+                    CustomStopwatch sw1 = new();
+                    Stopwatch sw2 = new();
                     sw1.Start();
 
                     form1Control.btnControl(false);
 
-                    Stopwatch sw2 = new();
-                    Global.DoneTotle = videoFunc.ffprobeData.Where(x => x.MainData.run != RunEnum.Done && x.MainData.run != RunEnum.Warning).Sum(x => x.MainData.duration * 2);
-                    Global.TotleTimeConsuming = videoFunc.ffprobeData.Where(x => x.MainData.run == RunEnum.Done).Sum(x => x.MainData.timeConsuming);
-                    Global.DoneCount = 0;
+                    Global.DoneTotle = videoFunc.ffprobeData.Sum(x => x.MainData.duration);
+                    Global.DoneCount = videoFunc.ffprobeData.Where(x => x.MainData.run == RunEnum.Done).Sum(x => x.MainData.duration);
+                    double totleTimeConsuming = videoFunc.ffprobeData.Where(x => x.MainData.run == RunEnum.Done).Sum(x => x.MainData.timeConsuming);
+                    sw1.Add(TimeSpan.FromSeconds(totleTimeConsuming));
 
                     List<ListViewItem> listViewItems = [.. listView1.Items.Cast<ListViewItem>()];
                     for (int idx = 0; idx < listViewItems.Count; idx++)
@@ -228,6 +229,7 @@ namespace X264GUIv2
                             {
                                 videoFunc.ffprobeData[itemIdx].MainData.run = RunEnum.Error;
                                 errProcess(videoFunc.ffprobeData[itemIdx], sw1, sw2, -1);
+                                Global.DoneTotle -= videoFunc.ffprobeData[itemIdx].MainData.duration;
                                 WriteFile.WriteLog(@$"""{videoFunc.ffprobeData[itemIdx].MainData.InFilePath}"" 路徑非[{Global.CodePage}]語言");
                                 continue;
                             }
@@ -239,10 +241,13 @@ namespace X264GUIv2
 
                             if (videoFunc.ffprobeData[itemIdx].MainData.run == RunEnum.Stop)
                                 break;
+
+                            Global.DoneCount += videoFunc.ffprobeData[itemIdx].MainData.duration;
                         }
                         catch (Exception ex)
                         {
                             errProcess(videoFunc.ffprobeData[itemIdx], sw1, sw2, -1);
+                            Global.DoneTotle -= videoFunc.ffprobeData[itemIdx].MainData.duration;
                             WriteFile.WriteLog(ex.Message);
                             continue;
                         }
@@ -261,7 +266,7 @@ namespace X264GUIv2
                     form1Control.btnControl(true);
 
                     sw1.Stop();
-                    timeStripStatus.Text = OtherControlFunc.timeTotleConv(sw1);
+                    timeStripStatus.Text = OtherControlFunc.timeConv(sw1.Elapsed);
 
                     if (!Cts.Token.IsCancellationRequested)
                     {
@@ -1039,7 +1044,7 @@ namespace X264GUIv2
 
         #region 轉換
 
-        private void mainProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2)
+        private void mainProcess(FfprobeOutput ffprobeOutput, CustomStopwatch sw1, Stopwatch sw2)
         {
             if (!File.Exists(ffprobeOutput.MainData.InFile))
                 throw new Exception(@$"無效路徑 ""{ffprobeOutput.MainData.InFile}""");
@@ -1215,7 +1220,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
         /// <summary>
         /// 音效處理
         /// </summary>
-        private FfprobeOutput audioProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, WeighAllot weighAllot, ref int exitCode, ref string msg)
+        private FfprobeOutput audioProcess(FfprobeOutput ffprobeOutput, CustomStopwatch sw1, Stopwatch sw2, WeighAllot weighAllot, ref int exitCode, ref string msg)
         {
             if (Cts == null || Cts.Token.IsCancellationRequested)
                 return ffprobeOutput;
@@ -1279,7 +1284,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                     },
                     ActionOut = sr =>
                     {
-                        timeStripStatus.Text = OtherControlFunc.timeTotleConv(sw1);
+                        timeStripStatus.Text = OtherControlFunc.timeConv(sw1.Elapsed);
                         f2.appendText = sr;
                     }
                 }, ffprobeOutput, RunEnum.SoundSeparation, ref exitCode, ref msg);
@@ -1287,11 +1292,11 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                 ffprobeOutput = eac3toProcess(ffprobeOutput, sw1, ref exitCode, ref msg);
             }
 
-            timeStripStatus.Text = OtherControlFunc.timeTotleConv(sw1);
+            timeStripStatus.Text = OtherControlFunc.timeConv(sw1.Elapsed);
             return ffprobeOutput;
         }
 
-        private FfprobeOutput eac3toProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, ref int exitCode, ref string msg)
+        private FfprobeOutput eac3toProcess(FfprobeOutput ffprobeOutput, CustomStopwatch sw1, ref int exitCode, ref string msg)
         {
             if (Cts == null)
                 return ffprobeOutput;
@@ -1314,12 +1319,12 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                 },
                 ActionOut = sr =>
                 {
-                    timeStripStatus.Text = OtherControlFunc.timeTotleConv(sw1);
+                    timeStripStatus.Text = OtherControlFunc.timeConv(sw1.Elapsed);
                     f2.appendText = sr;
                 },
                 ActionErr = sr =>
                 {
-                    timeStripStatus.Text = OtherControlFunc.timeTotleConv(sw1);
+                    timeStripStatus.Text = OtherControlFunc.timeConv(sw1.Elapsed);
                     f2.appendText = sr;
                 },
             }, ffprobeOutput, RunEnum.SoundProcessing, ref exitCode, ref msg);
@@ -1330,7 +1335,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
         /// <summary>
         /// OnePass
         /// </summary>
-        private FfprobeOutput onePassProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, WeighAllot weighAllot, ref int exitCode, ref string msg)
+        private FfprobeOutput onePassProcess(FfprobeOutput ffprobeOutput, CustomStopwatch sw1, Stopwatch sw2, WeighAllot weighAllot, ref int exitCode, ref string msg)
         {
             if (Cts == null)
                 return ffprobeOutput;
@@ -1355,7 +1360,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
         /// <summary>
         /// TwoPass
         /// </summary>
-        private FfprobeOutput twoPassProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, WeighAllot weighAllot, ref int exitCode, ref string msg)
+        private FfprobeOutput twoPassProcess(FfprobeOutput ffprobeOutput, CustomStopwatch sw1, Stopwatch sw2, WeighAllot weighAllot, ref int exitCode, ref string msg)
         {
             if (Cts == null)
                 return ffprobeOutput;
@@ -1380,7 +1385,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
         /// <summary>
         /// Merge
         /// </summary>
-        private FfprobeOutput mergeProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, WeighAllot weighAllot, ref int exitCode, ref string msg)
+        private FfprobeOutput mergeProcess(FfprobeOutput ffprobeOutput, CustomStopwatch sw1, Stopwatch sw2, WeighAllot weighAllot, ref int exitCode, ref string msg)
         {
             if (Cts == null)
                 return ffprobeOutput;
@@ -1411,7 +1416,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
                 ActionErr = sr =>
                 {
                     f2.appendText = sr;
-                    timeStripStatus.Text = OtherControlFunc.timeTotleConv(sw1);
+                    timeStripStatus.Text = OtherControlFunc.timeConv(sw1.Elapsed);
 
                     if (!OtherControlFunc.listViewIsRefresh())
                         return;
@@ -1438,7 +1443,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
         /// <summary>
         /// OnePass
         /// </summary>
-        private FfprobeOutput onePassAvsProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, WeighAllot weighAllot, ref int exitCode, ref string msg)
+        private FfprobeOutput onePassAvsProcess(FfprobeOutput ffprobeOutput, CustomStopwatch sw1, Stopwatch sw2, WeighAllot weighAllot, ref int exitCode, ref string msg)
         {
             if (Cts == null)
                 return ffprobeOutput;
@@ -1463,7 +1468,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
         /// <summary>
         /// TwoPass
         /// </summary>
-        private FfprobeOutput twoPassAvsProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, WeighAllot weighAllot, ref int exitCode, ref string msg)
+        private FfprobeOutput twoPassAvsProcess(FfprobeOutput ffprobeOutput, CustomStopwatch sw1, Stopwatch sw2, WeighAllot weighAllot, ref int exitCode, ref string msg)
         {
             if (Cts == null)
                 return ffprobeOutput;
@@ -1488,7 +1493,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
         /// <summary>
         /// OnePass
         /// </summary>
-        private FfprobeOutput onePassFfmpegProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, WeighAllot weighAllot, ref int exitCode, ref string msg)
+        private FfprobeOutput onePassFfmpegProcess(FfprobeOutput ffprobeOutput, CustomStopwatch sw1, Stopwatch sw2, WeighAllot weighAllot, ref int exitCode, ref string msg)
         {
             if (Cts == null)
                 return ffprobeOutput;
@@ -1518,7 +1523,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
         /// <summary>
         /// TwoPass
         /// </summary>
-        private FfprobeOutput twoPassFfmpegProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, WeighAllot weighAllot, ref int exitCode, ref string msg)
+        private FfprobeOutput twoPassFfmpegProcess(FfprobeOutput ffprobeOutput, CustomStopwatch sw1, Stopwatch sw2, WeighAllot weighAllot, ref int exitCode, ref string msg)
         {
             if (Cts == null)
                 return ffprobeOutput;
@@ -1548,7 +1553,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
         /// <summary>
         /// OnePass
         /// </summary>
-        private FfprobeOutput onePassMergeProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, WeighAllot weighAllot, ref int exitCode, ref string msg)
+        private FfprobeOutput onePassMergeProcess(FfprobeOutput ffprobeOutput, CustomStopwatch sw1, Stopwatch sw2, WeighAllot weighAllot, ref int exitCode, ref string msg)
         {
             if (Cts == null)
                 return ffprobeOutput;
@@ -1577,7 +1582,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
         /// <summary>
         /// TwoPass
         /// </summary>
-        private FfprobeOutput twoPassMergeProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, WeighAllot weighAllot, ref int exitCode, ref string msg)
+        private FfprobeOutput twoPassMergeProcess(FfprobeOutput ffprobeOutput, CustomStopwatch sw1, Stopwatch sw2, WeighAllot weighAllot, ref int exitCode, ref string msg)
         {
             if (Cts == null)
                 return ffprobeOutput;
@@ -1652,7 +1657,7 @@ TextSub(""{ffprobeOutput.MainData.avsTempFile}.ass"", 1)
             return ffprobeOutput;
         }
 
-        private RunEnum errProcess(FfprobeOutput ffprobeOutput, Stopwatch sw1, Stopwatch sw2, int exitCode)
+        private RunEnum errProcess(FfprobeOutput ffprobeOutput, CustomStopwatch sw1, Stopwatch sw2, int exitCode)
         {
             if (exitCode != 0 && ffprobeOutput.MainData.run != RunEnum.Stop && ffprobeOutput.MainData.run != RunEnum.Warning)
             {

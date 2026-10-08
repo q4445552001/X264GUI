@@ -15,9 +15,9 @@ namespace X264GUIv2
             }
         }
 
-        public void ffmpegOutput(FfprobeOutput ffprobeOutput, string sr, Stopwatch sw1, Stopwatch sw2, WeighAllot weighAllot)
+        public void ffmpegOutput(FfprobeOutput ffprobeOutput, string sr, CustomStopwatch sw1, Stopwatch sw2, WeighAllot weighAllot)
         {
-            form.timeStripStatus.Text = OtherControlFunc.timeTotleConv(sw1);
+            form.timeStripStatus.Text = OtherControlFunc.timeConv(sw1.Elapsed);
 
             int str = sr.IndexOf('=');
             if (str <= 0)
@@ -40,9 +40,9 @@ namespace X264GUIv2
             }
         }
 
-        public void avs4x26xOutput(FfprobeOutput ffprobeOutput, string sr, Stopwatch sw1, Stopwatch sw2, WeighAllot weighAllot)
+        public void avs4x26xOutput(FfprobeOutput ffprobeOutput, string sr, CustomStopwatch sw1, Stopwatch sw2, WeighAllot weighAllot)
         {
-            form.timeStripStatus.Text = OtherControlFunc.timeTotleConv(sw1);
+            form.timeStripStatus.Text = OtherControlFunc.timeConv(sw1.Elapsed);
 
             if (sr.Contains("[error]"))
             {
@@ -154,7 +154,7 @@ namespace X264GUIv2
                 _cts.Cancel();
         }
 
-        public void calculateProgres(FfprobeOutput ffprobeOutput, float pro, WeighAllot weighAllot, Stopwatch sw1)
+        public void calculateProgres(FfprobeOutput ffprobeOutput, float pro, WeighAllot weighAllot, CustomStopwatch sw1)
         {
             //WeighAllot weighAllot = new(
             //    ffprobeOutput.MainData.isLocalEncode &&
@@ -249,10 +249,9 @@ namespace X264GUIv2
         /// </summary>
         /// <param name="now">現在進度</param>
         /// <param name="count">目標進度</param>
-        /// <param name="sw">總消耗時間</param>
-        /// <param name="totle">總目標進度</param>
+        /// <param name="sw">已經過時間</param>
         /// <param name="isPercentage">格式化</param>
-        public void UpdateProgres(float now, float count, double dur, Stopwatch sw, bool isPercentage = true)
+        public void UpdateProgres(float now, float count, double dur, CustomStopwatch sw1, bool isPercentage = true)
         {
             if (now > 100 || now < 0)
                 return;
@@ -261,15 +260,23 @@ namespace X264GUIv2
             {
                 Graphics BarGraphics = form.progressBar1.CreateGraphics();
                 form.progressBar1.PerformStep();
+
                 float v = now / count * 100;
                 string str = isPercentage ? Math.Round(v, 2).ToString("#0.00") + " %" : $"{now:#,##0}/{count:#,##0}";
-                TimeSpan ts = TimeSpan.FromSeconds(Global.DoneRemaining(now, dur, sw));
+                TimeSpan ts = TimeSpan.FromSeconds(Global.DoneRemaining(now, dur, sw1));
                 str += $"  eta.{(int)ts.TotalHours:000}:{ts:mm\\:ss}";
-                PointF pt = new(form.progressBar1.Width / 2 - (str.Length * 4), form.progressBar1.Height / 2 - 10);
                 form.progressBar1.Value = v >= 100 ? 100 : (int)v;
 
                 Font font = new("Consolas", 12, FontStyle.Bold);
-                BarGraphics.DrawString(str, font, Brushes.Blue, pt);
+                Size textSize = TextRenderer.MeasureText(str, font);
+                Point pt = new((form.progressBar1.Width - textSize.Width) / 2, (form.progressBar1.Height - textSize.Height) / 2);
+                //BarGraphics.DrawString(str, font, Brushes.DarkRed, pt);
+
+                TextRenderer.DrawText(BarGraphics, str, font, new Point(pt.X - 1, pt.Y), Color.Yellow);
+                TextRenderer.DrawText(BarGraphics, str, font, new Point(pt.X + 1, pt.Y), Color.Yellow);
+                TextRenderer.DrawText(BarGraphics, str, font, new Point(pt.X, pt.Y - 1), Color.Yellow);
+                TextRenderer.DrawText(BarGraphics, str, font, new Point(pt.X, pt.Y + 1), Color.Yellow);
+                TextRenderer.DrawText(BarGraphics, str, font, pt, Color.DarkRed);
             }
             form.Invoke(del);
         }
@@ -286,12 +293,14 @@ namespace X264GUIv2
             {
                 Graphics BarGraphics = form.progressBar1.CreateGraphics();
                 form.progressBar1.PerformStep();
+
                 char spinner = spinnerChars[spinnerIndex];
                 spinnerIndex = (spinnerIndex + 1) % spinnerChars.Length;
+                form.progressBar1.Value = 100;
+
                 Font font = new("Consolas", 12, FontStyle.Bold);
                 string showStr = $"{spinner} {str}...";
                 PointF pt = new(form.progressBar1.Width / 2 - (showStr.Length * 4), form.progressBar1.Height / 2 - 10);
-                form.progressBar1.Value = 100;
                 BarGraphics.DrawString(showStr, font, Brushes.White, pt);
             }
 
