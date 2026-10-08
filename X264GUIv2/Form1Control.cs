@@ -272,11 +272,11 @@ namespace X264GUIv2
                 Point pt = new((form.progressBar1.Width - textSize.Width) / 2, (form.progressBar1.Height - textSize.Height) / 2);
                 //BarGraphics.DrawString(str, font, Brushes.DarkRed, pt);
 
-                TextRenderer.DrawText(BarGraphics, str, font, new Point(pt.X - 1, pt.Y), Color.Yellow);
-                TextRenderer.DrawText(BarGraphics, str, font, new Point(pt.X + 1, pt.Y), Color.Yellow);
-                TextRenderer.DrawText(BarGraphics, str, font, new Point(pt.X, pt.Y - 1), Color.Yellow);
-                TextRenderer.DrawText(BarGraphics, str, font, new Point(pt.X, pt.Y + 1), Color.Yellow);
-                TextRenderer.DrawText(BarGraphics, str, font, pt, Color.DarkRed);
+                TextRenderer.DrawText(BarGraphics, str, font, new Point(pt.X - 1, pt.Y), Color.Black);
+                TextRenderer.DrawText(BarGraphics, str, font, new Point(pt.X + 1, pt.Y), Color.Black);
+                TextRenderer.DrawText(BarGraphics, str, font, new Point(pt.X, pt.Y - 1), Color.Black);
+                TextRenderer.DrawText(BarGraphics, str, font, new Point(pt.X, pt.Y + 1), Color.Black);
+                TextRenderer.DrawText(BarGraphics, str, font, pt, Color.White);
             }
             form.Invoke(del);
         }
