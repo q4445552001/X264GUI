@@ -273,11 +273,11 @@ namespace X264GUIv2
                 //BarGraphics.DrawString(str, font, Brushes.DarkRed, pt);
 
                 Color color = Color.White;
-                TextRenderer.DrawText(BarGraphics, str, font, new Point(pt.X - 1, pt.Y), color);
-                TextRenderer.DrawText(BarGraphics, str, font, new Point(pt.X + 1, pt.Y), color);
-                TextRenderer.DrawText(BarGraphics, str, font, new Point(pt.X, pt.Y - 1), color);
-                TextRenderer.DrawText(BarGraphics, str, font, new Point(pt.X, pt.Y + 1), color);
-                TextRenderer.DrawText(BarGraphics, str, font, pt, Color.BlueViolet);
+                TextRenderer.DrawText(BarGraphics, str, font, new Point(pt.X - 2, pt.Y), color);
+                TextRenderer.DrawText(BarGraphics, str, font, new Point(pt.X + 2, pt.Y), color);
+                TextRenderer.DrawText(BarGraphics, str, font, new Point(pt.X, pt.Y - 2), color);
+                TextRenderer.DrawText(BarGraphics, str, font, new Point(pt.X, pt.Y + 2), color);
+                TextRenderer.DrawText(BarGraphics, str, font, pt, Color.Black);
             }
             form.Invoke(del);
         }
