@@ -981,8 +981,6 @@ namespace X264GUIv2
         {
             try
             {
-                form1Control.bitrateCBoxControl(true);
-
                 listView1.listViewCheck(videoFunc.ffprobeData, idx => videoFunc.ffprobeData[idx].MainData = videoFunc.bitRateFunc(videoFunc.ffprobeData[idx].MainData), subStatusIdx);
             }
             catch (Exception ex)

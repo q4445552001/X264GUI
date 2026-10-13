@@ -43,7 +43,6 @@
             runBtn = new Button();
             stopBtn = new Button();
             statusStrip1 = new StatusStrip();
-            toolStripStatusLabel1 = new ToolStripStatusLabel();
             progressText = new ToolStripStatusLabel();
             timeStripStatus = new ToolStripStatusLabel();
             menuStrip1 = new MenuStrip();
@@ -228,18 +227,12 @@
             // 
             // statusStrip1
             // 
-            statusStrip1.Items.AddRange(new ToolStripItem[] { toolStripStatusLabel1, progressText, timeStripStatus });
+            statusStrip1.Items.AddRange(new ToolStripItem[] { progressText, timeStripStatus });
             statusStrip1.Location = new Point(0, 408);
             statusStrip1.Name = "statusStrip1";
             statusStrip1.Size = new Size(759, 22);
             statusStrip1.TabIndex = 19;
             statusStrip1.Text = "statusStrip1";
-            // 
-            // toolStripStatusLabel1
-            // 
-            toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            toolStripStatusLabel1.Size = new Size(34, 17);
-            toolStripStatusLabel1.Text = "數量:";
             // 
             // progressText
             // 
@@ -251,7 +244,7 @@
             // 
             timeStripStatus.ImageAlign = ContentAlignment.MiddleLeft;
             timeStripStatus.Name = "timeStripStatus";
-            timeStripStatus.Size = new Size(684, 17);
+            timeStripStatus.Size = new Size(718, 17);
             timeStripStatus.Spring = true;
             timeStripStatus.Text = "00:00:00";
             timeStripStatus.TextAlign = ContentAlignment.MiddleRight;
@@ -586,7 +579,6 @@
         public Button stopBtn;
         public StatusStrip statusStrip1;
         public ToolStripStatusLabel progressText;
-        public ToolStripStatusLabel toolStripStatusLabel1;
         public MenuStrip menuStrip1;
         public ToolStripMenuItem ViewMenuItem;
         public ToolStripMenuItem logViewToolStripMenuItem;

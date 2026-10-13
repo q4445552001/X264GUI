@@ -6,15 +6,6 @@ namespace X264GUIv2
 {
     public class Form1Control(Form1 form)
     {
-        public void bitrateCBoxControl(bool isClose)
-        {
-            if (!isClose)
-            {
-                form.bitrateNumeric.Enabled = false;
-                return;
-            }
-        }
-
         public void ffmpegOutput(FfprobeOutput ffprobeOutput, string sr, CustomStopwatch sw1, Stopwatch sw2, WeighAllot weighAllot)
         {
             form.timeStripStatus.Text = OtherControlFunc.timeConv(sw1.Elapsed);
@@ -219,7 +210,7 @@ namespace X264GUIv2
             form.upBtn.Enabled = isClose;
             form.dnBtn.Enabled = isClose;
             form.bitrateCBox.Enabled = isClose;
-            bitrateCBoxControl(isClose);
+            form.bitrateNumeric.Enabled = isClose;
             form.fpsCBox.Enabled = isClose;
             form.resolutionCBox.Enabled = isClose;
             form.coreCBox.Enabled = isClose;
@@ -272,12 +263,12 @@ namespace X264GUIv2
                 Point pt = new((form.progressBar1.Width - textSize.Width) / 2, (form.progressBar1.Height - textSize.Height) / 2);
                 //BarGraphics.DrawString(str, font, Brushes.DarkRed, pt);
 
-                Color color = Color.White;
+                Color color = Color.Red;
                 TextRenderer.DrawText(BarGraphics, str, font, new Point(pt.X - 2, pt.Y), color);
                 TextRenderer.DrawText(BarGraphics, str, font, new Point(pt.X + 2, pt.Y), color);
                 TextRenderer.DrawText(BarGraphics, str, font, new Point(pt.X, pt.Y - 2), color);
                 TextRenderer.DrawText(BarGraphics, str, font, new Point(pt.X, pt.Y + 2), color);
-                TextRenderer.DrawText(BarGraphics, str, font, pt, Color.Black);
+                TextRenderer.DrawText(BarGraphics, str, font, pt, Color.White);
             }
             form.Invoke(del);
         }
